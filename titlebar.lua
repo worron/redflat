@@ -483,6 +483,8 @@ function titlebar.widget.floating(c, style)
 	local ret = titlebar_icon(style)
 	ret:set_active(awful.client.floating.get(c))
 	c:connect_signal("property::floating", function() ret:set_active(awful.client.floating.get(c)) end)
+	c:connect_signal("property::maximized_horizontal", function() ret:set_active(awful.client.floating.get(c)) end)
+	c:connect_signal("property::maximized_vertical", function() ret:set_active(awful.client.floating.get(c)) end)
 	return ret
 end
 
