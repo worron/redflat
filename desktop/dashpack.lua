@@ -55,7 +55,8 @@ function dashpack.new(args, geometry, style)
 	dwidget.wibox:geometry(geometry)
 
 	-- initialize bar lines
-	local pack = barpack(#args.sensors, style.barpack)
+	local barpack_style = redutil.table.merge(style.barpack, { color = style.color })
+	local pack = barpack(#args.sensors, barpack_style)
 	dwidget.wibox:set_widget(pack.layout)
 
 	for i, name in ipairs(args.names) do
