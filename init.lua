@@ -3,6 +3,9 @@
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
 
+
+redasync = require("redflat.asyncshell")
+
 return setmetatable(
 	{ _NAME = "redflat" },
 	{ __index = function(table, key)

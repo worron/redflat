@@ -49,7 +49,7 @@ function asyncshell.request(command, callback, timeout)
 	                          .. " | sed -e 's/\"/\\\\\"/g' -e ':a;N;$!ba;s/\\n/\\\\n/g'"
 
 	local req = string.format(
-		"echo \"asyncshell.deliver(%s, \\\"$(%s)\\\")\" | awesome-client &",
+		"echo \"redasync.deliver(%s, \\\"$(%s)\\\")\" | awesome-client &",
 		id, formatted_command
 	)
 
