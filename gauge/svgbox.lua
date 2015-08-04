@@ -18,8 +18,8 @@ local type = type
 local pcall = pcall
 local print = print
 local math = math
-local os = os
 
+local Gdk = require("lgi").Gdk
 local pixbuf = require("lgi").GdkPixbuf
 local cairo = require("lgi").cairo
 local base = require("wibox.widget.base")
@@ -31,22 +31,12 @@ local color = require("gears.color")
 -----------------------------------------------------------------------------------------------------------------------
 local svgbox = { mt = {} }
 
-svgbox.tempdir = "/tmp/awesome/"
-os.execute("mkdir -p " .. svgbox.tempdir)
-
 -- weak table is useless here
 -- TODO: implement mechanics to clear cache
 local cache = setmetatable({}, { __mode = 'k' })
-local tmp_counter = 0
 
 -- Support functions
 -----------------------------------------------------------------------------------------------------------------------
-
--- Counter for temporary files
-local function next_tmp()
-	tmp_counter = (tmp_counter + 1) % 10000
-	return tmp_counter
-end
 
 -- Check if given argument is SVG file
 local function is_svg(args)
@@ -67,32 +57,25 @@ local function set_cache(file, width, height, surf)
 	cache[file .. "-" .. width .. "x" .. height] = surf
 end
 
--- Create cairo surface from SVG file with given sizes
-local function surface_from_svg(file, width, height)
-	local surf
+-- Get cairo pattern
+local function get_current_pattern(cr)
+	cr:push_group()
+	cr:paint()
+	return cr:pop_group()
+end
 
-	-- check cache
+-- Create Gdk PixBuf from SVG file with given sizes
+local function pixbuf_from_svg(file, width, height)
 	local cached = get_cache(file, width, height)
-	if cached then return cached end
-	-- naughty.notify({ text = file })
 
-	-- generate name for temporary file
-	local tempfile = svgbox.tempdir .. tostring(next_tmp()) .. ".png"
-
-	-- load Gtk pixbuf from SVG file with wanted sizes
-	-- and save resized image to temporary png file
-	local buf = pixbuf.Pixbuf.new_from_file_at_scale(file, width, height, true)
-	buf:savev(tempfile, "png", {}, {})
-
-	-- load cairo surface from temporary png file
-	if awful.util.file_readable(tempfile) then
-		-- surf = surface.load(tempfile)
-		surf = cairo.ImageSurface.create_from_png(tempfile)
-		set_cache(file, width, height, surf)
-		os.execute("rm " .. tempfile)
+	if cached then
+		return cached
+	else
+		-- naughty.notify({ text = file })
+		local buf = pixbuf.Pixbuf.new_from_file_at_scale(file, width, height, true)
+		set_cache(file, width, height, buf)
+		return buf
 	end
-
-	return surf
 end
 
 -- Returns a new svgbox
@@ -182,20 +165,23 @@ function svgbox.new(image, resize_allowed, newcolor)
 			local aspect = math.min(width / w, height / h)
 			if self.is_svg and self.vector_resize_allowed then
 				-- for vector image
-				local new_surface = surface_from_svg(self.image_name, math.floor(w * aspect), math.floor(h * aspect))
-				if new_surface then self._image = new_surface end
+				local pixbuf = pixbuf_from_svg(self.image_name, math.floor(w * aspect), math.floor(h * aspect))
+				cr:set_source_pixbuf(pixbuf, 0, 0)
 			else
 				-- for raster image
 				cr:scale(aspect, aspect)
+				cr:set_source_surface(self._image, 0, 0)
 			end
+		else
+			cr:set_source_surface(self._image, 0, 0)
 		end
 
 		-- set icon color if need
 		if self.color then
+			local pattern = get_current_pattern(cr)
 			cr:set_source(color(self.color))
-			cr:mask(cairo.Pattern.create_for_surface(self._image), 0, 0)
+			cr:mask(pattern, 0, 0)
 		else
-			cr:set_source_surface(self._image, 0, 0)
 			cr:paint()
 		end
 
