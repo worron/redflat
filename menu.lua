@@ -57,7 +57,7 @@ local function default_theme()
 		nohide       = false,
 		auto_expand  = true,
 		auto_hotkey  = false,
-		svg_scale    = {false, false},
+		svg_scale    = { false, false },
 		color        = { border = "#575757", text = "#aaaaaa", highlight = "#eeeeee",
 		                 main = "#b1222b", wibox = "#202020",
 		                 submenu_icon = nil, right_icon = nil, left_icon = nil }
@@ -419,8 +419,8 @@ function menu.entry(parent, args)
 	margin:set_widget(label)
 
 	if args.icon then
-		iconbox = svgbox(args.icon, args.theme.svg_scale[1])
-		if args.theme.color.left_icon then iconbox:set_color(args.theme.color.left_icon) end
+		iconbox = svgbox(args.icon, nil, args.theme.color.left_icon)
+		iconbox:set_vector_resize(args.theme.svg_scale[1])
 	else
 		margin:set_left(args.theme.icon_margin[1])
 	end
@@ -431,14 +431,14 @@ function menu.entry(parent, args)
 
 	if type(args.cmd) == "table" then
 		if args.theme.submenu_icon then
-			right_iconbox = svgbox(args.theme.submenu_icon, args.theme.svg_scale[2])
-			if args.theme.color.submenu_icon then right_iconbox:set_color(args.theme.color.submenu_icon) end
+			right_iconbox = svgbox(args.theme.submenu_icon, nil, args.theme.color.submenu_icon)
+			right_iconbox:set_vector_resize(args.theme.svg_scale[2])
 		else
 			right_iconbox = wibox.widget.textbox("▶ ")
 		end
 	elseif args.right_icon then
-		right_iconbox = svgbox(args.right_icon, args.theme.svg_scale[2])
-		if args.theme.color.right_icon then right_iconbox:set_color(args.theme.color.right_icon) end
+		right_iconbox = svgbox(args.right_icon, nil, args.theme.color.right_icon)
+		right_iconbox:set_vector_resize(args.theme.svg_scale[2])
 	end
 
 	-- Construct item layouts

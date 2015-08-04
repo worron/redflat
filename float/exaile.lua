@@ -110,16 +110,13 @@ function exaile:init()
 
 	-- playback buttons
 	local player_buttons = wibox.layout.fixed.horizontal()
-	local prev_button = svgbox(style.icon.prev_tr, false)
-	prev_button:set_color(style.color.icon)
+	local prev_button = svgbox(style.icon.prev_tr, nil, style.color.icon)
 	player_buttons:add(prev_button)
 
-	self.play_button = svgbox(style.icon.play, false)
-	self.play_button:set_color(style.color.icon)
+	self.play_button = svgbox(style.icon.play, nil, style.color.icon)
 	player_buttons:add(wibox.layout.margin(self.play_button, unpack(style.pause_gap)))
 
-	local next_button = svgbox(style.icon.next_tr, false)
-	next_button:set_color(style.color.icon)
+	local next_button = svgbox(style.icon.next_tr, nil, style.color.icon)
 	player_buttons:add(next_button)
 
 	-- time indicator

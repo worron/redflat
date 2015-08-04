@@ -160,7 +160,7 @@ local function state_line_construct(state_icons, setup_layout, style)
 
 	for i, v in ipairs(state_icons) do
 		-- create widget
-		stateboxes[i] = svgbox(v.icon, false)
+		stateboxes[i] = svgbox(v.icon)
 		stateboxes[i]:set_size({ width = style.state_iconsize[1], height = style.state_iconsize[2] })
 
 		-- set widget in line
