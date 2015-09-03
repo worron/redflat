@@ -86,7 +86,7 @@ end
 -- Highlight key tip
 --------------------------------------------------------------------------------
 local function highlight(list, codetable, key, last, style)
-	local key = key == " " and "space" or key -- !!! fix this !!!
+	local key = key == " " and "space" or key == "," and "comma" or key == "." and "period" or key -- !!! fix this !!!
 
 	if key == last.key then return end
 	local code = keycode(key, codetable)
