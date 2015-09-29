@@ -158,11 +158,12 @@ function svgbox.new(image, resize_allowed, newcolor)
 	function widg:draw(wibox, cr, width, height)
 		if width == 0 or height == 0 or not self._image then return end
 
+		local w, h = self._image.width, self._image.height
+		local aspect = math.min(width / w, height / h)
+
 		cr:save()
 		-- let's scale the image so that it fits into (width, height)
 		if need_scale(self, width, height) then
-			local w, h = self._image.width, self._image.height
-			local aspect = math.min(width / w, height / h)
 			if self.is_svg and self.vector_resize_allowed then
 				-- for vector image
 				local pixbuf = pixbuf_from_svg(self.image_name, math.floor(w * aspect), math.floor(h * aspect))
@@ -171,6 +172,7 @@ function svgbox.new(image, resize_allowed, newcolor)
 				-- for raster image
 				cr:scale(aspect, aspect)
 				cr:set_source_surface(self._image, 0, 0)
+				cr:scale(1/aspect, 1/aspect) -- fix this !!!
 			end
 		else
 			cr:set_source_surface(self._image, 0, 0)
@@ -179,7 +181,9 @@ function svgbox.new(image, resize_allowed, newcolor)
 		-- set icon color if need
 		if self.color then
 			local pattern = get_current_pattern(cr)
+			cr:scale(aspect, aspect) -- fix this !!!
 			cr:set_source(color(self.color))
+			cr:scale(1/aspect, 1/aspect) -- fix this !!!
 			cr:mask(pattern, 0, 0)
 		else
 			cr:paint()
