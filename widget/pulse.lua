@@ -30,6 +30,7 @@ local redutil = require("redflat.util")
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
 local pulse = { widgets = {}, mt = {} }
+local pulse_def_sink = awful.util.pread("pacmd dump|perl -ane 'print $F[1] if /set-default-sink/'")
 
 pulse.startup_time = 4
 
@@ -59,7 +60,7 @@ function pulse:change_volume(args)
 	local diff = args.down and -args.step or args.step
 
 	-- get current volume
-	local v = awful.util.pread("pacmd dump |grep set-sink-volume")
+	local v = awful.util.pread("pacmd dump |grep set-sink-volume | grep " .. pulse_def_sink )
 	local volume = tonumber(string.sub(v, string.find(v, 'x') - 1))
 
 	-- calculate new volume
@@ -78,7 +79,7 @@ function pulse:change_volume(args)
 	end
 
 	-- set new volume
-	awful.util.spawn("pacmd set-sink-volume 0 "..new_volume)
+	awful.util.spawn("pacmd set-sink-volume " .. pulse_def_sink .. " " .. new_volume)
 	-- update volume indicators
 	self:update_volume()
 end
@@ -86,11 +87,12 @@ end
 -- Set mute
 -----------------------------------------------------------------------------------------------------------------------
 function pulse:mute()
-	local mute = awful.util.pread("pacmd dump |grep set-sink-mute")
+   local mute = pulse_def_sink
+   
 	if string.find(mute, "no") then
-		awful.util.spawn("pacmd set-sink-mute 0 yes")
+           awful.util.spawn("pacmd set-sink-mute " .. pulse_def_sink .. "  yes")
 	else
-		awful.util.spawn("pacmd set-sink-mute 0 no")
+		awful.util.spawn("pacmd set-sink-mute " .. pulse_def_sink .. " no")
 	end
 	self:update_volume()
 end
@@ -105,7 +107,7 @@ function pulse:update_volume()
 	local mute
 
 	-- get current volume and mute state
-	local v = awful.util.pread("pacmd dump |grep set-sink-volume")
+	local v = awful.util.pread("pacmd dump |grep set-sink-volume | grep " .. pulse_def_sink)
 	local m = awful.util.pread("pacmd dump |grep set-sink-mute")
 
 	if v then
@@ -141,7 +143,7 @@ function pulse.new(args, style)
 
 	local counter = 0
 	local args = args or {}
-	local timeout = args.timeout or 30
+	local timeout = args.timeout or 0.5
 
 	-- create widget
 	--------------------------------------------------------------------------------
@@ -156,7 +158,7 @@ function pulse.new(args, style)
 		pulse.tooltip:add_to_object(widg)
 	end
 
-	--[[
+       --[[
 	-- Set update timer
 	--------------------------------------------------------------------------------
 	local t = timer({ timeout = timeout })
