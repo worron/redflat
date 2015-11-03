@@ -61,7 +61,7 @@ function pulse:change_volume(args)
 
 	-- get current volume
 	local v = awful.util.pread("pacmd dump |grep set-sink-volume | grep " .. pulse_def_sink )
-	local volume = tonumber(string.sub(v, string.find(v, 'x') - 1))
+	local volume = tonumber(string.match(v, "0x%x+"))
 
 	-- calculate new volume
 	local new_volume = volume + diff
@@ -87,10 +87,10 @@ end
 -- Set mute
 -----------------------------------------------------------------------------------------------------------------------
 function pulse:mute()
-   local mute = pulse_def_sink
-   
-	if string.find(mute, "no") then
-           awful.util.spawn("pacmd set-sink-mute " .. pulse_def_sink .. "  yes")
+	local mute = awful.util.pread("pacmd dump | grep set-sink-mute | grep " .. pulse_def_sink)
+
+	if string.find(mute, "no", -4) then
+		awful.util.spawn("pacmd set-sink-mute " .. pulse_def_sink .. " yes")
 	else
 		awful.util.spawn("pacmd set-sink-mute " .. pulse_def_sink .. " no")
 	end
@@ -107,15 +107,15 @@ function pulse:update_volume()
 	local mute
 
 	-- get current volume and mute state
-	local v = awful.util.pread("pacmd dump |grep set-sink-volume | grep " .. pulse_def_sink)
-	local m = awful.util.pread("pacmd dump |grep set-sink-mute")
+	local v = awful.util.pread("pacmd dump | grep set-sink-volume | grep " .. pulse_def_sink)
+	local m = awful.util.pread("pacmd dump | grep set-sink-mute | grep " .. pulse_def_sink)
 
 	if v then
-		local pv = string.find(v, 'x')
-		if pv then volume = math.floor(tonumber(string.sub(v, pv - 1)) * 100 / volmax) end
+		local pv = string.match(v, "0x%x+")
+		if pv then volume = math.floor(tonumber(pv) * 100 / volmax) end
 	end
 
-	if m ~= nil and string.find(m, "no") then
+	if m ~= nil and string.find(m, "no", -4) then
 		mute = false
 	else
 		mute = true
@@ -158,7 +158,7 @@ function pulse.new(args, style)
 		pulse.tooltip:add_to_object(widg)
 	end
 
-       --[[
+	--[[
 	-- Set update timer
 	--------------------------------------------------------------------------------
 	local t = timer({ timeout = timeout })
