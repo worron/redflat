@@ -143,7 +143,8 @@ function pulse.new(args, style)
 
 	local counter = 0
 	local args = args or {}
-	local timeout = args.timeout or 0.5
+	local timeout = args.timeout or 5
+	local autoupdate = args.autoupdate or false
 
 	-- create widget
 	--------------------------------------------------------------------------------
@@ -158,13 +159,13 @@ function pulse.new(args, style)
 		pulse.tooltip:add_to_object(widg)
 	end
 
-	--[[
 	-- Set update timer
 	--------------------------------------------------------------------------------
-	local t = timer({ timeout = timeout })
-	t:connect_signal("timeout", function() pulse:update_volume() end)
-	t:start()
-	--]]
+	if autoupdate then
+		local t = timer({ timeout = timeout })
+		t:connect_signal("timeout", function() pulse:update_volume() end)
+		t:start()
+	end
 
 	-- Set startup timer
 	-- This is workaround if widget created bofore pulseaudio servise start
