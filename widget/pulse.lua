@@ -30,6 +30,7 @@ local redutil = require("redflat.util")
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
 local pulse = { widgets = {}, mt = {} }
+local counter = 0
 local pulse_def_sink = awful.util.pread("pacmd dump|perl -ane 'print $F[1] if /set-default-sink/'")
 
 pulse.startup_time = 4
@@ -141,7 +142,6 @@ function pulse.new(args, style)
 	local style = redutil.table.merge(default_style(), style or {})
 	pulse.notify_icon = style.notify_icon
 
-	local counter = 0
 	local args = args or {}
 	local timeout = args.timeout or 5
 	local autoupdate = args.autoupdate or false
@@ -167,23 +167,24 @@ function pulse.new(args, style)
 		t:start()
 	end
 
-	-- Set startup timer
-	-- This is workaround if widget created bofore pulseaudio servise start
-	--------------------------------------------------------------------------------
-	pulse.startup_updater = timer({ timeout = 1 })
-	pulse.startup_updater:connect_signal("timeout",
-		function()
-			counter = counter + 1
-			pulse:update_volume()
-			if counter > pulse.startup_time then pulse.startup_updater:stop() end
-		end
-	)
-	pulse.startup_updater:start()
-
 	--------------------------------------------------------------------------------
 	pulse:update_volume()
 	return widg
 end
+
+-- Set startup timer
+-- This is workaround if module activated bofore pulseaudio servise start
+-----------------------------------------------------------------------------------------------------------------------
+pulse.startup_updater = timer({ timeout = 1 })
+pulse.startup_updater:connect_signal("timeout",
+	function()
+		counter = counter + 1
+		pulse_def_sink = awful.util.pread("pacmd dump|perl -ane 'print $F[1] if /set-default-sink/'")
+		pulse:update_volume()
+		if counter > pulse.startup_time then pulse.startup_updater:stop() end
+	end
+)
+pulse.startup_updater:start()
 
 -- Config metatable to call pulse module as function
 -----------------------------------------------------------------------------------------------------------------------
