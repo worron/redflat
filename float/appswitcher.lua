@@ -16,6 +16,8 @@ local math = math
 local unpack = unpack
 local table = table
 
+local Gdk = require("lgi").Gdk
+local pixbuf = require("lgi").GdkPixbuf
 local awful = require("awful")
 local beautiful = require("beautiful")
 local wibox = require("wibox")
@@ -27,9 +29,10 @@ local redtitlebar = require("redflat.titlebar")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
-local appswitcher = { clients_list = {}, index = 1, hotkeys = {} }
+local appswitcher = { clients_list = {}, index = 1, hotkeys = {}, svgsize = 256 }
 
 local cache = { titlebar = {}, border_cololr = nil }
+local svgcache = {}
 
 -- key bindings
 appswitcher.keys = {
@@ -67,6 +70,31 @@ end
 
 -- Support functions
 -----------------------------------------------------------------------------------------------------------------------
+
+-- Create icon visual for client
+--------------------------------------------------------------------------------
+local function get_icon_visual(icon_db, c, size)
+	local surface, buf
+
+	if icon_db[string.lower(c.class)] then
+		local icon = icon_db[string.lower(c.class)]
+
+		if type(icon) == "string" and string.match(icon, "\.svg") then
+			if svgcache[icon] then
+				buf = svgcache[icon]
+			else
+				buf = pixbuf.Pixbuf.new_from_file_at_scale(icon, size, size, true)
+				svgcache[icon] = buf
+			end
+		else
+			surface = gears.surface(icon)
+		end
+	else
+		surface = gears.surface(c.icon)
+	end
+
+	return surface, buf
+end
 
 -- Find all clients to be shown
 --------------------------------------------------------------------------------
@@ -226,7 +254,7 @@ function appswitcher:init()
 		for i = 1, #self.clients_list do
 
 			-- support vars
-			local sc, tr, surface
+			local sc, tr, surface, pixbuf
 			local c = self.clients_list[i]
 
 			-- create surface and calculate scale and translate factors
@@ -242,9 +270,11 @@ function appswitcher:init()
 					tr = {(psize.width - sc * cg.width) / 2, 0}
 				end
 			else
-				surface = gears.surface(icon_db[string.lower(c.class)] or c.icon)
+				-- surface = gears.surface(icon_db[string.lower(c.class)] or c.icon)
+				surface, pixbuf = get_icon_visual(icon_db, c, self.svgsize)
 
-				sc = style.icon_size / surface.width * iscf
+				-- sc = style.icon_size / surface.width * iscf
+				sc = style.icon_size / (surface and surface.width or pixbuf.width) * iscf
 				tr = {(psize.width - style.icon_size * iscf) / 2, (psize.height - style.icon_size * iscf) / 2}
 			end
 
@@ -261,7 +291,11 @@ function appswitcher:init()
 			cr:translate(unpack(tr))
 			cr:scale(sc, sc)
 
-			cr:set_source_surface(surface, 0, 0)
+			if pixbuf then
+				cr:set_source_pixbuf(pixbuf, 0, 0)
+			else
+				cr:set_source_surface(surface, 0, 0)
+			end
 			cr:paint()
 			cr:restore()
 
