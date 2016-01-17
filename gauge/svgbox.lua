@@ -19,13 +19,20 @@ local pcall = pcall
 local print = print
 local math = math
 
-local Gdk = require("lgi").Gdk
-local pixbuf = require("lgi").GdkPixbuf
+-- local Gdk = require("lgi").Gdk
+-- local pixbuf = require("lgi").GdkPixbuf
 local cairo = require("lgi").cairo
 local base = require("wibox.widget.base")
 local surface = require("gears.surface")
 local awful = require("awful")
 local color = require("gears.color")
+
+local pixbuf
+local function load_pixbuf()
+	local Gdk = require("lgi").Gdk
+	pixbuf = require("lgi").GdkPixbuf
+end
+local is_pixbuf_loaded = pcall(load_pixbuf)
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -164,7 +171,7 @@ function svgbox.new(image, resize_allowed, newcolor)
 		cr:save()
 		-- let's scale the image so that it fits into (width, height)
 		if need_scale(self, width, height) then
-			if self.is_svg and self.vector_resize_allowed then
+			if self.is_svg and self.vector_resize_allowed and is_pixbuf_loaded then
 				-- for vector image
 				local pixbuf = pixbuf_from_svg(self.image_name, math.floor(w * aspect), math.floor(h * aspect))
 				cr:set_source_pixbuf(pixbuf, 0, 0)

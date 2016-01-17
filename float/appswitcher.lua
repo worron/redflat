@@ -16,12 +16,19 @@ local math = math
 local unpack = unpack
 local table = table
 
-local Gdk = require("lgi").Gdk
-local pixbuf = require("lgi").GdkPixbuf
+-- local Gdk = require("lgi").Gdk
+-- local pixbuf = require("lgi").GdkPixbuf
 local awful = require("awful")
 local beautiful = require("beautiful")
 local wibox = require("wibox")
 local gears = require("gears")
+
+local pixbuf
+local function load_pixbuf()
+	local Gdk = require("lgi").Gdk
+	pixbuf = require("lgi").GdkPixbuf
+end
+local is_pixbuf_loaded = pcall(load_pixbuf)
 
 local dfparser = require("redflat.service.dfparser")
 local redutil = require("redflat.util")
@@ -79,7 +86,7 @@ local function get_icon_visual(icon_db, c, size)
 	if icon_db[string.lower(c.class)] then
 		local icon = icon_db[string.lower(c.class)]
 
-		if type(icon) == "string" and string.match(icon, "\.svg") then
+		if type(icon) == "string" and string.match(icon, "\.svg") and is_pixbuf_loaded then
 			if svgcache[icon] then
 				buf = svgcache[icon]
 			else
