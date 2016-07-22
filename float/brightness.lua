@@ -13,6 +13,7 @@ local beautiful = require("beautiful")
 
 local rednotify = require("redflat.float.notify")
 local redutil = require("redflat.util")
+local asyncshell = require("redflat.asyncshell")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -25,10 +26,12 @@ local defaults = { down = false, step = 2 }
 function brightness:change(args)
 	local args = redutil.table.merge(defaults, args or {})
 	if args.step > 0 then
-		if args.down then awful.util.spawn("xbacklight -dec " .. args.step)
-		else awful.util.spawn("xbacklight -inc " .. args.step) end
+		if args.down then
+			asyncshell.request("xbacklight -dec " .. args.step, function(_) self:update_info() end)
+		else
+			asyncshell.request("xbacklight -inc " .. args.step, function(_) self:update_info() end)
+		end
 	end
-	self:update_info()
 end
 
 -- Update brightness level info
