@@ -21,7 +21,7 @@ local asyncshell = require("redflat.asyncshell")
 
 -- Initialize and vars for module
 -----------------------------------------------------------------------------------------------------------------------
-local exaile = { box = {} }
+local exaile = { box = {}, started = false }
 
 local last = { status = "Stopped" }
 
@@ -229,6 +229,10 @@ function exaile:init()
 	--------------------------------------------------------------------------------
 	self.updatetimer = timer({ timeout = style.timeout })
 	self.updatetimer:connect_signal("timeout", function() self:update() end)
+
+	-- Run dbus servise
+	--------------------------------------------------------------------------------
+	if not self.started then self:start() end
 end
 
 -- Player playback control
@@ -280,63 +284,67 @@ end
 -- Dbus signal setup
 -- update some info which avaliable from dbus signal
 -----------------------------------------------------------------------------------------------------------------------
-dbus.request_name("session", "org.freedesktop.DBus.Properties")
-dbus.add_match(
-	"session",
-	"path=/org/mpris/MediaPlayer2, interface='org.freedesktop.DBus.Properties', member='PropertiesChanged'"
-)
-dbus.connect_signal("org.freedesktop.DBus.Properties",
-	function (_, _, data)
-		if not exaile.wibox then exaile:init() end
+function exaile:start()
+	dbus.request_name("session", "org.freedesktop.DBus.Properties")
+	dbus.add_match(
+		"session",
+		"path=/org/mpris/MediaPlayer2, interface='org.freedesktop.DBus.Properties', member='PropertiesChanged'"
+	)
+	dbus.connect_signal("org.freedesktop.DBus.Properties",
+		function (_, _, data)
+			if not exaile.wibox then exaile:init() end
 
-		--if data.PlaybackStatus and data.PlaybackStatus ~= last.status then
-		if data.PlaybackStatus then
-			-- check player status and set suitable play/pause button image
-			local state = data.PlaybackStatus == "Playing" and "pause" or "play"
-			exaile.set_play_button(state)
-			last.status = data.PlaybackStatus
+			--if data.PlaybackStatus and data.PlaybackStatus ~= last.status then
+			if data.PlaybackStatus then
+				-- check player status and set suitable play/pause button image
+				local state = data.PlaybackStatus == "Playing" and "pause" or "play"
+				exaile.set_play_button(state)
+				last.status = data.PlaybackStatus
 
-			-- stop/start update timer
-			if data.PlaybackStatus == "Playing" then
-				if exaile.wibox.visible then exaile.updatetimer:start() end
-			else
-				exaile.updatetimer:stop()
-				exaile:update()
+				-- stop/start update timer
+				if data.PlaybackStatus == "Playing" then
+					if exaile.wibox.visible then exaile.updatetimer:start() end
+				else
+					exaile.updatetimer:stop()
+					exaile:update()
+				end
+
+				-- clear track info if stoppped
+				if data.PlaybackStatus == "Stopped" then
+					exaile.clear_info()
+				end
 			end
 
-			-- clear track info if stoppped
-			if data.PlaybackStatus == "Stopped" then
-				exaile.clear_info()
+			if data.Metadata then
+				-- set song title
+				exaile.box.title:set_text(data.Metadata["xesam:title"] or "Unknown")
+
+				-- set album or artist info
+				exaile.info.artist = data.Metadata["xesam:artist"] and data.Metadata["xesam:artist"][1] or "Unknown"
+				exaile.info.album  = data.Metadata["xesam:album"] or "Unknown"
+				exaile.update_artist()
+
+
+				-- set cover art
+				--if data.Metadata["mpris:artUrl"] and data.Metadata["mpris:artUrl"] ~= last.art then
+				if data.Metadata["mpris:artUrl"] then
+					local image = string.match(data.Metadata["mpris:artUrl"], "file://(.+)")
+					exaile.box.image:set_color(nil)
+					exaile.box.image:set_image(image)
+				end
+			end
+
+			-- update player volume info
+			-- !!! Workaround bacause awesome dbus doesn't recognize data.Volume double type !!!
+			if not data.PlaybackStatus and not data.Metadata or not last.volume_checked then
+				asyncshell.request(command .. "GetVolume", function(o) exaile.volume:set_value(o /100) end)
+				last.volume_checked = true
 			end
 		end
+	)
 
-		if data.Metadata then
-			-- set song title
-			exaile.box.title:set_text(data.Metadata["xesam:title"] or "Unknown")
-
-			-- set album or artist info
-			exaile.info.artist = data.Metadata["xesam:artist"] and data.Metadata["xesam:artist"][1] or "Unknown"
-			exaile.info.album  = data.Metadata["xesam:album"] or "Unknown"
-			exaile.update_artist()
-
-
-			-- set cover art
-			--if data.Metadata["mpris:artUrl"] and data.Metadata["mpris:artUrl"] ~= last.art then
-			if data.Metadata["mpris:artUrl"] then
-				local image = string.match(data.Metadata["mpris:artUrl"], "file://(.+)")
-				exaile.box.image:set_color(nil)
-				exaile.box.image:set_image(image)
-			end
-		end
-
-		-- update player volume info
-		-- !!! Workaround bacause awesome dbus doesn't recognize data.Volume double type !!!
-		if not data.PlaybackStatus and not data.Metadata or not last.volume_checked then
-			asyncshell.request(command .. "GetVolume", function(o) exaile.volume:set_value(o /100) end)
-			last.volume_checked = true
-		end
-	end
-)
+	self.started = true
+end
 
 -- End
 -----------------------------------------------------------------------------------------------------------------------
