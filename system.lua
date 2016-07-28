@@ -354,6 +354,20 @@ function system.thermal.nvoptimus()
 	return { tonumber(temp), off = nvidia_on == nil }
 end
 
+-- Using nvidia-smi on sysmem with optimus (nvidia-prime)
+------------------------------------------------------------
+function system.thermal.nvprime()
+	local temp = 0
+	local nvidia_on = string.find(awful.util.pread("prime-select query"), "nvidia")
+
+	if nvidia_on ~= nil then
+		t = string.match(awful.util.pread("nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader"), "%d%d")
+		if t then temp = t end
+	end
+
+	return { tonumber(temp), off = nvidia_on == nil }
+end
+
 -- Get info from transmission-remote client
 -- This function adapted special for asyncshell
 -----------------------------------------------------------------------------------------------------------------------
