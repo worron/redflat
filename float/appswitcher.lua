@@ -312,6 +312,8 @@ function appswitcher:init()
 			redutil.cairo.set_font(cr, style.font)
 			redutil.cairo.tcenter_horizontal(cr, { psize.width/2, psize.height + style.label_height }, txt)
 		end
+
+		collectgarbage() -- prevents memory leak after complex draw function
 	end
 
 	-- Set widget and create title for wibox
