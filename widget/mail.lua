@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------------
 --                                               RedFlat mail widget                                                 --
 -----------------------------------------------------------------------------------------------------------------------
--- Check if new mail available using python scripts
+-- Check if new mail available using python scripts or curl shell command
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
@@ -35,6 +35,24 @@ local function default_style()
 	return redutil.table.merge(style, redutil.check(beautiful, "widget.mail") or {})
 end
 
+-- Mail check functions
+-----------------------------------------------------------------------------------------------------------------------
+mail.check_function = {}
+
+mail.check_function["script"] = function(args)
+	return args.script
+end
+
+mail.check_function["curl_imap"] = function(args)
+	local port = args.port or 993
+	local request = "-X 'SEARCH (UNSEEN)'"
+	local head_command = "curl --connect-timeout 5 -fsm 5"
+
+	curl_req = string.format("%s --url imaps://%s:%s/INBOX -u %s:%q %s -k | tr -dc '0-9'",
+	                         head_command, args.server, port, args.mail, args.password, request)
+
+	return curl_req
+end
 -- Create a new mail widget
 -- @param style Table containing colors and geometry parameters for all elemets
 -- @param args.update_timeout Update interval
@@ -49,8 +67,9 @@ function mail.new(args, style)
 	local count
 	local object = {}
 	local update_timeout = args.update_timeout or 3600
-	local scripts = args.scripts or {}
-	local path = args.path or "~/.config/awesome/scripts/"
+	local maillist = args.maillist or {}
+	-- local scripts = args.scripts or {}
+	-- local path = args.path or "~/.config/awesome/scripts/"
 
 	local style = redutil.table.merge(default_style(), style or {})
 
@@ -63,28 +82,29 @@ function mail.new(args, style)
 	-- Set tooltip
 	--------------------------------------------------------------------------------
 	object.tp = tooltip({ object.widget }, style.tooltip)
+	object.tp:set_text("0 new messages")
 
 	-- Update info function
 	--------------------------------------------------------------------------------
 	local function mail_count(output)
 		local c = tonumber(output)
-		if not c then return end
 
-		count = count + c
-		object.tp:set_text(count .. " new messages")
+		if c then
+			count = count + c
+			if style.need_notify and count > 0 then
+				rednotify:show({ text = count .. " new messages", icon = style.notify_icon })
+			end
+		end
 
 		local color = count > 0 and style.color.main or style.color.icon
 		object.widget:set_color(color)
-
-		if style.need_notify and count > 0 then
-			rednotify:show({ text = count .. " new messages", icon = style.notify_icon })
-		end
+		object.tp:set_text(count .. " new messages")
 	end
 
 	function object.update()
 		count = 0
-		for _, script in ipairs(scripts) do
-			asyncshell.request(path .. script, mail_count, 60)
+		for _, cmail in ipairs(maillist) do
+			asyncshell.request(mail.check_function[cmail.checker](cmail), mail_count, 60)
 		end
 	end
 
