@@ -326,6 +326,19 @@ function system.thermal.sensors(args)
 	return temp and { tonumber(temp) } or { 0 }
 end
 
+local sensors_store
+
+function system.thermal.sensors_core(args)
+	local args = args or {}
+	local index = args.index or 0
+
+	if args.main then sensors_store = awful.util.pread("sensors | grep Core") end
+	local line = string.match(sensors_store, "Core " .. index .."(.-)\r?\n")
+	local temp = string.match(line, "%+(%d+%.%d)°[CF]")
+
+	return temp and { tonumber(temp) } or { 0 }
+end
+
 -- Using hddtemp
 ------------------------------------------------------------
 function system.thermal.hddtemp(args)
