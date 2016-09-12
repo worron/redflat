@@ -53,10 +53,12 @@ function textset.new(args, style)
 	widg._layout:set_spacing(Pango.units_from_double(style.spacing))
 
 	-- !!! dirty fix for original awesome textbox v3.5.6 to avoid cutting edges !!!
+	local edge_fix = 5 -- px
+
 	function widg:draw(wibox, cr, width, height)
 		cr:update_layout(self._layout)
 
-		self._layout.width = Pango.units_from_double(width - 10) -- right edge fix
+		self._layout.width = Pango.units_from_double(width - 2 * edge_fix)
 		self._layout.height = Pango.units_from_double(height)
 
 		local ink, logical = self._layout:get_pixel_extents()
@@ -65,7 +67,7 @@ function textset.new(args, style)
 		if     self._valign == "center" then offset = (height - logical.height) / 2
 		elseif self._valign == "bottom" then offset = height - logical.height end
 
-		cr:move_to(5, offset) -- left edge fix
+		cr:move_to(edge_fix, offset)
 		cr:show_layout(self._layout)
 	end
 
