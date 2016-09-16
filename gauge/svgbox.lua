@@ -47,7 +47,7 @@ local cache = setmetatable({}, { __mode = 'k' })
 
 -- Check if given argument is SVG file
 local function is_svg(args)
-	return type(args) == "string" and string.match(args, "\.svg")
+	return type(args) == "string" and string.match(args, "%.svg")
 end
 
 -- Check if need scale image

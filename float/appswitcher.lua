@@ -86,7 +86,7 @@ local function get_icon_visual(icon_db, c, size)
 	if icon_db[string.lower(c.class)] then
 		local icon = icon_db[string.lower(c.class)]
 
-		if type(icon) == "string" and string.match(icon, "\.svg") and is_pixbuf_loaded then
+		if type(icon) == "string" and string.match(icon, "%.svg") and is_pixbuf_loaded then
 			if svgcache[icon] then
 				buf = svgcache[icon]
 			else
