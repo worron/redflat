@@ -16,7 +16,7 @@ local beautiful = require("beautiful")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
-local qlaunch = { hotkeys = {}, history = {} }
+local qlaunch = { hotkeys = {}, history = {}, store = {} }
 local swpack = { apps = {}, menu = {} }
 
 -- Generate default theme vars
@@ -55,6 +55,11 @@ local function build_filter(app)
 	end
 end
 
+local function format_key(key)
+	local nk = key:match("#(%d+)")
+	return nk and (tonumber(nk) - 9) or key
+end
+
 -- redflat appswitcher
 function swpack.apps:init(style)
 	self.widget = redflat.float.appswitcher
@@ -89,29 +94,39 @@ end
 -- Initialize widget
 -----------------------------------------------------------------------------------------------------------------------
 function qlaunch:init(args, style)
+	local tk = {}
 	local args = args or {}
 	local modkeys = args.modkeys or { "Mod1" }
-	self.apps = args.apps or {}
+	local setmodkeys = args.setmodkeys or { "Mod1", "Shift" }
+	self.original = args.keys or {}
 
 	local style = redflat.util.table.merge(default_style(), style or {})
 	self.switcher = swpack[style.sw_type]
 	self.switcher:init(style.switcher[style.sw_type])
 
-	for app, data in pairs(self.apps) do
-		self.hotkeys = awful.util.table.join(
-			self.hotkeys, awful.key(modkeys, data.key, function() self:run_or_raise(app) end)
-		)
+	for key, data in pairs(self.original) do
+		self.store[key] = { app = data.app, run = data.run }
+		table.insert(tk, awful.key(modkeys, key, function() self:run_or_raise(key) end))
+		table.insert(tk, awful.key(setmodkeys, key, function() self:set_new_app(key) end))
 	end
+	self.hotkeys = awful.util.table.join(unpack(tk))
 
 	client.connect_signal("focus", function(c) self:set_last(c) end)
 end
 
-function qlaunch:run_or_raise(app)
+function qlaunch:run_or_raise(key)
+	local app = self.store[key].app
+	if app == "" then return end
+
 	local clients = get_clients(app)
 	local cnum = #clients
 
 	if cnum == 0 then
-		awful.util.spawn_with_shell(self.apps[app].run)
+		if self:restore_orginal_key(key) then
+			self:run_or_raise(key)
+		else
+			if self.store[key].run ~= "" then awful.util.spawn_with_shell(self.store[key].run) end
+		end
 	elseif cnum == 1 then
 		focus_and_raise(clients[1])
 	else
@@ -128,10 +143,25 @@ function qlaunch:run_or_raise(app)
 	end
 end
 
+function qlaunch:restore_orginal_key(key)
+	if self.original[key].app ~= "" and self.original[key].app ~= self.store[key].app then
+		self.store[key] = { app = self.original[key].app, run = self.original[key].run }
+		return true
+	end
+
+	return false
+end
+
+function qlaunch:set_new_app(key)
+	if not client.focus then return end
+	self.store[key] = { app = client.focus.class:lower(), run = "" }
+	naughty.notify({text=string.format("%s now binded with '%s'", client.focus.class, format_key(key))})
+end
+
 function qlaunch:set_last(c)
-	for app, _ in pairs(self.apps) do
-		if c.class:lower() == app then
-			self.history[app] = c
+	for _, data in pairs(self.store) do
+		if c.class:lower() == data.app then
+			self.history[data.app] = c
 			break
 		end
 	end
