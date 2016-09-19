@@ -48,7 +48,7 @@ mail.check_function["curl_imap"] = function(args)
 	local request = "-X 'SEARCH (UNSEEN)'"
 	local head_command = "curl --connect-timeout 5 -fsm 5"
 
-	curl_req = string.format("%s --url imaps://%s:%s/INBOX -u %s:%q %s -k | tr -dc '0-9'",
+	curl_req = string.format("%s --url imaps://%s:%s/INBOX -u %s:%q %s -k | awk '{print $NF} ' | tr -dc '0-9'",
 	                         head_command, args.server, port, args.mail, args.password, request)
 
 	return curl_req
@@ -68,8 +68,6 @@ function mail.new(args, style)
 	local object = {}
 	local update_timeout = args.update_timeout or 3600
 	local maillist = args.maillist or {}
-	-- local scripts = args.scripts or {}
-	-- local path = args.path or "~/.config/awesome/scripts/"
 
 	local style = redutil.table.merge(default_style(), style or {})
 
