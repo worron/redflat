@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------------
 --                                           RedFlat quick laucnher widget                                           --
 -----------------------------------------------------------------------------------------------------------------------
--- Quick app launch or switch
+-- Quick application launch or switch
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
@@ -9,25 +9,51 @@
 local table = table
 local unpack = unpack
 local string = string
+local math = math
 local io = io
 local os = os
 
+local wibox = require("wibox")
 local awful = require("awful")
-local redflat = require("redflat")
 local beautiful = require("beautiful")
+local color = require("gears.color")
+
+local redflat = require("redflat")
+local svgbox = require("redflat.gauge.svgbox")
+local dfparser = require("redflat.service.dfparser")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
 local qlaunch = { hotkeys = {}, history = {}, store = {} }
-local swpack = { apps = {}, menu = {} }
+
+local code_to_pressed, pressed_to_code = {}, {}
+for i = 1, 10 do
+	local pressed = tostring(i % 10)
+	local code = "#" .. tostring(i + 9)
+	code_to_pressed[code]    = pressed
+	pressed_to_code[pressed] = code
+end
+
+local sw = redflat.float.appswitcher
+local TPI = math.pi * 2
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		sw_type    = "menu",
-		switcher   = { apps = {}, menu = { width = 800 } },
-		configfile = os.getenv("HOME") .. "/.cache/awesome/applist",
+		df_icon         = nil,
+		no_icon         = nil,
+		icons           = {},
+		geometry        = { width = 1200, height = 180 },
+		border_margin   = { 20, 20, 10, 10 },
+		appline         = { iwidth = 160, im = { 10, 10, 5, 5 }, igap = { 0, 0, 10, 10 }, lheight = 30 },
+		state           = { gap = 4, radius = 5, height = 20, width = 20 },
+		configfile      = os.getenv("HOME") .. "/.cache/awesome/applist",
+		label_font      = "Sans 12",
+		border_width    = 2,
+		service_hotkeys = { close = { "Escape" }, switch = { "Return" }},
+		color           = { border = "#575757", text = "#aaaaaa", main = "#b1222b", urgent = "#32882d",
+		                    wibox  = "#202020", icon = "#a0a0a0", bg   = "#161616", gray   = "#575757" }
 	}
 
 	return redflat.util.table.merge(style, redflat.util.check(beautiful, "float.qlaunch") or {})
@@ -36,6 +62,9 @@ end
 
 -- Support functions
 -----------------------------------------------------------------------------------------------------------------------
+
+-- Get list of clients with given class
+------------------------------------------------------------
 local function get_clients(app)
 	local clients = {}
 	for _, c in ipairs(client.get()) do
@@ -44,6 +73,8 @@ local function get_clients(app)
 	return clients
 end
 
+-- Set focus on given client
+------------------------------------------------------------
 local function focus_and_raise(c)
 	if c.minimized then c.minimized = false end
 	if not c:isvisible() then awful.tag.viewmore(c:tags(), c.screen) end
@@ -52,56 +83,196 @@ local function focus_and_raise(c)
 	c:raise()
 end
 
+-- Build filter for clients with given class
+------------------------------------------------------------
 local function build_filter(app)
 	return function(c)
 		return c.class:lower() == app
 	end
 end
 
-local function format_key(key)
-	local nk = key:match("#(%d+)")
-	return nk and (tonumber(nk) - 9) or key
+-- Translate pressed key to keycode for numeric keys
+------------------------------------------------------------
+local function format_key(key, reverse)
+	local kset = reverse and pressed_to_code or code_to_pressed
+	return kset[key] and kset[key] or key
 end
 
+-- Check if file exist
+------------------------------------------------------------
 function is_file_exists(file)
 	local f = io.open(file, "r")
 	if f then f:close(); return true else return false end
 end
 
--- redflat appswitcher
-function swpack.apps:init(style)
-	self.widget = redflat.float.appswitcher
-	self.widget:init()
-end
+-- Widget construction functions
+-----------------------------------------------------------------------------------------------------------------------
 
-function swpack.apps:activate(app, clist)
-	self.widget:show({ filter = build_filter(app) })
-end
+-- Build application state indicator
+--------------------------------------------------------------------------------
+function build_state_indicator(style)
 
--- redflat menu switcher
-function swpack.menu:init(style)
-	self.style = style
-end
+	-- Initialize vars
+	------------------------------------------------------------
+	local widg = wibox.widget.base.make_widget()
 
-function swpack.menu:activate(app, clist)
-	local items = {}
-	for _, c in ipairs(clist) do
-		local client_tags = ""
-		for _, t in ipairs(c:tags()) do client_tags = client_tags .. " " .. string.upper(t.name) end
-		table.insert(items, { string.format("[%s ] %s", client_tags, c.name), function() focus_and_raise(c) end })
+	-- updating values
+	local data = {
+		state = {},
+		height = style.state.height or nil,
+		width = style.state.width or nil
+	}
+
+	-- User functions
+	------------------------------------------------------------
+	function widg:setup(clist)
+		data.state = {}
+		for _, c in ipairs(clist) do
+			table.insert(data.state, { focused = client.focus == c, urgent = c.urgent, minimized = c.minimized })
+		end
+		self:emit_signal("widget::updated")
 	end
 
-	self.widget = redflat.menu({ theme = self.style, items = items })
-	redflat.util.placement.centered(self.widget.wibox, nil, screen[mouse.screen].workarea)
-	self.widget:show({ coords = self.widget.wibox:geometry() })
+	-- Fit
+	------------------------------------------------------------
+	widg.fit = function(widg, width, height)
+		return data.width or width, data.height or height
+	end
 
-	collectgarbage() -- FIX THIS !!!
+	-- Draw
+	------------------------------------------------------------
+	widg.draw = function(widg, wibox, cr, width, height)
+		local n = #data.state
+		local dx = 2 * style.state.radius + style.state.gap
+
+		cr:save()
+		cr:translate(- (2 * n * style.state.radius + (n - 1) * style.state.gap) / 2, 0)
+
+		for i = 1, n do
+			cr:set_source(color(
+				data.state[i].focused   and style.color.main or
+				data.state[i].urgent    and style.color.urgent or
+				data.state[i].minimized and style.color.gray or style.color.icon
+			))
+			cr:arc((i -1) * dx + width / 2 + style.state.radius, height / 2, style.state.radius, 0, TPI)
+			cr:fill()
+		end
+
+		cr:restore()
+	end
+
+	------------------------------------------------------------
+	return widg
 end
 
+-- Build icon with label item
+--------------------------------------------------------------------------------
+local function build_item(key, style)
+	local widg = {}
 
--- Initialize widget
+	-- Label
+	------------------------------------------------------------
+	local label = wibox.widget.textbox()
+	local label_constraint = wibox.layout.constraint(label, "exact", nil, style.appline.lheight)
+	label:set_markup(string.format('<span color="%s">%s</span>', style.color.text, format_key(key)))
+	label:set_align("center")
+	label:set_font(style.label_font)
+
+	widg.background = wibox.widget.background(label_constraint, style.color.bg)
+
+	-- Icon
+	------------------------------------------------------------
+	widg.svgbox = svgbox()
+	local icon_align = wibox.layout.align.horizontal()
+	local icon_constraint = wibox.layout.constraint(icon_align, "exact", style.appline.iwidth, nil)
+	icon_align:set_middle(widg.svgbox)
+
+	-- State
+	------------------------------------------------------------
+	widg.state = build_state_indicator(style)
+
+	-- Layout setup
+	------------------------------------------------------------
+	widg.layout = wibox.layout.align.vertical()
+	widg.layout:set_top(widg.state)
+	widg.layout:set_middle(wibox.layout.margin(icon_constraint, unpack(style.appline.igap)))
+	widg.layout:set_bottom(widg.background)
+
+	------------------------------------------------------------
+	return widg
+end
+
+-- Build widget with application list
+--------------------------------------------------------------------------------
+local function build_switcher(keys, style)
+
+	-- Init vars
+	------------------------------------------------------------
+	local widg = { items = {}, selected = nil }
+	local middle_layout = wibox.layout.fixed.horizontal()
+
+	widg.layout = wibox.layout.align.horizontal()
+
+	-- Sorted keys
+	------------------------------------------------------------
+	local sk = {}
+	for k in pairs(keys) do table.insert(sk, k) end
+	table.sort(sk)
+
+	-- Build icon row
+	------------------------------------------------------------
+	for _, key in ipairs(sk) do
+		widg.items[key] = build_item(key, style)
+		middle_layout:add(wibox.layout.margin(widg.items[key].layout, unpack(style.appline.im)))
+	end
+
+	widg.layout:set_middle(wibox.layout.margin(middle_layout, unpack(style.border_margin)))
+
+	-- Winget functions
+	------------------------------------------------------------
+	function widg:update(store, idb)
+		self.selected = nil
+		for key, data in pairs(store) do
+			local icon = data.app == "" and style.no_icon or idb[data.app] or style.df_icon
+			self.items[key].svgbox:set_image(icon)
+			self.items[key].svgbox:set_color(style.color.icon)
+		end
+	end
+
+	function widg:set_state(store)
+		for k, item in pairs(self.items) do
+			local clist = get_clients(store[k].app)
+			item.state:setup(clist)
+		end
+	end
+
+	function widg:reset()
+		if self.selected then self.items[self.selected].background:set_bg(style.color.bg) end
+		self.selected = nil
+	end
+
+	function widg:check_key(store, key)
+		local key = format_key(key, true)
+		if self.items[key] then
+			if self.selected then self.items[self.selected].background:set_bg(style.color.bg) end
+			self.items[key].background:set_bg(style.color.main)
+			self.selected = key
+		end
+	end
+
+	------------------------------------------------------------
+	return widg
+end
+
+-- Main widget
 -----------------------------------------------------------------------------------------------------------------------
+
+-- Build widget
+--------------------------------------------------------------------------------
 function qlaunch:init(args, style)
+
+	-- Init vars
+	------------------------------------------------------------
 	local args = args or {}
 	local keys = args.keys or {}
 	local switchmod = args.switchmod or { "Mod1" }
@@ -110,12 +281,42 @@ function qlaunch:init(args, style)
 
 	local style = redflat.util.table.merge(default_style(), style or {})
 	self.configfile = style.configfile
+	self.icon_db = dfparser.icon_list(style.icons)
 
 	self:load_config(keys)
 
-	self.switcher = swpack[style.sw_type]
-	self.switcher:init(style.switcher[style.sw_type])
+	-- Wibox
+	------------------------------------------------------------
+	self.wibox = wibox({
+		ontop        = true,
+		bg           = style.color.wibox,
+		border_width = style.border_width,
+		border_color = style.color.border
+	})
+	self.wibox:geometry(style.geometry)
+	redflat.util.placement.centered(self.wibox, nil, screen[mouse.screen].workarea)
 
+	-- Switcher widget
+	------------------------------------------------------------
+	self.switcher = build_switcher(self.store, style)
+	self.switcher:update(self.store, self.icon_db)
+
+	self.wibox:set_widget(self.switcher.layout)
+
+	-- Keygrabber
+	------------------------------------------------------------
+	self.keygrabber = function(mod, key, event)
+		if event == "press" then return false
+		elseif awful.util.table.hasitem(style.service_hotkeys.close,  key) then self:hide(true)
+		elseif awful.util.table.hasitem(style.service_hotkeys.switch, key) then self:hide()
+		else
+			self.switcher:check_key(self.store, key)
+			return false
+		end
+	end
+
+	-- Build hotkeys
+	------------------------------------------------------------
 	local tk = {}
 	for key, data in pairs(self.store) do
 		table.insert(tk, awful.key(switchmod, key, function() self:run_or_raise(key) end))
@@ -124,10 +325,33 @@ function qlaunch:init(args, style)
 	end
 	self.hotkeys = awful.util.table.join(unpack(tk))
 
+	-- Connect additional signals
+	------------------------------------------------------------
 	client.connect_signal("focus", function(c) self:set_last(c) end)
 	awesome.connect_signal("exit", function() self:save_config() end)
 end
 
+-- Widget show/hide
+--------------------------------------------------------------------------------
+function qlaunch:show()
+	self.switcher:set_state(self.store)
+	self.wibox.visible = true
+	awful.keygrabber.run(self.keygrabber)
+end
+
+function qlaunch:hide(dryrun)
+	self.wibox.visible = false
+	awful.keygrabber.stop(self.keygrabber)
+
+	if self.switcher.selected and not dryrun then
+		self:run_or_raise(self.switcher.selected)
+	end
+
+	self.switcher:reset()
+end
+
+-- Switch to app
+--------------------------------------------------------------------------------
 function qlaunch:run_or_raise(key, forced_run)
 	local app = self.store[key].app
 	if app == "" then return end
@@ -136,13 +360,17 @@ function qlaunch:run_or_raise(key, forced_run)
 	local cnum = #clients
 
 	if cnum == 0 or forced_run then
+		-- open new application
 		if self.store[key].run ~= "" then awful.util.spawn_with_shell(self.store[key].run) end
 	elseif cnum == 1 then
+		-- switch to sole app
 		focus_and_raise(clients[1])
 	else
 		if awful.util.table.hasitem(clients, client.focus) then
-			self.switcher:activate(app, clients)
+			-- run selection widget if wanted app focused
+			sw:show({ filter = build_filter(app) })
 		else
+			-- switch to last focused if availible or first in list otherwise
 			local last = awful.util.table.hasitem(clients, self.history[app])
 			if last then
 				focus_and_raise(self.history[app])
@@ -153,13 +381,23 @@ function qlaunch:run_or_raise(key, forced_run)
 	end
 end
 
+-- Bind new application to given hotkey
+--------------------------------------------------------------------------------
 function qlaunch:set_new_app(key)
-	if not client.focus then return end
-	local run_command = awful.util.pread(string.format("tr '\\0' ' ' < /proc/%s/cmdline", client.focus.pid))
-	self.store[key] = { app = client.focus.class:lower(), run = run_command }
-	naughty.notify({text=string.format("%s now binded with '%s'", client.focus.class, format_key(key))})
+	if client.focus then
+		local run_command = awful.util.pread(string.format("tr '\\0' ' ' < /proc/%s/cmdline", client.focus.pid))
+		self.store[key] = { app = client.focus.class:lower(), run = run_command }
+		naughty.notify({text=string.format("%s was binded with '%s'", client.focus.class, format_key(key))})
+	else
+		self.store[key] = { app = "", run = "" }
+		naughty.notify({text=string.format("'%s' key was unbinded", format_key(key))})
+	end
+
+	self.switcher:update(self.store, self.icon_db)
 end
 
+-- Save information about last focused client in widget store
+--------------------------------------------------------------------------------
 function qlaunch:set_last(c)
 	for _, data in pairs(self.store) do
 		if c.class:lower() == data.app then
@@ -169,6 +407,8 @@ function qlaunch:set_last(c)
 	end
 end
 
+-- Application list save/load
+--------------------------------------------------------------------------------
 function qlaunch:load_config(default_keys)
 	if is_file_exists(self.configfile) then
 		for line in io.lines(self.configfile) do
