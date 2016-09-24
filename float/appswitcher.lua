@@ -358,6 +358,7 @@ function appswitcher:show(args)
 
 	local args = args or {}
 	local filter = args.filter
+	local noaction = args.noaction
 
 	if not self.wibox then self:init() end
 	if self.wibox.visible then
@@ -373,14 +374,15 @@ function appswitcher:show(args)
 	cache.args = args
 	self.size_correction(#clients)
 	redutil.placement.centered(self.wibox, nil, screen[mouse.screen].workarea)
-	self.wibox.visible = true
 	self.update_timer:start()
 	awful.keygrabber.run(self.keygrabber)
 
 	self.index = awful.util.table.hasitem(self.clients_list, client.focus) or 1
 	self.winmark(self.clients_list[self.index], true)
-	self:switch(args)
+	if not noaction then self:switch(args) end
 	self.widget:emit_signal("widget::updated")
+
+	self.wibox.visible = true
 end
 
 -- Hide appswitcher widget
