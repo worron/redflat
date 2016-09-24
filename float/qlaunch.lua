@@ -19,8 +19,6 @@ local beautiful = require("beautiful")
 local color = require("gears.color")
 
 local redflat = require("redflat")
-local svgbox = require("redflat.gauge.svgbox")
-local dfparser = require("redflat.service.dfparser")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -44,10 +42,11 @@ local function default_style()
 		df_icon         = nil,
 		no_icon         = nil,
 		icons           = {},
+		notify_icon     = nil,
 		geometry        = { width = 1200, height = 180 },
 		border_margin   = { 20, 20, 10, 10 },
 		appline         = { iwidth = 160, im = { 10, 10, 5, 5 }, igap = { 0, 0, 10, 10 }, lheight = 30 },
-		state           = { gap = 4, radius = 5, height = 20, width = 20 },
+		state           = { gap = 4, radius = 3, size = 10, height = 20, width = 20 },
 		configfile      = os.getenv("HOME") .. "/.cache/awesome/applist",
 		label_font      = "Sans 12",
 		border_width    = 2,
@@ -116,6 +115,10 @@ function build_state_indicator(style)
 	------------------------------------------------------------
 	local widg = wibox.widget.base.make_widget()
 
+	local dx = style.state.size + style.state.gap
+	local ds = style.state.size - style.state.radius
+	local r  = style.state.radius
+
 	-- updating values
 	local data = {
 		state = {},
@@ -143,22 +146,22 @@ function build_state_indicator(style)
 	------------------------------------------------------------
 	widg.draw = function(widg, wibox, cr, width, height)
 		local n = #data.state
-		local dx = 2 * style.state.radius + style.state.gap
-
-		cr:save()
-		cr:translate(- (2 * n * style.state.radius + (n - 1) * style.state.gap) / 2, 0)
+		local x0 = (width - n * style.state.size - (n - 1) * style.state.gap) / 2
+		local y0 = (height - style.state.size) / 2
 
 		for i = 1, n do
 			cr:set_source(color(
-				data.state[i].focused   and style.color.main or
+				data.state[i].focused   and style.color.main   or
 				data.state[i].urgent    and style.color.urgent or
-				data.state[i].minimized and style.color.gray or style.color.icon
+				data.state[i].minimized and style.color.gray   or style.color.icon
 			))
-			cr:arc((i -1) * dx + width / 2 + style.state.radius, height / 2, style.state.radius, 0, TPI)
+			-- draw rounded rectangle
+			cr:arc(x0 + (i -1) * dx + ds, y0 + r,  r, -TPI / 4, 0)
+			cr:arc(x0 + (i -1) * dx + ds, y0 + ds, r, 0, TPI / 4)
+			cr:arc(x0 + (i -1) * dx + r,  y0 + ds, r, TPI / 4, TPI / 2)
+			cr:arc(x0 + (i -1) * dx + r,  y0 + r,  r, TPI / 2, 3 * TPI / 4)
 			cr:fill()
 		end
-
-		cr:restore()
 	end
 
 	------------------------------------------------------------
@@ -182,7 +185,7 @@ local function build_item(key, style)
 
 	-- Icon
 	------------------------------------------------------------
-	widg.svgbox = svgbox()
+	widg.svgbox = redflat.gauge.svgbox()
 	local icon_align = wibox.layout.align.horizontal()
 	local icon_constraint = wibox.layout.constraint(icon_align, "exact", style.appline.iwidth, nil)
 	icon_align:set_middle(widg.svgbox)
@@ -281,7 +284,8 @@ function qlaunch:init(args, style)
 
 	local style = redflat.util.table.merge(default_style(), style or {})
 	self.configfile = style.configfile
-	self.icon_db = dfparser.icon_list(style.icons)
+	self.icon_db = redflat.service.dfparser.icon_list(style.icons)
+	self.notify_icon = style.notify_icon
 
 	self:load_config(keys)
 
@@ -319,7 +323,7 @@ function qlaunch:init(args, style)
 	------------------------------------------------------------
 	local tk = {}
 	for key, data in pairs(self.store) do
-		table.insert(tk, awful.key(switchmod, key, function() self:run_or_raise(key) end))
+		table.insert(tk, awful.key(switchmod, key, nil, function() self:run_or_raise(key) end))
 		table.insert(tk, awful.key(setupmod, key, function() self:set_new_app(key) end))
 		table.insert(tk, awful.key(runmod, key, function() self:run_or_raise(key, true) end))
 	end
@@ -368,7 +372,7 @@ function qlaunch:run_or_raise(key, forced_run)
 	else
 		if awful.util.table.hasitem(clients, client.focus) then
 			-- run selection widget if wanted app focused
-			sw:show({ filter = build_filter(app) })
+			sw:show({ filter = build_filter(app), noaction = true })
 		else
 			-- switch to last focused if availible or first in list otherwise
 			local last = awful.util.table.hasitem(clients, self.history[app])
@@ -387,10 +391,16 @@ function qlaunch:set_new_app(key)
 	if client.focus then
 		local run_command = awful.util.pread(string.format("tr '\\0' ' ' < /proc/%s/cmdline", client.focus.pid))
 		self.store[key] = { app = client.focus.class:lower(), run = run_command }
-		naughty.notify({text=string.format("%s was binded with '%s'", client.focus.class, format_key(key))})
+		redflat.float.notify:show({
+			text = string.format("%s binded with '%s'", client.focus.class, format_key(key)),
+			icon = self.notify_icon,
+		})
 	else
 		self.store[key] = { app = "", run = "" }
-		naughty.notify({text=string.format("'%s' key was unbinded", format_key(key))})
+		redflat.float.notify:show({
+			text = string.format("'%s' key unbinded", format_key(key)),
+			icon = self.notify_icon,
+		})
 	end
 
 	self.switcher:update(self.store, self.icon_db)
