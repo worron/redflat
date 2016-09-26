@@ -409,6 +409,7 @@ end
 -- Save information about last focused client in widget store
 --------------------------------------------------------------------------------
 function qlaunch:set_last(c)
+	if not c.class then return end
 	for _, data in pairs(self.store) do
 		if c.class:lower() == data.app then
 			self.history[data.app] = c
