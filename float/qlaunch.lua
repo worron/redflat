@@ -321,13 +321,17 @@ function qlaunch:init(args, style)
 
 	-- Build hotkeys
 	------------------------------------------------------------
-	local tk = {}
-	for key, data in pairs(self.store) do
-		table.insert(tk, awful.key(switchmod, key, nil, function() self:run_or_raise(key) end))
-		table.insert(tk, awful.key(setupmod, key, function() self:set_new_app(key) end))
-		table.insert(tk, awful.key(runmod, key, function() self:run_or_raise(key, true) end))
+	if args.no_bind then
+		self.hotkeys = {}
+	else
+		local tk = {}
+		for key, data in pairs(self.store) do
+			table.insert(tk, awful.key(switchmod, key, nil, function() self:run_or_raise(key) end))
+			table.insert(tk, awful.key(setupmod, key, function() self:set_new_app(key) end))
+			table.insert(tk, awful.key(runmod, key, function() self:run_or_raise(key, true) end))
+		end
+		self.hotkeys = awful.util.table.join(unpack(tk))
 	end
-	self.hotkeys = awful.util.table.join(unpack(tk))
 
 	-- Connect additional signals
 	------------------------------------------------------------
