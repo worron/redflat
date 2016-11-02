@@ -6,7 +6,6 @@
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
-local table = table
 local string = string
 
 local wibox = require("wibox")
@@ -28,7 +27,7 @@ local function default_style()
 		geometry        = { width = 220, height = 60 },
 		label_font      = "Sans 14 bold",
 		border_width    = 2,
-		service_hotkeys = { close = { "Escape" }, ignore = {"Super_L"} },
+		service_hotkeys = { close = { "Escape" }, ignore = { "Super_L" }, stepback = { "BackSpace" } },
 		color           = { border = "#575757", wibox = "#202020" }
 	}
 
@@ -55,6 +54,7 @@ function prekey:init(style)
 	-- Init vars
 	------------------------------------------------------------
 	self.active = nil
+	self.parents = {}
 	self.tip = ""
 
 	local style = redflat.util.table.merge(default_style(), style or {})
@@ -80,12 +80,13 @@ function prekey:init(style)
 	self.keygrabber = function(mod, key, event)
 		if event == "release" then return false
 		elseif awful.util.table.hasitem(style.service_hotkeys.close,  key) then self:hide()
+		elseif awful.util.table.hasitem(style.service_hotkeys.stepback, key) then self:undo()
 		elseif awful.util.table.hasitem(style.service_hotkeys.ignore, key) then return true
 		else
 			for _, item in ipairs(self.active.items) do
 				if check_key(key, mod, item) then
-					self:activate(item)
 					if rednotify.wibox and rednotify.wibox.visible then redflat.float.notify:hide() end
+					self:activate(item)
 					return false
 				end
 			end
@@ -105,14 +106,32 @@ function prekey:activate(item)
 		item.action()
 		self:hide()
 	else
+		if #item.items == 0 then return end -- pure overcautiousness
+
 		if not self.active then
 			self.wibox.visible = true
 			awful.keygrabber.run(self.keygrabber)
+		else
+			self.parents[#self.parents + 1] = self.active
 		end
 
 		self.active = item
 		self.tip = self.tip == "" and self.active.label or self.tip .. " " .. self.active.label
 		self.label:set_text(self.tip)
+	end
+end
+
+-- Deactivate last key item
+--------------------------------------------------------------------------------
+function prekey:undo()
+	if #self.parents > 0 then
+		self.tip = self.tip:sub(1, - (#self.active.label + 2))
+		self.label:set_text(self.tip)
+
+		self.active = self.parents[#self.parents]
+		self.parents[#self.parents] = nil
+	else
+		self:hide()
 	end
 end
 
@@ -122,6 +141,7 @@ function prekey:hide()
 	self.wibox.visible = false
 	awful.keygrabber.stop(self.keygrabber)
 	self.active = nil
+	self.parents = {}
 	self.tip = ""
 end
 
