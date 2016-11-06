@@ -205,7 +205,7 @@ local function new_task(c_group, style)
 	task.widg:connect_signal("mouse::leave",
 		function()
 			redtasklist.tasktip.hidetimer:start()
-			redtasklist.winmenu.menu.hidetimer:start()
+			if not redtasklist.winmenu.menu.hidetimer.started then redtasklist.winmenu.menu.hidetimer:start() end
 		end
 	)
 	return task
@@ -591,7 +591,7 @@ function redtasklist.tasktip:init(buttons, style)
 	self.wibox:connect_signal("mouse::leave",
 		function()
 			self.hidetimer:start()
-			redtasklist.winmenu.menu.hidetimer:start()
+			if not redtasklist.winmenu.menu.hidetimer.started then redtasklist.winmenu.menu.hidetimer:start() end
 		end
 	)
 end

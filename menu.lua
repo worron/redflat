@@ -276,7 +276,7 @@ function menu:hide()
 	self.sel = nil
 	awful.keygrabber.stop(self._keygrabber)
 
-	if self.hidetimer then self.hidetimer:stop() end
+	if self.hidetimer and self.hidetimer.started then self.hidetimer:stop() end
 
 	self.wibox.visible = false
 end
