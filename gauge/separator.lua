@@ -22,7 +22,8 @@ local separator = {}
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		margin = { 0, 0, 0, 0 },
+		marginv = { 0, 0, 0, 0 },
+		marginh = { 0, 0, 0, 0 },
 		color  = { shadow1 = "#141414", shadow2 = "#313131" }
 	}
 	return redutil.table.merge(style, redutil.check(beautiful, "gauge.separator") or {})
@@ -36,6 +37,9 @@ local function separator_base(horizontal, style)
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local style = redutil.table.merge(default_style(), style or {})
+	if not style.margin then
+		style.margin = horizontal and style.marginh or style.marginv
+	end
 
 	-- Create custom widget
 	--------------------------------------------------------------------------------
@@ -43,7 +47,7 @@ local function separator_base(horizontal, style)
 
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height)
+	function widg:fit(context, width, height)
 		if horizontal then
 			return width, 2
 		else
@@ -53,7 +57,7 @@ local function separator_base(horizontal, style)
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
+	function widg:draw(context, cr, width, height)
 		cr:set_source(color(style.color.shadow1))
 		if horizontal then cr:rectangle(0, 0, width, 1)
 		else cr:rectangle(0, 0, 1, height) end
@@ -66,7 +70,7 @@ local function separator_base(horizontal, style)
 	end
 
 	--------------------------------------------------------------------------------
-	return wibox.layout.margin(widg, unpack(style.margin))
+	return wibox.container.margin(widg, unpack(style.margin))
 end
 
 -- Horizontal and vertial variants
