@@ -195,6 +195,17 @@ local function wposition(grid, n, workarea, dir)
 	return pos
 end
 
+-- Correct area geometry
+------------------------------------------------------------
+function util.desktop.add_gap(geometry, gap)
+	return {
+		x = geometry.x + gap,
+		y = geometry.y + gap,
+		width = geometry.width - 2 * gap,
+		height = geometry.height - 2 * gap
+	}
+end
+
 -- Calculate size and position for desktop widget
 ------------------------------------------------------------
 function util.desktop.wgeometry(grid, place, workarea)

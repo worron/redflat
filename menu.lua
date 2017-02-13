@@ -23,6 +23,8 @@
 local wibox = require("wibox")
 local awful = require("awful")
 local beautiful = require("beautiful")
+local gears = require("gears")
+
 local setmetatable = setmetatable
 local tonumber = tonumber
 local string = string
@@ -111,7 +113,7 @@ end
 -- Function to set menu or submenu in position
 -----------------------------------------------------------------------------------------------------------------------
 local function set_coords(_menu, screen_idx, m_coords)
-	local s_geometry = redutil.placement.add_gap(screen[screen_idx].workarea, _menu.theme.screen_gap)
+	local s_geometry = redutil.desktop.add_gap(screen[screen_idx].workarea, _menu.theme.screen_gap)
 
 	local screen_w = s_geometry.x + s_geometry.width
 	local screen_h = s_geometry.y + s_geometry.height
@@ -305,7 +307,7 @@ function menu:add(args)
 	------------------------------------------------------------
 	if type(args[1]) ~= "string" and args.widget then
 		local element = {}
-		element.width, element.height = args.widget:fit(-1, -1)
+		element.width, element.height = args.widget:fit({}, -1, -1)
 		self.add_size = self.add_size + element.height
 		self.layout:add(args.widget)
 		return
@@ -333,9 +335,7 @@ function menu:add(args)
 
 	item.parent = self
 	item.theme = item.theme or theme
-	--wibox.widget.base.check_widget(item.widget)
-	item._background = wibox.widget.background()
-	item._background:set_widget(item.widget)
+	item._background = wibox.container.background(item.widget)
 	item._background:set_fg(item.theme.color.text)
 	item._background:set_bg(item.theme.color.wibox)
 
@@ -415,8 +415,7 @@ function menu.entry(parent, args)
 	-- Set left icon if needed
 	------------------------------------------------------------
 	local iconbox = nil
-	local margin = wibox.layout.margin()
-	margin:set_widget(label)
+	local margin = wibox.container.margin(label)
 
 	if args.icon then
 		iconbox = svgbox(args.icon, nil, args.theme.color.left_icon)
@@ -446,7 +445,7 @@ function menu.entry(parent, args)
 	local left = wibox.layout.fixed.horizontal()
 
 	if iconbox ~= nil then
-		left:add(wibox.layout.margin(iconbox, unpack(args.theme.icon_margin)))
+		left:add(wibox.container.margin(iconbox, unpack(args.theme.icon_margin)))
 	end
 
 	left:add(margin)
@@ -455,10 +454,10 @@ function menu.entry(parent, args)
 	layout:set_left(left)
 
 	if right_iconbox ~= nil then
-		layout:set_right(wibox.layout.margin(right_iconbox, unpack(args.theme.ricon_margin)))
+		layout:set_right(wibox.container.margin(right_iconbox, unpack(args.theme.ricon_margin)))
 	end
 
-	local layout_const = wibox.layout.constraint(layout, "exact", args.theme.width, args.theme.height)
+	local layout_const = wibox.container.constraint(layout, "exact", args.theme.width, args.theme.height)
 
 	------------------------------------------------------------
 	return {
@@ -491,6 +490,7 @@ function menu.new(args, parent)
 		items        = {},
 		keys         = {},
 		parent       = parent,
+		-- layout       = wibox.layout.fixed.vertical(),
 		layout       = wibox.layout.fixed.vertical(),
 		hide_timeout = parent and parent.hide_timeout or args.hide_timeout,
 		add_size     = 0,
@@ -535,7 +535,7 @@ function menu.new(args, parent)
 		-- timer only for root menu
 		-- all submenus will be hidden automatically
 		if root == _menu then
-			_menu.hidetimer = timer({ timeout = _menu.hide_timeout })
+			_menu.hidetimer = gears.timer({ timeout = _menu.hide_timeout })
 			_menu.hidetimer:connect_signal("timeout", function() _menu:hide() end)
 		end
 
