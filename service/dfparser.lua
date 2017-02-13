@@ -243,7 +243,7 @@ end
 --------------------------------------------------------------------------------
 local function parse_dir(dir, style)
 	local programs = {}
-	local files = awful.util.pread('find '.. dir ..' -maxdepth 1 -name "*.desktop" 2>/dev/null')
+	local files = redutil.read_output('find '.. dir ..' -maxdepth 1 -name "*.desktop" 2>/dev/null')
 
 	for file in string.gmatch(files, "[^\n]+") do
 		local program = parse(file, style)

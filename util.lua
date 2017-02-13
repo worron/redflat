@@ -38,6 +38,14 @@ function util.read_ffile(path)
 	return output
 end
 
+function util.read_output(cmd)
+	local file = assert(io.popen(cmd, 'r'))
+	local output = file:read('*all')
+	file:close()
+
+	return output
+end
+
 -- Check if deep key exists
 -----------------------------------------------------------------------------------------------------------------------
 function util.check(t, s)
