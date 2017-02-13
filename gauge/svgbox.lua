@@ -143,7 +143,7 @@ function svgbox.new(image, resize_allowed, newcolor)
 
 	-- Fit
 	------------------------------------------------------------
-	function widg:fit(width, height)
+	function widg:fit(context, width, height)
 		if self.width or self.height then
 			return self.width or width, self.height or height
 		else
@@ -162,7 +162,7 @@ function svgbox.new(image, resize_allowed, newcolor)
 
 	-- Draw
 	------------------------------------------------------------
-	function widg:draw(wibox, cr, width, height)
+	function widg:draw(context, cr, width, height)
 		if width == 0 or height == 0 or not self._image then return end
 
 		local w, h = self._image.width, self._image.height
