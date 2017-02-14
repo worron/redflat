@@ -207,7 +207,7 @@ function menu:exec(num)
 		item.child:show()
 	elseif type(cmd) == "string" then
 		if not item.theme.nohide then menu.get_root(self):hide() end
-		awful.util.spawn(cmd)
+		awful.spawn(cmd)
 	elseif type(cmd) == "function" then
 		if not item.theme.nohide then menu.get_root(self):hide() end
 		cmd()
