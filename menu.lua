@@ -23,7 +23,7 @@
 local wibox = require("wibox")
 local awful = require("awful")
 local beautiful = require("beautiful")
-local gears = require("gears")
+local timer = require("gears.timer")
 
 local setmetatable = setmetatable
 local tonumber = tonumber
@@ -534,7 +534,7 @@ function menu.new(args, parent)
 		-- timer only for root menu
 		-- all submenus will be hidden automatically
 		if root == _menu then
-			_menu.hidetimer = gears.timer({ timeout = _menu.theme.hide_timeout })
+			_menu.hidetimer = timer({ timeout = _menu.theme.hide_timeout })
 			_menu.hidetimer:connect_signal("timeout", function() _menu:hide() end)
 		end
 

@@ -32,7 +32,10 @@ function tooltip.new(args, style)
 	local args = args or {}
 	local style = redutil.table.merge(default_style(), style or {})
 
-	args = redutil.table.merge(args, style)
+	for k, v in pairs(style) do
+		if not args[k] then args[k] = v end
+	end
+
 	return awful.tooltip(args)
 end
 
