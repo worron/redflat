@@ -81,7 +81,7 @@ function layoutbox:init(layouts, style)
 
 	-- Initialize menu
 	------------------------------------------------------------
-	self.menu = redmenu({ hide_timeout = 1, theme = style.menu, items = items })
+	self.menu = redmenu({ theme = style.menu, items = items })
 end
 
 -- Show layout menu
@@ -139,7 +139,9 @@ function layoutbox.new(args, style)
 	tag.connect_signal("property::layout", update)
 	w:connect_signal("mouse::leave",
 		function()
-			if layoutbox.menu.wibox.visible then layoutbox.menu.hidetimer:start() end
+			if layoutbox.menu.hidetimer and layoutbox.menu.wibox.visible then
+				layoutbox.menu.hidetimer:start()
+			end
 		end
 	)
 

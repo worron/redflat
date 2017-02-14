@@ -60,6 +60,7 @@ local function default_theme()
 		auto_expand  = true,
 		auto_hotkey  = false,
 		svg_scale    = { false, false },
+		hide_timeout = 0,
 		color        = { border = "#575757", text = "#aaaaaa", highlight = "#eeeeee",
 		                 main = "#b1222b", wibox = "#202020",
 		                 submenu_icon = nil, right_icon = nil, left_icon = nil }
@@ -490,9 +491,7 @@ function menu.new(args, parent)
 		items        = {},
 		keys         = {},
 		parent       = parent,
-		-- layout       = wibox.layout.fixed.vertical(),
 		layout       = wibox.layout.fixed.vertical(),
-		hide_timeout = parent and parent.hide_timeout or args.hide_timeout,
 		add_size     = 0,
 		theme        = redutil.table.merge(parent and parent.theme or default_theme(), args.theme or {})
 	}
@@ -529,13 +528,13 @@ function menu.new(args, parent)
 
 	-- Set menu autohide timer
 	------------------------------------------------------------
-	if _menu.hide_timeout then
+	if _menu.theme.hide_timeout > 0 then
 		local root = _menu:get_root()
 
 		-- timer only for root menu
 		-- all submenus will be hidden automatically
 		if root == _menu then
-			_menu.hidetimer = gears.timer({ timeout = _menu.hide_timeout })
+			_menu.hidetimer = gears.timer({ timeout = _menu.theme.hide_timeout })
 			_menu.hidetimer:connect_signal("timeout", function() _menu:hide() end)
 		end
 
