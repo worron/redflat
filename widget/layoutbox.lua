@@ -49,7 +49,7 @@ function layoutbox:init(layouts, style)
 
 	-- Set tooltip
 	------------------------------------------------------------
-	layoutbox.tp = tooltip({}, style.tooltip)
+	layoutbox.tp = tooltip({})
 
 	-- Construct layout list
 	------------------------------------------------------------
@@ -64,7 +64,7 @@ function layoutbox:init(layouts, style)
 	-- Update tooltip function
 	------------------------------------------------------------
 	function self:update_tooltip(layout_name)
-		layoutbox.tp:set_text(style.name_alias[layout_name] or layout_name)
+		self.tp:set_text(style.name_alias[layout_name] or layout_name)
 	end
 
 	-- Update menu function
@@ -82,18 +82,6 @@ function layoutbox:init(layouts, style)
 	-- Initialize menu
 	------------------------------------------------------------
 	self.menu = redmenu({ hide_timeout = 1, theme = style.menu, items = items })
-end
-
--- Widget update function
------------------------------------------------------------------------------------------------------------------------
-local function update(w, screen, style)
-	local layout = layout.getname(layout.get(screen))
-	w:set_image(style.icon[layout] or style.icon.unknown)
-	layoutbox:update_tooltip(layout)
-
-	if layoutbox.menu.wibox.visible then
-		layoutbox:update_menu(last_tag)
-	end
 end
 
 -- Show layout menu
@@ -116,33 +104,47 @@ end
 -- @param screen The screen number that the layout will be represented for
 -- @param layouts List of layouts
 -----------------------------------------------------------------------------------------------------------------------
-function layoutbox.new(args)
+function layoutbox.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local screen = args.screen or 1
+	local args = args or {}
+	local layouts = args.layouts or awful.layout.layouts
+	local s = args.screen or 1
 	local style = redutil.table.merge(default_style(), style or {})
 	local w = svgbox()
 	w:set_color(style.color.icon)
 
-	if not layoutbox.menu then layoutbox:init(args.layouts, style) end
+	if not layoutbox.menu then layoutbox:init(layouts, style) end
 
 	-- Set tooltip
 	--------------------------------------------------------------------------------
 	layoutbox.tp:add_to_object(w)
 
-	-- Set signals
+	-- Update function
 	--------------------------------------------------------------------------------
-	local function update_on_tag_selection(t)
-		return update(w, awful.tag.getscreen(t), style)
+	local function update()
+		local layout = layout.getname(layout.get(s))
+		w:set_image(style.icon[layout] or style.icon.unknown)
+		layoutbox:update_tooltip(layout)
+
+		if layoutbox.menu.wibox.visible then
+			layoutbox:update_menu(last_tag)
+		end
 	end
 
-	awful.tag.attached_connect_signal(screen, "property::selected", update_on_tag_selection)
-	awful.tag.attached_connect_signal(screen, "property::layout", update_on_tag_selection)
-	--w:connect_signal("mouse::leave", function() layoutbox.menu.hidetimer:start() end)
+	-- Set signals
+	--------------------------------------------------------------------------------
+	tag.connect_signal("property::selected", update)
+	tag.connect_signal("property::layout", update)
+	w:connect_signal("mouse::leave",
+		function()
+			if layoutbox.menu.wibox.visible then layoutbox.menu.hidetimer:start() end
+		end
+	)
 
 	--------------------------------------------------------------------------------
-	update(w, screen, style)
+	update()
 	return w
 end
 
