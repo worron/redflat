@@ -21,7 +21,7 @@ local wibox = require("wibox")
 local beautiful = require("beautiful")
 
 local redutil = require("redflat.util")
-local redtag = require("redflat.gauge.redtag")
+local basetag = require("redflat.gauge.tag")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -32,7 +32,7 @@ local taglist = { filter = {}, mt = {} }
 local function default_style()
 	local style = {
 		tag       = {},
-		widget    = redtag.new,
+		widget    = basetag.blue.new,
 		separator = nil
 	}
 	return redutil.table.merge(style, redutil.check(beautiful, "widget.taglist") or {})
@@ -45,7 +45,6 @@ end
 --------------------------------------------------------------------------------
 local function get_state(t)
 	local state = { focus = false, urgent = false, list = {} }
-	local focused_client = client.focus
 	local client_list = t:clients()
 
 	for _, c in pairs(client_list) do
@@ -65,7 +64,7 @@ end
 --------------------------------------------------------------------------------
 local function filtrate_tags(screen, filter)
 	local tags = {}
-	for _, t in ipairs(awful.tag.gettags(screen)) do
+	for _, t in ipairs(screen.tags) do
 		if not awful.tag.getproperty(t, "hide") and filter(t) then
 			table.insert(tags, t)
 		end
@@ -87,6 +86,7 @@ function taglist.new(screen, filter, buttons, style)
 
 	local layout = wibox.layout.fixed.horizontal()
 	local data = setmetatable({}, { __mode = 'k' })
+	local filter = filter or taglist.filter.all
 
 	-- Update function
 	--------------------------------------------------------------------------------
@@ -105,7 +105,6 @@ function taglist.new(screen, filter, buttons, style)
 			if cache then
 				widg = cache
 			else
-				--widg = redtag(style.tag)
 				widg = style.widget(style.tag)
 				widg:buttons(redutil.create_buttons(buttons, t))
 				data[t] = widg
@@ -120,12 +119,12 @@ function taglist.new(screen, filter, buttons, style)
 			if style.separator and i < #tags then
 				layout:add(style.separator)
 			end
-	   end
+		end
 		------------------------------------------------------------
 	end
 
 	local uc = function (c) return update(c.screen) end
-	local ut = function (t) return update(awful.tag.getscreen(t)) end
+	local ut = function (t) return update(t.screen) end
 
 	-- Signals setup
 	--------------------------------------------------------------------------------
@@ -139,7 +138,7 @@ function taglist.new(screen, filter, buttons, style)
 		"tagged", "untagged", "unmanage"
 	}
 
-	for _, sg in ipairs(tag_signals) do awful.tag.attached_connect_signal(screen, sg, ut) end
+	for _, sg in ipairs(tag_signals) do awful.tag.attached_connect_signal(nil, sg, ut) end
 	for _, sg in ipairs(client_signals) do client.connect_signal(sg, uc) end
 
 	client.connect_signal("property::screen", function(c) update(screen) end)
