@@ -59,9 +59,14 @@ local function get_state(t)
 	state.active = t.selected
 	state.occupied = #client_list > 0 and not (#client_list == 1 and state.focus)
 	state.text = string.upper(t.name)
-	state.tip = string.format("%s (%d apps)", t.name, #client_list) -- tooltip string
 
 	return state
+end
+
+-- Generate tooltip string
+--------------------------------------------------------------------------------
+local function make_tip(t)
+	return string.format("%s (%d apps)", t.name, #(t:clients()))
 end
 
 -- Find all tag to be shown
@@ -77,20 +82,18 @@ local function filtrate_tags(screen, filter)
 end
 
 -- Create a new taglist widget
--- @param screen The screen to draw taglist for
--- @param filter Filter function to define what tags will be listed
--- @param buttons A table with buttons binding to set
--- @param style
 -----------------------------------------------------------------------------------------------------------------------
-function taglist.new(screen, filter, buttons, style)
+function taglist.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(default_style(), style or {})
-
+	local cs = args.screen
 	local layout = wibox.layout.fixed.horizontal()
 	local data = setmetatable({}, { __mode = 'k' })
-	local filter = filter or taglist.filter.all
+	local filter = args.filter or taglist.filter.all
+	local hint = args.hint or make_tip
+
+	local style = redutil.table.merge(default_style(), style or {})
 
 	-- Set tooltip
 	--------------------------------------------------------------------------------
@@ -98,8 +101,8 @@ function taglist.new(screen, filter, buttons, style)
 
 	-- Update function
 	--------------------------------------------------------------------------------
-	local update = function (s)
-		if s ~= screen then return end
+	local update = function(s)
+		if s ~= cs then return end
 		local tags = filtrate_tags(s, filter)
 
 		-- Construct taglist
@@ -114,7 +117,7 @@ function taglist.new(screen, filter, buttons, style)
 				widg = cache
 			else
 				widg = style.widget(style.tag)
-				widg:buttons(redutil.create_buttons(buttons, t))
+				if args.buttons then  widg:buttons(redutil.create_buttons(args.buttons, t)) end
 				data[t] = widg
 
 				-- set optional tooltip (what about removing?)
@@ -127,7 +130,7 @@ function taglist.new(screen, filter, buttons, style)
 			-- set tag state info to widget
 			local state = get_state(t)
 			widg:set_state(state)
-			widg.tip = state.tip -- dirty
+			widg.tip = hint(t)
 
 			-- add widget and separator to base layout
 			layout:add(widg)
@@ -156,10 +159,10 @@ function taglist.new(screen, filter, buttons, style)
 	for _, sg in ipairs(tag_signals) do awful.tag.attached_connect_signal(nil, sg, ut) end
 	for _, sg in ipairs(client_signals) do client.connect_signal(sg, uc) end
 
-	client.connect_signal("property::screen", function(c) update(screen) end)
+	client.connect_signal("property::screen", function(c) update(cs) end) -- dirty
 
 	--------------------------------------------------------------------------------
-	update(screen) -- create taglist widget
+	update(cs) -- create taglist widget
 	return layout  -- return taglist widget
 end
 
