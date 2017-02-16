@@ -19,9 +19,11 @@ local string = string
 local awful = require("awful")
 local wibox = require("wibox")
 local beautiful = require("beautiful")
+local layout = require("awful.layout")
 
 local redutil = require("redflat.util")
 local basetag = require("redflat.gauge.tag")
+local tooltip = require("redflat.float.tooltip")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -33,6 +35,7 @@ local function default_style()
 	local style = {
 		tag       = {},
 		widget    = basetag.blue.new,
+		show_tip  = false,
 		separator = nil
 	}
 	return redutil.table.merge(style, redutil.check(beautiful, "widget.taglist") or {})
@@ -56,6 +59,7 @@ local function get_state(t)
 	state.active = t.selected
 	state.occupied = #client_list > 0 and not (#client_list == 1 and state.focus)
 	state.text = string.upper(t.name)
+	state.tip = string.format("%s (%d apps)", t.name, #client_list) -- tooltip string
 
 	return state
 end
@@ -88,6 +92,10 @@ function taglist.new(screen, filter, buttons, style)
 	local data = setmetatable({}, { __mode = 'k' })
 	local filter = filter or taglist.filter.all
 
+	-- Set tooltip
+	--------------------------------------------------------------------------------
+	if not taglist.tp then taglist.tp = tooltip() end
+
 	-- Update function
 	--------------------------------------------------------------------------------
 	local update = function (s)
@@ -108,11 +116,18 @@ function taglist.new(screen, filter, buttons, style)
 				widg = style.widget(style.tag)
 				widg:buttons(redutil.create_buttons(buttons, t))
 				data[t] = widg
+
+				-- set optional tooltip (what about removing?)
+				if style.show_tip then
+					taglist.tp:add_to_object(widg)
+					widg:connect_signal("mouse::enter", function() taglist.tp:set_text(widg.tip) end)
+				end
 			end
 
 			-- set tag state info to widget
 			local state = get_state(t)
 			widg:set_state(state)
+			widg.tip = state.tip -- dirty
 
 			-- add widget and separator to base layout
 			layout:add(widg)

@@ -33,7 +33,7 @@ local function default_style()
 		             wibox = "#202020" }
 	}
 
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.bluetag") or {})
+	return redutil.table.merge(style, redutil.check(beautiful, "gauge.tag.blue") or {})
 end
 
 
