@@ -20,6 +20,7 @@ local awful = require("awful")
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local layout = require("awful.layout")
+local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
 local basetag = require("redflat.gauge.tag")
@@ -27,7 +28,7 @@ local tooltip = require("redflat.float.tooltip")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
-local taglist = { filter = {}, mt = {} }
+local taglist = { filter = {}, mt = {} , queue = setmetatable({}, { __mode = 'k' }) }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
@@ -36,6 +37,7 @@ local function default_style()
 		tag       = {},
 		widget    = basetag.blue.new,
 		show_tip  = false,
+		timeout   = 0.05,
 		separator = nil
 	}
 	return redutil.table.merge(style, redutil.check(beautiful, "widget.taglist") or {})
@@ -81,9 +83,12 @@ local function filtrate_tags(screen, filter)
 	return tags
 end
 
+
 -- Create a new taglist widget
 -----------------------------------------------------------------------------------------------------------------------
 function taglist.new(args, style)
+
+	if not taglist.queue then taglist:init() end
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
@@ -139,10 +144,17 @@ function taglist.new(args, style)
 			end
 		end
 		------------------------------------------------------------
+
+		if taglist.queue[s] and taglist.queue[s].started then taglist.queue[s]:stop() end
 	end
 
-	local uc = function (c) return update(c.screen) end
-	local ut = function (t) return update(t.screen) end
+	-- Create timer to prevent multiply call
+	--------------------------------------------------------------------------------
+	taglist.queue[cs] = timer({ timeout = style.timeout })
+	taglist.queue[cs]:connect_signal("timeout", function() update(cs) end)
+
+	local uc = function (c) taglist.queue[c.screen]:again() end
+	local ut = function (t) taglist.queue[t.screen]:again() end
 
 	-- Signals setup
 	--------------------------------------------------------------------------------
