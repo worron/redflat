@@ -35,7 +35,7 @@ local svgbox = require("redflat.gauge.svgbox")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
-local redtasklist = { filter = {}, winmenu = {}, tasktip = {}, action = {}, mt = {} }
+local redtasklist = { filter = {}, winmenu = {}, tasktip = {}, action = {}, mt = {}, }
 
 local last = {
 	client      = nil,
@@ -53,6 +53,7 @@ local function default_style()
 		width       = 40,
 		char_digit  = 3,
 		need_group  = true,
+		timeout     = 0.05,
 		task_margin = { 5, 5, 0, 0 }
 	}
 	style.winmenu = {
@@ -384,9 +385,9 @@ local function construct_tasktip(c_group, layout, data, buttons, style)
 			if state.urgent    then line:mark_urgent()    end
 
 			local gap = (i - 1) * (tb_h + style.margin[3] + style.margin[4])
-			line.field:buttons(redutil.create_buttons(buttons, { group = { c }, gap = gap }))
+			if buttons then line.field:buttons(redutil.create_buttons(buttons, { group = { c }, gap = gap })) end
 		else
-			line.field:buttons({})
+			if buttons then line.field:buttons({}) end
 		end
 
 		tip_width = math.max(tip_width, tb_w)
@@ -609,19 +610,18 @@ function redtasklist.tasktip:show(c_group)
 end
 
 -- Create a new tasklist widget
--- @param screen The screen to draw tasklist for
--- @param filter Filter function to define what clients will be listed
--- @param style Settings for redtask widget
 -----------------------------------------------------------------------------------------------------------------------
-function redtasklist.new(screen, filter, buttons, style)
+function redtasklist.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
+	local cs = args.screen
+	local filter = args.filter or redtasklist.filter.currenttags
+
 	local style = redutil.table.merge(default_style(), style or {})
-	local filter = filter or redtasklist.filter.currenttags
 
 	redtasklist.winmenu:init(style.winmenu)
-	redtasklist.tasktip:init(buttons, style.tasktip)
+	redtasklist.tasktip:init(args.buttons, style.tasktip)
 
 	local tasklist = wibox.layout.flex.horizontal()
 	local data = {}
@@ -632,12 +632,12 @@ function redtasklist.new(screen, filter, buttons, style)
 	-- Tasklist update function
 	------------------------------------------------------------
 	local function tasklist_update()
-		local clients = visible_clients(filter, screen)
+		local clients = visible_clients(filter, cs)
 		local client_groups = group_task(clients, style.need_group)
 
 		last.sorted_list = sort_list(client_groups)
 
-		tasklist_construct(client_groups, tasklist, data, buttons, style)
+		tasklist_construct(client_groups, tasklist, data, args.buttons, style)
 	end
 
 	-- Full update including pop-up widgets
@@ -648,7 +648,13 @@ function redtasklist.new(screen, filter, buttons, style)
 		redtasklist.winmenu:update(last.client)
 	end
 
+	-- Create timer to prevent multiply call
+	--------------------------------------------------------------------------------
+	tasklist.queue = timer({ timeout = style.timeout })
+	tasklist.queue:connect_signal("timeout", function() update(cs); tasklist.queue:stop() end)
+
 	-- Signals setup
+	-- TODO: split signals for screens
 	--------------------------------------------------------------------------------
 	local client_signals = {
 		"property::urgent", "property::sticky", "property::minimized",
@@ -659,8 +665,10 @@ function redtasklist.new(screen, filter, buttons, style)
 
 	local tag_signals = { "property::selected", "property::activated" }
 
-	for _, sg in ipairs(client_signals) do client.connect_signal(sg, update) end
-	for _, sg in ipairs(tag_signals)    do tag.attached_connect_signal(screen, sg, update) end
+	-- for _, sg in ipairs(client_signals) do client.connect_signal(sg, update) end
+	-- for _, sg in ipairs(tag_signals)    do tag.attached_connect_signal(cs, sg, update) end
+	for _, sg in ipairs(client_signals) do client.connect_signal(sg, function() tasklist.queue:again() end) end
+	for _, sg in ipairs(tag_signals) do tag.attached_connect_signal(cs, sg, function() tasklist.queue:again() end) end
 
 	-- force hide pop-up widgets if any client was closed
 	-- because last vars may be no actual anymore
