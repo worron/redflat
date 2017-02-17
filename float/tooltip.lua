@@ -69,7 +69,7 @@ function tooltip.new(args, style)
 	--------------------------------------------------------------------------------
 	 function ttp:set_geometry()
 		local geom = self.wibox:geometry()
-		local n_w, n_h = self.widget:get_preferred_size(mouse.screen)
+		local n_w, n_h = self.widget:get_preferred_size()
 		if geom.width ~= n_w or geom.height ~= n_h then
 			self.wibox:geometry({
 				width = n_w + style.margin[1] + style.margin[2],

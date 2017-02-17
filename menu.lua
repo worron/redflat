@@ -44,6 +44,8 @@ local svgbox = require("redflat.gauge.svgbox")
 -----------------------------------------------------------------------------------------------------------------------
 local menu = { mt = {} }
 
+local _fake_context = { dpi = beautiful.xresources.get_dpi() } -- fix this
+
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_theme()
@@ -308,7 +310,7 @@ function menu:add(args)
 	------------------------------------------------------------
 	if type(args[1]) ~= "string" and args.widget then
 		local element = {}
-		element.width, element.height = args.widget:fit({}, -1, -1)
+		element.width, element.height = args.widget:fit(_fake_context, -1, -1)
 		self.add_size = self.add_size + element.height
 		self.layout:add(args.widget)
 		return
