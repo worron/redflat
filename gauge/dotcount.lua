@@ -68,14 +68,14 @@ function counter.new(style)
 
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height)
+	function widg:fit(context, width, height)
 		local width = (style.dot_size + style.dot_gap_h) * data.column_num - style.dot_gap_h
 		return width, height
 	end
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(mcountwidg, wibox, cr, width, height)
+	function widg:draw(context, cr, width, height)
 		local maxnum = style.row_num * data.column_num
 		local gap_v = (height - style.row_num * style.dot_size) / (style.row_num - 1)
 

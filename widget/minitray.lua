@@ -19,6 +19,7 @@ local ipairs = ipairs
 local wibox = require("wibox")
 local awful = require("awful")
 local beautiful = require("beautiful")
+local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
 local dotcount = require("redflat.gauge.dotcount")
@@ -35,7 +36,7 @@ local function default_style()
 	local style = {
 		dotcount     = {},
 		geometry     = { height = 40 },
-		screen_pos   = {},
+		screen_pos   = function(s) return { x = s.workarea.x, y = s.workarea.y } end,
 		screen_gap   = 0,
 		border_width = 2,
 		color        = { wibox = "#202020", border = "#575757" }
@@ -92,8 +93,12 @@ function minitray:show()
 	if items == 0 then items = 1 end
 
 	self.wibox:geometry({ width = self.geometry.width or self.geometry.height * items })
-	if self.screen_pos[mouse.screen] then self.wibox:geometry(self.screen_pos[mouse.screen]) end
-	redutil.placement.no_offscreen(self.wibox, self.screen_gap, screen[mouse.screen].workarea)
+	if self.screen_pos then
+		self.wibox:geometry(self.screen_pos(mouse.screen))
+	else
+		awful.placement.under_mouse(self.wibox)
+	end
+	redutil.placement.no_offscreen(self.wibox, self.screen_gap)
 
 	-- Show
 	------------------------------------------------------------
@@ -133,9 +138,6 @@ function minitray.new(args, style)
 	--------------------------------------------------------------------------------
 	if not minitray.wibox then
 		minitray:init(style)
-		-- !!! This line is a workaround !!!
-		-- I don't know why but awesome.systray() working right only after first toggle
-		minitray:show(); minitray:hide()
 	end
 
 	-- Create tray widget
