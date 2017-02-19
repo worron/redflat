@@ -13,15 +13,30 @@ local pairs = pairs
 local math = math
 local string = string
 local setmetatable = setmetatable
+
 local awful = require("awful")
 local wibox = require("wibox")
 local beautiful = require("beautiful")
+local surface = require("gears.surface")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
 local util = { text = {}, cairo = {}, table = {}, desktop = {}, placement = {}, client = {} }
 
 util.floating_layout = {}
+
+-----------------------------------------------------------------------------------------------------------------------
+function util.placeholder(args)
+	local args = args or {}
+	local tb = wibox.widget {
+		markup = args.txt or "?",
+		align  = "center",
+		valign = "center",
+		widget = wibox.widget.textbox
+	}
+
+	return surface.widget_to_surface(tb, args.width or 48, args.height or 48)
+end
 
 -- Read from file
 -----------------------------------------------------------------------------------------------------------------------
