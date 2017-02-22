@@ -21,7 +21,7 @@ local surface = require("gears.surface")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local util = { text = {}, cairo = {}, table = {}, desktop = {}, placement = {}, client = {} }
+local util = { text = {}, cairo = {}, table = {}, desktop = {}, placement = {}, client = {}, key = {} }
 
 util.floating_layout = {}
 
@@ -192,17 +192,35 @@ function util.table.sum(t, n)
 	return s
 end
 
--- Apply handler on every raw table element and join result
+-- Key utilits
+-----------------------------------------------------------------------------------------------------------------------
+
+-- Build awful keys from reflat raw keys table
 ------------------------------------------------------------
-function util.table.join_raw(t, handler)
+function util.key.build(t)
 	local temp = {}
 
 	for _, v in ipairs(t) do
-		if v.args then table.insert(temp, handler(unpack(v.args))) end
+		table.insert(temp, awful.key(unpack(v)))
 	end
 
 	return awful.util.table.join(unpack(temp))
 end
+
+-- Check if redflat raw key matched with awful prompt key
+------------------------------------------------------------
+function util.key.match_prompt(rawkey, mod, key)
+	local modcheck = true
+	local count = 0
+
+	for k, _ in pairs(mod) do
+		modcheck = modcheck and awful.util.table.hasitem(rawkey[1], k)
+		count = count + 1
+	end
+
+	return #rawkey[1] == count and modcheck and key == rawkey[2]
+end
+
 
 -- Desktop utilits
 -----------------------------------------------------------------------------------------------------------------------
@@ -325,8 +343,8 @@ local function size_correction(c, geometry, is_restore)
 	local sign = is_restore and - 1 or 1
 	local bg = sign * 2 * c.border_width
 
-    if geometry.width  then geometry.width  = geometry.width  - bg end
-    if geometry.height then geometry.height = geometry.height - bg end
+	if geometry.width  then geometry.width	= geometry.width  - bg end
+	if geometry.height then geometry.height = geometry.height - bg end
 end
 
 -- Client geometry correction by border width
