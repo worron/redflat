@@ -71,7 +71,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function floatprompt:run()
 	if not self.wibox then self:init() end
-	awful.placement.centered(self.wibox, { parent = mouse.screen, honor_workarea = true })
+	redutil.placement.centered(self.wibox, nil, mouse.screen.workarea)
 	self.wibox.visible = true
 	self.info = false
 

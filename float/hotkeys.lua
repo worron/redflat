@@ -34,7 +34,6 @@ local function default_style()
 	local style = {
 		geometry      = { width = 800, height = 600 },
 		border_margin = { 10, 10, 10, 10 },
-		sep_margin    = { 20, 20, 10, 10 },
 		tspace        = 5,
 		border_width  = 2,
 		ltimeout      = 0.05,
@@ -253,7 +252,7 @@ function hotkeys:show()
 	if not self.wibox then self:init() end
 
 	if not self.wibox.visible then
-		awful.placement.centered(self.wibox, { parent = mouse.screen, honor_workarea = true })
+		redutil.placement.centered(self.wibox, nil, mouse.screen.workarea)
 		self.wibox.visible = true
 		awful.keygrabber.run(self.keygrabber)
 	else

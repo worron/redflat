@@ -315,7 +315,7 @@ function apprunner:show()
 		self.applist:set_select(1)
 	end
 
-	awful.placement.centered(self.wibox, { parent = mouse.screen, honor_workarea = true })
+	redutil.placement.centered(self.wibox, nil, mouse.screen.workarea)
 	self.wibox.visible = true
 	hotkeys:set_pack("Apprunner widget", self.keys, self.keytip.column, self.keytip.geometry)
 

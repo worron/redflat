@@ -116,7 +116,7 @@ end
 -- Function to set menu or submenu in position
 -----------------------------------------------------------------------------------------------------------------------
 local function set_coords(_menu, screen_idx, m_coords)
-	local s_geometry = redutil.desktop.add_gap(screen[screen_idx].workarea, _menu.theme.screen_gap)
+	local s_geometry = redutil.placement.add_gap(screen[screen_idx].workarea, _menu.theme.screen_gap)
 
 	local screen_w = s_geometry.x + s_geometry.width
 	local screen_h = s_geometry.y + s_geometry.height
