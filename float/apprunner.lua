@@ -22,18 +22,29 @@ local svgbox = require("redflat.gauge.svgbox")
 local dfparser = require("redflat.service.dfparser")
 local redutil = require("redflat.util")
 local decoration = require("redflat.float.decoration")
+local hotkeys = require("redflat.float.hotkeys")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
-local apprunner = { applist = {} }
+local apprunner = { applist = {}, command = "" }
 
 local programs = {}
 local lastquery = nil
 
 -- key bindings
 apprunner.keys = {
-	up    = { "Up" },
-	down  = { "Down" }
+	{
+		{}, "Down", function() apprunner:down() end,
+		{ description = "Select next item", group = "Navigation" }
+	},
+	{
+		{}, "Up", function() apprunner:up() end,
+		{ description = "Select previous item", group = "Navigation" }
+	},
+	{
+		{ "Mod4" }, "F1", function() hotkeys:show() end,
+		{ description = "Show hotkeys helper", group = "Help" }
+	},
 }
 
 -- Generate default theme vars
@@ -53,6 +64,7 @@ local function default_style()
 		name_font        = "Sans 12",
 		comment_font     = "Sans 12",
 		border_width     = 2,
+		keytip           = { geometry = { width = 600, height = 300 } },
 		dimage           = redutil.placeholder(),
 		color            = { border = "#575757", text = "#aaaaaa", highlight = "#eeeeee", main = "#b1222b",
 		                     bg = "#161616", bg_second = "#181818", wibox = "#202020", icon = "a0a0a0" }
@@ -204,33 +216,32 @@ local function list_filtrate(query)
 end
 
 -- Functions to navigate through application list
---------------------------------------------------------------------------------
-local function switch_down()
-	if apprunner.applist.selected < math.min(apprunner.itemnum, #programs.current) then
-		apprunner.applist:set_select(apprunner.applist.selected + 1)
-	elseif apprunner.applist.selected + apprunner.applist.position - 1 < #programs.current then
-		apprunner.applist.position = apprunner.applist.position + 1
-		apprunner.applist:update(programs.current)
+-----------------------------------------------------------------------------------------------------------------------
+function apprunner:down()
+	if self.applist.selected < math.min(self.itemnum, #programs.current) then
+		self.applist:set_select(self.applist.selected + 1)
+	elseif self.applist.selected + self.applist.position - 1 < #programs.current then
+		self.applist.position = self.applist.position + 1
+		self.applist:update(programs.current)
 	end
 end
 
-local function switch_up()
-	if apprunner.applist.selected > 1 then
-		apprunner.applist:set_select(apprunner.applist.selected - 1)
-	elseif apprunner.applist.position > 1 then
-		apprunner.applist.position = apprunner.applist.position - 1
-		apprunner.applist:update(programs.current)
+function apprunner:up()
+	if self.applist.selected > 1 then
+		self.applist:set_select(self.applist.selected - 1)
+	elseif self.applist.position > 1 then
+		self.applist.position = self.applist.position - 1
+		self.applist:update(programs.current)
 	end
 end
 
 -- Keypress handler
 -----------------------------------------------------------------------------------------------------------------------
 local function keypressed_callback(mod, key, comm)
-	if     awful.util.table.hasitem(apprunner.keys.down, key) then switch_down()
-	elseif awful.util.table.hasitem(apprunner.keys.up,   key) then switch_up()
-	else
-		return false
+	for _, k in ipairs(apprunner.keys) do
+		if redutil.key.match_prompt(k, mod, key) then k[3](); return true end
 	end
+	return false
 end
 
 -- Initialize apprunner widget
@@ -241,6 +252,7 @@ function apprunner:init()
 	--------------------------------------------------------------------------------
 	local style = default_style()
 	self.itemnum = style.itemnum
+	self.keytip = style.keytip
 
 	-- get full application list
 	programs.all = dfparser.program_list(style.icon_style)
@@ -305,15 +317,27 @@ function apprunner:show()
 
 	awful.placement.centered(self.wibox, { parent = mouse.screen, honor_workarea = true })
 	self.wibox.visible = true
+	hotkeys:set_pack("Apprunner widget", self.keys, self.keytip.column, self.keytip.geometry)
 
 	return awful.prompt.run({
 		prompt = "",
 		textbox = self.textbox,
 		exe_callback = function () self.applist.items[self.applist.selected]:run() end,
-		done_callback = function () self.wibox.visible = false end,
-		keypressed_callback = function (...) keypressed_callback(...) end,
-		changed_callback = function (...) list_filtrate(...) end,
+		done_callback = function () self:hide() end,
+		keypressed_callback = keypressed_callback,
+		changed_callback = list_filtrate,
 	})
+end
+
+function apprunner:hide()
+	self.wibox.visible = false
+	hotkeys:remove_pack()
+end
+
+-- Set user hotkeys
+-----------------------------------------------------------------------------------------------------------------------
+function apprunner:set_keys(keys)
+	self.keys = keys
 end
 
 -- End
