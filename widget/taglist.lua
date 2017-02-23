@@ -153,8 +153,8 @@ function taglist.new(args, style)
 	taglist.queue[cs] = timer({ timeout = style.timeout })
 	taglist.queue[cs]:connect_signal("timeout", function() update(cs) end)
 
-	local uc = function (c) taglist.queue[c.screen]:again() end
-	local ut = function (t) taglist.queue[t.screen]:again() end
+	local uc = function (c) if taglist.queue[c.screen] then taglist.queue[c.screen]:again() end end
+	local ut = function (t) if taglist.queue[t.screen] then taglist.queue[t.screen]:again() end end
 
 	-- Signals setup
 	--------------------------------------------------------------------------------

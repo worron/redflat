@@ -116,7 +116,7 @@ local function tagmenu_items(action, style)
 		if not awful.tag.getproperty(t, "hide") then
 			table.insert(
 				items,
-				{ t.name, function() action(t, last.client) end, style.micon.blank, style.micon.blank }
+				{ t.name, function() action(t) end, style.micon.blank, style.micon.blank }
 			)
 		end
 	end
@@ -469,8 +469,8 @@ function redtasklist.winmenu:init(style)
 
 	-- Construct tag submenus ("move" and "add")
 	------------------------------------------------------------
-	local movemenu_items = tagmenu_items(awful.client.movetotag, style)
-	local addmenu_items  = tagmenu_items(awful.client.toggletag, style)
+	local movemenu_items = tagmenu_items(function(t) last.client:move_to_tag(t) end, style)
+	local addmenu_items  = tagmenu_items(function(t) last.client:toggle_tag(t)  end, style)
 
 	-- Create menu
 	------------------------------------------------------------
