@@ -64,7 +64,7 @@ local function default_style()
 		name_font        = "Sans 12",
 		comment_font     = "Sans 12",
 		border_width     = 2,
-		keytip           = { geometry = { width = 600, height = 300 } },
+		keytip           = { geometry = { width = 400, height = 300 } },
 		dimage           = redutil.placeholder(),
 		color            = { border = "#575757", text = "#aaaaaa", highlight = "#eeeeee", main = "#b1222b",
 		                     bg = "#161616", bg_second = "#181818", wibox = "#202020", icon = "a0a0a0" }

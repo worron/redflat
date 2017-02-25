@@ -38,11 +38,11 @@ local math = math
 
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
-
+local hotkeys = require("redflat.float.hotkeys")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local menu = { mt = {} }
+local menu = { mt = {}, action = {} }
 
 local _fake_context = { dpi = beautiful.xresources.get_dpi() } -- fix this
 
@@ -63,6 +63,7 @@ local function default_theme()
 		auto_hotkey  = false,
 		svg_scale    = { false, false },
 		hide_timeout = 0,
+		keytip       = { geometry = { width = 400, height = 400 } },
 		color        = { border = "#575757", text = "#aaaaaa", highlight = "#eeeeee",
 		                 main = "#b1222b", wibox = "#202020",
 		                 submenu_icon = nil, right_icon = nil, left_icon = nil }
@@ -70,15 +71,6 @@ local function default_theme()
 	return redutil.table.merge(style, beautiful.menu or {})
 end
 
--- Key bindings for menu navigation.
-menu.menu_keys = {
-	up    = { "Up" },
-	down  = { "Down" },
-	back  = { "Left" },
-	exec  = { "Return" },
-	enter = { "Right" },
-	close = { "Escape" }
-}
 
 -- Support functions
 -----------------------------------------------------------------------------------------------------------------------
@@ -158,43 +150,86 @@ end
 -- A new instance for every submenu should be used
 -----------------------------------------------------------------------------------------------------------------------
 
-local grabber
+-- Menu functions
+--------------------------------------------------------------------------------
+function menu.action.up(_menu, sel)
+	local sel_new = sel - 1 < 1 and #_menu.items or sel - 1
+	_menu:item_enter(sel_new)
+end
 
--- localize small alias functions for keygrabber in logical block
-do
-	-- support functions
-	local function go_up(menu, sel)
-		local sel_new = sel - 1 < 1 and #menu.items or sel - 1
-		menu:item_enter(sel_new)
+function menu.action.down(_menu, sel)
+	local sel_new = sel + 1 > #_menu.items and 1 or sel + 1
+	_menu:item_enter(sel_new)
+end
+
+function menu.action.enter(_menu, sel)
+	if sel > 0 and _menu.items[sel].child then _menu.items[sel].child:show() end
+end
+
+function menu.action.exec(_menu, sel)
+	if sel > 0 then _menu:exec(sel, { exec = true }) end
+end
+
+function menu.action.back(_menu, sel)
+	_menu:hide()
+end
+
+function menu.action.close(_menu, sel)
+	menu.get_root(_menu):hide()
+end
+
+-- Menu keys
+--------------------------------------------------------------------------------
+menu.keys = {
+	{
+		{}, "Down", menu.action.down,
+		{ description = "Select next item", group = "Navigation" }
+	},
+	{
+		{}, "Up", menu.action.up,
+		{ description = "Select previous item", group = "Navigation" }
+	},
+	{
+		{}, "Left", menu.action.back,
+		{ description = "Go back", group = "Navigation" }
+	},
+	{
+		{}, "Right", menu.action.enter,
+		{ description = "Open submenu", group = "Navigation" }
+	},
+	{
+		{}, "Escape", menu.action.close,
+		{ description = "Close menu", group = "Action" }
+	},
+	{
+		{}, "Return", menu.action.exec,
+		{ description = "Activate item", group = "Action" }
+	},
+	{
+		{ "Mod4" }, "F1", function() hotkeys:show() end,
+		{ description = "Show hotkeys helper", group = "Help" }
+	},
+}
+
+-- this one only displayed in hotkeys helper
+local _fake_keys = {
+	{
+		{}, "_ (underlined letter)", nil,
+		{ description = "Activate item", group = "Action" }
+	},
+}
+
+-- Menu keygrabber
+--------------------------------------------------------------------------------
+local grabber = function(_menu, mod, key, event)
+	if event ~= "press" then return end
+	local sel = _menu.sel or 0
+
+	for _, k in ipairs(menu.keys) do
+		if redutil.key.match_grabber(k, mod, key) then k[3](_menu, sel); return false end
 	end
 
-	local function go_down(menu, sel)
-		local sel_new = sel + 1 > #menu.items and 1 or sel + 1
-		menu:item_enter(sel_new)
-	end
-
-	local function enter(menu, sel)
-		if menu.items[sel].child then menu.items[sel].child:show() end
-	end
-
-	local function exec(menu, sel)
-		menu:exec(sel, { exec = true })
-	end
-
-	-- keygrabber
-	grabber = function(_menu, mod, key, event)
-		if event ~= "press" then return end
-		local sel = _menu.sel or 0
-
-		if     awful.util.table.hasitem(menu.menu_keys.up,    key)             then go_up(_menu, sel)
-		elseif awful.util.table.hasitem(menu.menu_keys.down,  key)             then go_down(_menu, sel)
-		elseif awful.util.table.hasitem(menu.menu_keys.enter, key) and sel > 0 then enter(_menu, sel)
-		elseif awful.util.table.hasitem(menu.menu_keys.exec,  key) and sel > 0 then exec(_menu, sel)
-		elseif awful.util.table.hasitem(menu.menu_keys.back,  key)             then _menu:hide()
-		elseif awful.util.table.hasitem(menu.menu_keys.close, key)             then menu.get_root(_menu):hide()
-		else   check_access_key(_menu, key)
-		end
-	end
+	check_access_key(_menu, key)
 end
 
 -- Execute menu item
@@ -267,6 +302,9 @@ function menu:show(args)
 	awful.keygrabber.run(self._keygrabber)
 	self.wibox.visible = true
 	self:item_enter(1)
+
+	local tips = self.theme.auto_hotkey and awful.util.table.join(menu.keys, _fake_keys) or menu.keys
+	hotkeys:set_pack("Menu", tips, self.theme.keytip.column, self.theme.keytip.geometry)
 end
 
 -- Hide a menu popup.
@@ -284,6 +322,7 @@ function menu:hide()
 	if self.hidetimer and self.hidetimer.started then self.hidetimer:stop() end
 
 	self.wibox.visible = false
+	hotkeys:remove_pack()
 end
 
 -- Toggle menu visibility
@@ -294,6 +333,12 @@ function menu:toggle(args)
 	else
 		self:show(args)
 	end
+end
+
+-- Set user hotkeys
+--------------------------------------------------------------------------------
+function menu:set_keys(keys)
+	self.keys = keys
 end
 
 -- Add a new menu entry.
