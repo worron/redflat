@@ -22,7 +22,7 @@ local svgbox = require("redflat.gauge.svgbox")
 local dfparser = require("redflat.service.dfparser")
 local redutil = require("redflat.util")
 local decoration = require("redflat.float.decoration")
-local hotkeys = require("redflat.float.hotkeys")
+local redtip = require("redflat.float.hotkeys")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -42,7 +42,7 @@ apprunner.keys = {
 		{ description = "Select previous item", group = "Navigation" }
 	},
 	{
-		{ "Mod4" }, "F1", function() hotkeys:show() end,
+		{ "Mod4" }, "F1", function() redtip:show() end,
 		{ description = "Show hotkeys helper", group = "Help" }
 	},
 }
@@ -317,7 +317,7 @@ function apprunner:show()
 
 	redutil.placement.centered(self.wibox, nil, mouse.screen.workarea)
 	self.wibox.visible = true
-	hotkeys:set_pack("Apprunner widget", self.keys, self.keytip.column, self.keytip.geometry)
+	redtip:set_pack("Apprunner widget", self.keys, self.keytip.column, self.keytip.geometry)
 
 	return awful.prompt.run({
 		prompt = "",
@@ -331,7 +331,7 @@ end
 
 function apprunner:hide()
 	self.wibox.visible = false
-	hotkeys:remove_pack()
+	redtip:remove_pack()
 end
 
 -- Set user hotkeys

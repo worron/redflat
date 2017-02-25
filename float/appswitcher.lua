@@ -16,11 +16,10 @@ local math = math
 local unpack = unpack
 local table = table
 
--- local Gdk = require("lgi").Gdk
--- local pixbuf = require("lgi").GdkPixbuf
 local awful = require("awful")
 local beautiful = require("beautiful")
 local wibox = require("wibox")
+local timer = require("gears.timer")
 local gears = require("gears")
 
 local pixbuf
@@ -32,7 +31,8 @@ local is_pixbuf_loaded = pcall(load_pixbuf)
 
 local dfparser = require("redflat.service.dfparser")
 local redutil = require("redflat.util")
-local redtitlebar = require("redflat.titlebar")
+local redtip = require("redflat.float.hotkeys")
+-- local redtitlebar = require("redflat.titlebar")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -43,9 +43,29 @@ local svgcache = {}
 
 -- key bindings
 appswitcher.keys = {
-	next  = { "a", "A" },
-	prev  = { "q", "Q" },
-	close = { "Super_L" },
+	{
+		{}, "Right", function() appswitcher:switch() end,
+		{ description = "Select next app", group = "Navigation" }
+	},
+	{
+		{}, "Left", function() appswitcher:switch({ reverse = true }) end,
+		{ description = "Select previous app", group = "Navigation" }
+	},
+	{
+		{}, "Escape", function() appswitcher:hide() end,
+		{ description = "Exit", group = "Action" }
+	},
+	{
+		{ "Mod4" }, "F1", function() redtip:show()  end,
+		{ description = "Show hotkeys helper", group = "Help" }
+	},
+}
+
+local _fake_keys = {
+	{
+		{}, "N", nil,
+		{ description = "Select app by key", group = "Navigation" }
+	},
 }
 
 
@@ -65,6 +85,7 @@ local function default_style()
 		icon_style      = {},
 		update_timeout  = 1,
 		min_icon_number = 4,
+		keytip          = { geometry = { width = 400, height = 320 } },
 		title_font      = "Sans 12",
 		hotkeys         = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" },
 		font            = { font = "Sans", size = 16, face = 0, slant = 0 },
@@ -150,6 +171,8 @@ function appswitcher:init()
 	local icon_db = dfparser.icon_list(style.icon_style)
 	local iscf = 1 -- icon size correction factor
 
+	self.keytip = style.keytip
+
 	-- Create floating wibox for appswitcher widget
 	--------------------------------------------------------------------------------
 	self.wibox = wibox({
@@ -166,14 +189,13 @@ function appswitcher:init()
 	end
 
 	self.keygrabber = function(mod, key, event)
-		if event == "press" then return false
-		elseif awful.util.table.hasitem(self.keys.close, key) then self:hide()
-		elseif awful.util.table.hasitem(self.keys.next,  key) then self:switch()
-		elseif awful.util.table.hasitem(self.keys.prev,  key) then self:switch({ reverse = true })
-		elseif awful.util.table.hasitem(style.hotkeys,   key) then focus_by_key(key)
-		else
-			return false
+		if event == "press" then return false end
+
+		for _, k in ipairs(self.keys) do
+			if redutil.key.match_grabber(k, mod, key) then k[3](); return false end
 		end
+
+		if awful.util.table.hasitem(style.hotkeys,   key) then focus_by_key(key) end
 	end
 
 	-- Function to form title string for given client (name and tags)
@@ -239,11 +261,11 @@ function appswitcher:init()
 
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height) return width, height end
+	function widg:fit(context, width, height) return width, height end
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
+	function widg.draw(widg, context, cr, width, height)
 
 		-- calculate preview pattern size
 		local psize = {
@@ -324,16 +346,16 @@ function appswitcher:init()
 	self.titlebox:set_align("center")
 	self.titlebox:set_font(style.title_font)
 
-	local title_layout = wibox.layout.constraint(self.titlebox, "exact", nil, style.title_height)
+	local title_layout = wibox.container.constraint(self.titlebox, "exact", nil, style.title_height)
 	local vertical_layout = wibox.layout.fixed.vertical()
-	local widget_bg = wibox.widget.background(
-		wibox.layout.margin(self.widget, unpack(style.preview_margin)),
+	local widget_bg = wibox.container.background(
+		wibox.container.margin(self.widget, unpack(style.preview_margin)),
 		style.color.bg
 	)
 	vertical_layout:add(title_layout)
 	vertical_layout:add(widget_bg)
 
-	self.wibox:set_widget(wibox.layout.margin(vertical_layout, unpack(style.border_margin)))
+	self.wibox:set_widget(wibox.container.margin(vertical_layout, unpack(style.border_margin)))
 
 	-- Set preview icons update timer
 	--------------------------------------------------------------------------------
@@ -370,10 +392,10 @@ function appswitcher:show(args)
 	if #clients == 0 then return end
 
 	self.clients_list = clients
-	cache.titlebar = redtitlebar.hide_all(clients)
+	-- cache.titlebar = redtitlebar.hide_all(clients)
 	cache.args = args
 	self.size_correction(#clients)
-	redutil.placement.centered(self.wibox, nil, screen[mouse.screen].workarea)
+	redutil.placement.centered(self.wibox, nil, mouse.screen.workarea)
 	self.update_timer:start()
 	awful.keygrabber.run(self.keygrabber)
 
@@ -383,6 +405,9 @@ function appswitcher:show(args)
 	self.widget:emit_signal("widget::updated")
 
 	self.wibox.visible = true
+
+	local tips = awful.util.table.join(self.keys, _fake_keys)
+	redtip:set_pack("Menu", tips, self.keytip.column, self.keytip.geometry)
 end
 
 -- Hide appswitcher widget
@@ -392,8 +417,9 @@ function appswitcher:hide(is_empty_call)
 	if not self.wibox then self:init() end
 	if not self.wibox.visible then return end
 	self.wibox.visible = false
+	redtip:remove_pack()
 	self.update_timer:stop()
-	redtitlebar.show_all(cache.titlebar)
+	-- redtitlebar.show_all(cache.titlebar)
 	awful.keygrabber.stop(self.keygrabber)
 
 	self.winmark(self.clients_list[self.index], false)
@@ -417,6 +443,12 @@ function appswitcher:switch(args)
 	self.winmark(self.clients_list[self.index], true)
 	self.titlebox:set_markup(self.title_generator(self.clients_list[self.index]))
 	self.widget:emit_signal("widget::updated")
+end
+
+-- Set user hotkeys
+-----------------------------------------------------------------------------------------------------------------------
+function appswitcher:set_keys(keys)
+	self.keys = keys
 end
 
 -- End

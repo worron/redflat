@@ -255,8 +255,8 @@ function hotkeys:show()
 		redutil.placement.centered(self.wibox, nil, mouse.screen.workarea)
 		self.wibox.visible = true
 		awful.keygrabber.run(self.keygrabber)
-	else
-		self:hide()
+	-- else
+	-- 	self:hide()
 	end
 end
 

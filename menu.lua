@@ -38,7 +38,7 @@ local math = math
 
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
-local hotkeys = require("redflat.float.hotkeys")
+local redtip = require("redflat.float.hotkeys")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -206,7 +206,7 @@ menu.keys = {
 		{ description = "Activate item", group = "Action" }
 	},
 	{
-		{ "Mod4" }, "F1", function() hotkeys:show() end,
+		{ "Mod4" }, "F1", function() redtip:show() end,
 		{ description = "Show hotkeys helper", group = "Help" }
 	},
 }
@@ -304,7 +304,7 @@ function menu:show(args)
 	self:item_enter(1)
 
 	local tips = self.theme.auto_hotkey and awful.util.table.join(menu.keys, _fake_keys) or menu.keys
-	hotkeys:set_pack("Menu", tips, self.theme.keytip.column, self.theme.keytip.geometry)
+	redtip:set_pack("Menu", tips, self.theme.keytip.column, self.theme.keytip.geometry)
 end
 
 -- Hide a menu popup.
@@ -322,7 +322,7 @@ function menu:hide()
 	if self.hidetimer and self.hidetimer.started then self.hidetimer:stop() end
 
 	self.wibox.visible = false
-	hotkeys:remove_pack()
+	redtip:remove_pack()
 end
 
 -- Toggle menu visibility
