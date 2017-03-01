@@ -218,7 +218,7 @@ function util.key.match_prompt(rawkey, mod, key)
 		count = count + 1
 	end
 
-	return #rawkey[1] == count and modcheck and key == rawkey[2]
+	return #rawkey[1] == count and modcheck and key:lower() == rawkey[2]:lower()
 end
 
 -- Check if redflat raw key matched with awful prompt key
@@ -226,7 +226,7 @@ end
 function util.key.match_grabber(rawkey, mod, key)
 	local modcheck = #mod == #rawkey[1]
 	for _, v in ipairs(mod) do modcheck = modcheck and awful.util.table.hasitem(rawkey[1], v) end
-	return modcheck and key == rawkey[2]
+	return modcheck and key:lower() == rawkey[2]:lower()
 end
 
 

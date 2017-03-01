@@ -190,7 +190,7 @@ function hotkeys:init()
 	-- Keygrabber
 	--------------------------------------------------------------------------------
 	self.keygrabber = function(mod, key, event)
-		if hasitem(self.keys.close, key) then
+		if hasitem(self.keys.close, key) and event == "release" then
 			self:hide()
 			return false
 		end
@@ -263,6 +263,8 @@ end
 -- hide
 function hotkeys:hide()
 	self.wibox.visible = false
+	self.lastkey = nil
+	self:highlight()
 	awful.keygrabber.stop(self.keygrabber)
 end
 

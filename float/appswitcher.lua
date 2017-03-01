@@ -56,7 +56,7 @@ appswitcher.keys = {
 		{ description = "Exit", group = "Action" }
 	},
 	{
-		{ "Mod4" }, "F1", function() redtip:show()  end,
+		{ "Mod4" }, "F1", function() redtip:show() end,
 		{ description = "Show hotkeys helper", group = "Help" }
 	},
 }
