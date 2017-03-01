@@ -38,8 +38,9 @@ local function default_style()
 		border_width  = 2,
 		ltimeout      = 0.05,
 		font          = "Sans 12",
-		-- keysfont      = "Sans bold 12",
+		keyfont       = "Sans bold 12",
 		titlefont     = "Sans bold 14",
+		is_align      = false,
 		color         = { border = "#575757", text = "#aaaaaa", main = "#b1222b", wibox = "#202020",
 		                  gray = "#575757" }
 	}
@@ -49,6 +50,14 @@ end
 
 -- Support functions
 -----------------------------------------------------------------------------------------------------------------------
+
+-- Calculate keytip length
+--------------------------------------------------------------------------------
+local function check_key_len(k)
+	local res = k.key:len()
+	for _, v in pairs(k.mod) do res = res + v:len() + 1 end
+	return res
+end
 
 -- Parse raw key table
 --------------------------------------------------------------------------------
@@ -67,19 +76,33 @@ local function parse(rawkeys, columns)
 
 	-- split keys to columns
 	for i = 1, columns do
-		keys[i] = {}
+		keys[i] = { groups = {}, length = nil, names = {} }
 		local chunk = { unpack(rk, 1, p) }
 		rk = { unpack(rk, p + 1) }
 
+		-- build key column
 		for _, v in ipairs(chunk) do
 			local data = v[#v]
-			table.insert(keys[i], {
-				mod = v[1],
-				key = v[2],
+			local k = {
+				mod = v[1], key = v[2],
 				description = data.description,
-				group = data.group,
-				keyset = data.keyset or { v[2] },
-			})
+				group       = data.group,
+				keyset      = data.keyset or { v[2] },
+				length      = check_key_len({ mod = v[1], key = v[2] })
+			}
+			if not keys[i].groups[k.group] then
+				keys[i].groups[k.group] = {}
+				table.insert(keys[i].names, k.group) -- sorted names list to save group order
+			end
+			table.insert(keys[i].groups[k.group], k)
+
+			-- calculate max tip lenght
+			if not keys[i].length or keys[i].length < k.length then keys[i].length = k.length end
+		end
+
+		-- sort key by lenght inside group
+		for name, group in pairs(keys[i].groups) do
+			table.sort(group, function(a, b) return a.length < b.length end)
 		end
 	end
 
@@ -93,33 +116,40 @@ local function build_tip(pack, style, keypressed)
 
 	for i, column in ipairs(pack) do
 		local coltxt = ""
-		local group = nil
 
-		for _, key in ipairs(column) do
-			if key.group ~= group then
-				group = key.group
-				coltxt = coltxt ..  string.format(
-					'\n<span font="%s" color="%s">%s</span>\n', style.titlefont, style.color.gray, group
-				)
-			end
+		for _, name in pairs(column.names) do
+			local group = column.groups[name]
 
-			local line = key.key
+			-- set group title
+			coltxt = coltxt ..  string.format(
+				'\n<span font="%s" color="%s">%s</span>\n', style.titlefont, style.color.gray, name
+			)
 
-			if #key.mod > 0 then
-				local modtext = ""
+			-- build key tip line
+			for _, key in ipairs(group) do
 
-				for i, v in ipairs(key.mod) do
-					modtext = i > 1 and modtext .. " + " .. v or v
+				-- key with align
+				local line = string.format('<b>%s</b>', key.key)
+				if style.is_align then
+					line = line .. string.rep(" ", column.length - key.length)
 				end
 
-				line = modtext .. " " .. line
-			end
+				-- key with mods
+				if #key.mod > 0 then
+					local fm = {}
+					for i, v in ipairs(key.mod) do fm[i] = string.format('<b>%s</b>', v) end
+					table.insert(fm, line)
+					line = table.concat(fm, string.format('<span color="%s">+</span>', style.color.gray))
+				end
 
-			local clr = keypressed and hasitem(key.keyset, keypressed) and style.color.main or style.color.text
-			line = string.format(
-				'<span font="%s" color="%s"><b>%s</b> %s</span>', style.font, clr, line, key.description
-			)
-			coltxt = coltxt .. line .. "\n"
+				-- key with description
+				local clr = keypressed and hasitem(key.keyset, keypressed) and style.color.main or style.color.text
+				line = string.format(
+					'<span color="%s"><span font="%s">%s</span>   %s</span>',
+					clr, style.keyfont, line, key.description
+				)
+				coltxt = coltxt .. line .. "\n"
+			end
 		end
 		text[i] = coltxt
 	end
@@ -198,7 +228,6 @@ function hotkeys:init()
 		self.lastkey = event == "press" and key or nil
 		ltimer:again()
 	end
-
 end
 
 
@@ -236,6 +265,7 @@ function hotkeys:highlight()
 		if not self.boxes[i] then -- TODO: weak table?
 			self.boxes[i] = wibox.widget.textbox()
 			self.boxes[i]:set_valign("top")
+			self.boxes[i]:set_font(self.style.font)
 		end
 
 		self.boxes[i]:set_markup(column)
