@@ -33,7 +33,7 @@ local function default_style()
 		marksize     = { width = 200, height = 100, r = 20 },
 		gradstep     = 100,
 		linegap      = 35,
-		keytip       = { geometry = { width = 600, height = 600 } },
+		keytip       = { base = { geometry = { width = 600, height = 600 } } },
 		titlefont    = { font = "Sans", size = 28, face = 1, slant = 0 },
 		num          = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "F1", "F3", "F4", "F5" },
 		font         = { font = "Sans", size = 22, face = 1, slant = 0 },
@@ -223,7 +223,8 @@ function navigator:run()
 	-- set keys tip
 	self.tip_settled = tip
 	if tip then
-		redtip:set_pack("Layout " .. l.name, tip, self.style.keytip.column, self.style.keytip.geometry)
+		local tip_style = self.style.keytip[l] or self.style.keytip.base
+		redtip:set_pack("Layout " .. l.name, tip, tip_style.column, tip_style.geometry)
 	end
 end
 

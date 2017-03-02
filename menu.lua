@@ -212,10 +212,10 @@ menu.keys = {
 }
 
 -- this one only displayed in hotkeys helper
-local _fake_keys = {
+menu._fake_keys = {
 	{
-		{}, "_ (underlined letter)", nil,
-		{ description = "Activate item", group = "Action" }
+		{}, "_letter", nil,
+		{ description = "Activate item by key", group = "Action" }
 	},
 }
 
@@ -303,8 +303,16 @@ function menu:show(args)
 	self.wibox.visible = true
 	self:item_enter(1)
 
-	local tips = self.theme.auto_hotkey and awful.util.table.join(menu.keys, _fake_keys) or menu.keys
-	redtip:set_pack("Menu", tips, self.theme.keytip.column, self.theme.keytip.geometry)
+	local tip
+	if self.theme.auto_hotkey then
+		local fk = awful.util.table.clone(menu._fake_keys)
+		fk[1][4].keyset = self.keys
+		tip = awful.util.table.join(menu.keys, fk)
+	else
+		tip = menu.keys
+	end
+
+	redtip:set_pack("Menu", tip, self.theme.keytip.column, self.theme.keytip.geometry)
 end
 
 -- Hide a menu popup.

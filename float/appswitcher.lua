@@ -61,7 +61,7 @@ appswitcher.keys = {
 	},
 }
 
-local _fake_keys = {
+appswitcher._fake_keys = {
 	{
 		{}, "N", nil,
 		{ description = "Select app by key", group = "Navigation" }
@@ -172,6 +172,8 @@ function appswitcher:init()
 	local iscf = 1 -- icon size correction factor
 
 	self.keytip = style.keytip
+	self._fake_keys[1][4].keyset = style.hotkeys
+	self:set_keys()
 
 	-- Create floating wibox for appswitcher widget
 	--------------------------------------------------------------------------------
@@ -406,8 +408,7 @@ function appswitcher:show(args)
 
 	self.wibox.visible = true
 
-	local tips = awful.util.table.join(self.keys, _fake_keys)
-	redtip:set_pack("Menu", tips, self.keytip.column, self.keytip.geometry)
+	redtip:set_pack("Appswitcher widget", self.tip, self.keytip.column, self.keytip.geometry)
 end
 
 -- Hide appswitcher widget
@@ -448,7 +449,8 @@ end
 -- Set user hotkeys
 -----------------------------------------------------------------------------------------------------------------------
 function appswitcher:set_keys(keys)
-	self.keys = keys
+	if keys then self.keys = keys end
+	self.tip = awful.util.table.join(self.keys, self._fake_keys)
 end
 
 -- End

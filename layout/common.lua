@@ -131,11 +131,11 @@ end
 common.updates = {}
 
 local function build_base_tip()
-	return awful.util.table.join(common.keys.base, common.keys.swap, common.keys._fake)
+	return awful.util.table.join(common.keys.swap, common.keys.base, common.keys._fake)
 end
 
 local function build_tile_tip()
-	return awful.util.table.join(common.keys.base, common.keys.swap, common.keys._fake, common.keys.tile)
+	return awful.util.table.join(common.keys.swap, common.keys.tile, common.keys.base, common.keys._fake)
 end
 
 local function set_tile_tip()
