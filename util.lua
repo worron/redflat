@@ -35,7 +35,7 @@ function util.placeholder(args)
 		widget = wibox.widget.textbox
 	}
 
-	return surface.widget_to_surface(tb, args.width or 48, args.height or 48)
+	return surface.widget_to_surface(tb, args.width or 24, args.height or 24)
 end
 
 -- Read from file
