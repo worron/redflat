@@ -74,6 +74,14 @@ function titlebar.get_style()
 	return default_style()
 end
 
+-- Get titlebar client list
+------------------------------------------------------------
+function titlebar.get_clients()
+	local cl = {}
+	for c, _ in pairs(titlebar.list) do table.insert(cl, c) end
+	return cl
+end
+
 
 -- Build client titlebar
 -----------------------------------------------------------------------------------------------------------------------
@@ -174,7 +182,7 @@ end
 
 -- Switch titlebar view model
 ------------------------------------------------------------
-function titlebar.switch_layout(c, position)
+function titlebar.switch(c, position)
 	local model = get_titlebar_model(c, position)
 	if not model or #model.layouts == 1 then return end
 
@@ -195,7 +203,7 @@ end
 -- Temporary hide client titlebar
 ------------------------------------------------------------
 function titlebar.cut_all(cl, position)
-	local cl = cl or titlebar.list
+	local cl = cl or titlebar.get_clients()
 	for _, c in ipairs(cl) do
 		local model = get_titlebar_model(c, position)
 		if model and not model.hidden then
@@ -207,7 +215,7 @@ end
 -- Restore client titlebar if it was cutted
 ------------------------------------------------------------
 function titlebar.restore_all(cl, position)
-	local cl = cl or titlebar.list
+	local cl = cl or titlebar.get_clients()
 	for _, c in ipairs(cl) do
 		local model = get_titlebar_model(c, position)
 		if model and not model.hidden then
@@ -215,6 +223,29 @@ function titlebar.restore_all(cl, position)
 		end
 	end
 end
+
+-- Mass actions
+------------------------------------------------------------
+function titlebar.toggle_all(cl, position)
+	local cl = cl or titlebar.get_clients()
+	for _, c in pairs(cl) do titlebar.toggle(c, position) end
+end
+
+function titlebar.switch_all(cl, position)
+	local cl = cl or titlebar.get_clients()
+	for _, c in pairs(cl) do titlebar.switch(c, position) end
+end
+
+function titlebar.show_all(cl, position)
+	local cl = cl or titlebar.get_clients()
+	for _, c in pairs(cl) do titlebar.show(c, position) end
+end
+
+function titlebar.hide_all(cl, position)
+	local cl = cl or titlebar.get_clients()
+	for _, c in pairs(cl) do titlebar.hide(c, position) end
+end
+
 
 -- Titlebar indicators
 -----------------------------------------------------------------------------------------------------------------------
