@@ -65,7 +65,7 @@ local function parse(rawkeys, columns)
 	local keys = {}
 	local columns = columns or 1
 	local rk = { unpack(rawkeys) }
-	local p = math.floor(#rawkeys / columns)
+	local p = math.ceil(#rawkeys / columns)
 
 	-- dirty trick for sorting
 	local sp = {}
