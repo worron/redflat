@@ -188,6 +188,34 @@ function titlebar.switch_layout(c, position)
 	end
 end
 
+
+-- Titlebar mass actions
+-----------------------------------------------------------------------------------------------------------------------
+
+-- Temporary hide client titlebar
+------------------------------------------------------------
+function titlebar.cut_all(cl, position)
+	local cl = cl or titlebar.list
+	for _, c in ipairs(cl) do
+		local model = get_titlebar_model(c, position)
+		if model and not model.hidden then
+			model.tfunction(c, 0)
+		end
+	end
+end
+
+-- Restore client titlebar if it was cutted
+------------------------------------------------------------
+function titlebar.restore_all(cl, position)
+	local cl = cl or titlebar.list
+	for _, c in ipairs(cl) do
+		local model = get_titlebar_model(c, position)
+		if model and not model.hidden then
+			model.tfunction(c, model.size)
+		end
+	end
+end
+
 -- Titlebar indicators
 -----------------------------------------------------------------------------------------------------------------------
 titlebar.icon = {}
