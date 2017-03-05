@@ -53,11 +53,13 @@ function progressbar.new(style)
 
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height) return width, height end
+	function widg:fit(context, width, height)
+		return width, height
+	end
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
+	function widg:draw(context, cr, width, height)
 		cr:set_source(color(style.color.gray))
 		cr:rectangle(0, 0, width, height)
 		cr:fill()
