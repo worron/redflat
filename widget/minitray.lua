@@ -36,7 +36,7 @@ local function default_style()
 	local style = {
 		dotcount     = {},
 		geometry     = { height = 40 },
-		screen_pos   = function(s) return { x = s.workarea.x, y = s.workarea.y } end,
+		set_position = nil,
 		screen_gap   = 0,
 		border_width = 2,
 		color        = { wibox = "#202020", border = "#575757" }
@@ -61,7 +61,7 @@ function minitray:init(style)
 
 	self.geometry = style.geometry
 	self.screen_gap = style.screen_gap
-	self.screen_pos = style.screen_pos
+	self.set_position = style.set_position
 
 	-- Create tooltip
 	--------------------------------------------------------------------------------
@@ -93,12 +93,12 @@ function minitray:show()
 	if items == 0 then items = 1 end
 
 	self.wibox:geometry({ width = self.geometry.width or self.geometry.height * items })
-	if self.screen_pos then
-		self.wibox:geometry(self.screen_pos(mouse.screen))
+	if self.set_position then
+		self.wibox:geometry(self.set_position())
 	else
 		awful.placement.under_mouse(self.wibox)
 	end
-	redutil.placement.no_offscreen(self.wibox, self.screen_gap)
+	redutil.placement.no_offscreen(self.wibox, self.screen_gap, mouse.screen.workarea)
 
 	-- Show
 	------------------------------------------------------------
