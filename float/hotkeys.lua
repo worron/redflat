@@ -26,7 +26,7 @@ local hotkeys = { keypack = {}, lastkey = nil, cache = {}, boxes = {} }
 local hasitem = awful.util.table.hasitem
 
 -- key bindings
-hotkeys.keys = { close = { "Super_L", "Escape" } }
+hotkeys.keys = { close = { "Escape" }, close_all = { "Super_L" } }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
@@ -220,9 +220,16 @@ function hotkeys:init()
 	-- Keygrabber
 	--------------------------------------------------------------------------------
 	self.keygrabber = function(mod, key, event)
-		if hasitem(self.keys.close, key) and event == "release" then
-			self:hide()
-			return false
+		if event == "release" then
+			if hasitem(self.keys.close, key) then
+				self:hide(); return
+			end
+
+			if hasitem(self.keys.close_all, key) then
+				self:hide()
+				if self.keypack[#self.keypack].on_close then self.keypack[#self.keypack].on_close() end
+				return
+			end
 		end
 
 		self.lastkey = event == "press" and key or nil
@@ -236,11 +243,14 @@ end
 
 -- Set new keypack
 --------------------------------------------------------------------------------
-function hotkeys:set_pack(name, pack, columns, geometry)
+function hotkeys:set_pack(name, pack, columns, geometry, on_close)
 	if not self.wibox then self:init() end
 
 	if not self.cache[name] then self.cache[name] = parse(pack, columns) end
-	table.insert(self.keypack, { name = name, pack = self.cache[name], geometry = geometry or self.style.geometry })
+	table.insert(
+		self.keypack,
+		{ name = name, pack = self.cache[name], geometry = geometry or self.style.geometry, on_close = on_close }
+	)
 	self.wibox:geometry(self.keypack[#self.keypack].geometry)
 	self.title:set_text(name .. " hotkeys")
 	self:highlight()

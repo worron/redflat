@@ -224,11 +224,13 @@ function navigator:run()
 	self.tip_settled = tip
 	if tip then
 		local tip_style = self.style.keytip[l] or self.style.keytip.base
-		redtip:set_pack("Layout " .. l.name, tip, tip_style.column, tip_style.geometry)
+		redtip:set_pack(
+			"Layout " .. l.name, tip, tip_style.column, tip_style.geometry,
+			function() redflat.layout.common.action.exit() end -- fix this?
+		)
 	end
 end
 
--- function navigator:close(is_soft)
 function navigator:close()
 	for i, c in ipairs(self.cls) do
 		self.data[i]:clear()
