@@ -110,6 +110,7 @@ function titlebar.new(c, style)
 			size = style.size,
 			drawable = ret,
 			hidden = false,
+			cutted = false,
 			tfunction = tfunction,
 			base = base,
 		}
@@ -204,12 +205,16 @@ end
 ------------------------------------------------------------
 function titlebar.cut_all(cl, position)
 	local cl = cl or titlebar.get_clients()
+	local cutted = {}
 	for _, c in ipairs(cl) do
 		local model = titlebar.get_model(c, position)
-		if model and not model.hidden then
+		if model and not model.hidden and not model.cutted then
 			model.tfunction(c, 0)
+			model.cutted = true
+			table.insert(cutted, c)
 		end
 	end
+	return cutted
 end
 
 -- Restore client titlebar if it was cutted
@@ -220,6 +225,7 @@ function titlebar.restore_all(cl, position)
 		local model = titlebar.get_model(c, position)
 		if model and not model.hidden then
 			model.tfunction(c, model.size)
+			model.cutted = false
 		end
 	end
 end

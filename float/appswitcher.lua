@@ -33,7 +33,6 @@ local dfparser = require("redflat.service.dfparser")
 local redutil = require("redflat.util")
 local redtip = require("redflat.float.hotkeys")
 local redtitle = require("redflat.titlebar")
--- local redtitlebar = require("redflat.titlebar")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -395,7 +394,7 @@ function appswitcher:show(args)
 	if #clients == 0 then return end
 
 	self.clients_list = clients
-	redtitle.cut_all(clients)
+	self.cutted = redtitle.cut_all(clients)
 	cache.args = args
 	self.size_correction(#clients)
 	redutil.placement.centered(self.wibox, nil, mouse.screen.workarea)
@@ -424,7 +423,7 @@ function appswitcher:hide(is_empty_call)
 	self.wibox.visible = false
 	redtip:remove_pack()
 	self.update_timer:stop()
-	redtitle.restore_all(self.clients_list)
+	redtitle.restore_all(self.cutted)
 	awful.keygrabber.stop(self.keygrabber)
 
 	self.winmark(self.clients_list[self.index], false)
