@@ -63,7 +63,7 @@ end
 
 -- Get titlebar model
 ------------------------------------------------------------
-local function get_titlebar_model(c, position)
+function titlebar.get_model(c, position)
 	local position = position or "top"
 	return titlebar.list[c] and titlebar.list[c][position] or nil
 end
@@ -133,7 +133,7 @@ end
 -- Show client titlebar
 ------------------------------------------------------------
 function titlebar.show(c, position)
-	local model = get_titlebar_model(c, position)
+	local model = titlebar.get_model(c, position)
 	if model and model.hidden then
 		model.tfunction(c, model.size)
 		model.hidden = false
@@ -143,7 +143,7 @@ end
 -- Hide client titlebar
 ------------------------------------------------------------
 function titlebar.hide(c, position)
-	local model = get_titlebar_model(c, position)
+	local model = titlebar.get_model(c, position)
 	if model and not model.hidden then
 		model.tfunction(c, 0)
 		model.hidden = true
@@ -153,7 +153,7 @@ end
 -- Toggle client titlebar
 ------------------------------------------------------------
 function titlebar.toggle(c, position)
-	local model = get_titlebar_model(c, position)
+	local model = titlebar.get_model(c, position)
 	if not model then return end
 
 	model.tfunction(c, model.hidden and model.size or 0)
@@ -163,7 +163,7 @@ end
 -- Add titlebar view model
 ------------------------------------------------------------
 function titlebar.add_layout(c, position, layout, size)
-	local model = get_titlebar_model(c, position)
+	local model = titlebar.get_model(c, position)
 	if not model then return end
 
 	local size = size or model.style.size
@@ -183,7 +183,7 @@ end
 -- Switch titlebar view model
 ------------------------------------------------------------
 function titlebar.switch(c, position)
-	local model = get_titlebar_model(c, position)
+	local model = titlebar.get_model(c, position)
 	if not model or #model.layouts == 1 then return end
 
 	model.current = (model.current < #model.layouts) and (model.current + 1) or 1
@@ -205,7 +205,7 @@ end
 function titlebar.cut_all(cl, position)
 	local cl = cl or titlebar.get_clients()
 	for _, c in ipairs(cl) do
-		local model = get_titlebar_model(c, position)
+		local model = titlebar.get_model(c, position)
 		if model and not model.hidden then
 			model.tfunction(c, 0)
 		end
@@ -217,7 +217,7 @@ end
 function titlebar.restore_all(cl, position)
 	local cl = cl or titlebar.get_clients()
 	for _, c in ipairs(cl) do
-		local model = get_titlebar_model(c, position)
+		local model = titlebar.get_model(c, position)
 		if model and not model.hidden then
 			model.tfunction(c, model.size)
 		end
