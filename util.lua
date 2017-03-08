@@ -273,7 +273,7 @@ function util.desktop.edge(direction, zone)
 
 	if zone then
 		for i, z in ipairs(zone) do
-			edge.area[i] = wibox.layout.margin(nil, 0, 0, z)
+			edge.area[i] = wibox.container.margin(nil, 0, 0, z)
 			edge.layout:add(edge.area[i])
 		end
 	end
