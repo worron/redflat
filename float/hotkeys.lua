@@ -90,14 +90,17 @@ local function parse(rawkeys, columns)
 				keyset      = data.keyset or { v[2] },
 				length      = check_key_len({ mod = v[1], key = v[2] })
 			}
-			if not keys[i].groups[k.group] then
-				keys[i].groups[k.group] = {}
-				table.insert(keys[i].names, k.group) -- sorted names list to save group order
-			end
-			table.insert(keys[i].groups[k.group], k)
 
-			-- calculate max tip lenght
-			if not keys[i].length or keys[i].length < k.length then keys[i].length = k.length end
+			if k.description then
+				if not keys[i].groups[k.group] then
+					keys[i].groups[k.group] = {}
+					table.insert(keys[i].names, k.group) -- sorted names list to save group order
+				end
+				table.insert(keys[i].groups[k.group], k)
+
+				-- calculate max tip lenght
+				if not keys[i].length or keys[i].length < k.length then keys[i].length = k.length end
+			end
 		end
 
 		-- sort key by lenght inside group

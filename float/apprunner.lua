@@ -58,7 +58,7 @@ local function default_style()
 		prompt_height    = 35,
 		title_icon       = nil,
 		icon_margin      = { 8, 12, 0, 0 },
-		icon_style       = {},
+		parser           = {},
 		list_text_vgap   = 4,
 		list_icon_margin = { 6, 12, 6, 6 },
 		name_font        = "Sans 12",
@@ -255,7 +255,7 @@ function apprunner:init()
 	self.keytip = style.keytip
 
 	-- get full application list
-	programs.all = dfparser.program_list(style.icon_style)
+	programs.all = dfparser.program_list(style.parser)
 	programs.current = awful.util.table.clone(programs.all)
 
 	-- Create quick search widget

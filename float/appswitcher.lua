@@ -40,6 +40,7 @@ local appswitcher = { clients_list = {}, index = 1, hotkeys = {}, svgsize = 256 
 
 local cache = { border_color = nil }
 local svgcache = {}
+local _empty_surface = redutil.placeholder({ txt = " " })
 
 -- key bindings
 appswitcher.keys = {
@@ -82,7 +83,7 @@ local function default_style()
 		preview_margin  = { 20, 20, 20, 20 },
 		border_margin   = { 6, 6, 6, 6 },
 		border_width    = 2,
-		icon_style      = {},
+		parser          = {},
 		update_timeout  = 1,
 		min_icon_number = 4,
 		keytip          = { geometry = { width = 400, height = 320 } },
@@ -118,7 +119,7 @@ local function get_icon_visual(icon_db, c, size)
 			surface = gears.surface(icon)
 		end
 	else
-		surface = gears.surface(c.icon)
+		surface = c.icon and gears.surface(c.icon) or _empty_surface
 	end
 
 	return surface, buf
@@ -168,7 +169,7 @@ function appswitcher:init()
 	-- Initialize style vars
 	--------------------------------------------------------------------------------
 	local style = default_style()
-	local icon_db = dfparser.icon_list(style.icon_style)
+	local icon_db = dfparser.icon_list(style.parser)
 	local iscf = 1 -- icon size correction factor
 
 	self.keytip = style.keytip
