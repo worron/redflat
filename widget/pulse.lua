@@ -20,9 +20,10 @@ local setmetatable = setmetatable
 local wibox = require("wibox")
 local awful = require("awful")
 local beautiful = require("beautiful")
+local timer = require("gears.timer")
 
 local tooltip = require("redflat.float.tooltip")
-local audio = require("redflat.gauge.redaudio")
+local audio = require("redflat.gauge.audio.blue")
 local rednotify = require("redflat.float.notify")
 local redutil = require("redflat.util")
 
@@ -31,7 +32,7 @@ local redutil = require("redflat.util")
 -----------------------------------------------------------------------------------------------------------------------
 local pulse = { widgets = {}, mt = {} }
 local counter = 0
-local pulse_def_sink = awful.util.pread("pacmd dump|perl -ane 'print $F[1] if /set-default-sink/'")
+local pulse_def_sink = redutil.read_output("pacmd dump|perl -ane 'print $F[1] if /set-default-sink/'")
 
 pulse.startup_time = 4
 
@@ -61,7 +62,7 @@ function pulse:change_volume(args)
 	local diff = args.down and -args.step or args.step
 
 	-- get current volume
-	local v = awful.util.pread("pacmd dump |grep set-sink-volume | grep " .. pulse_def_sink )
+	local v = redutil.read_output("pacmd dump |grep set-sink-volume | grep " .. pulse_def_sink )
 	local volume = tonumber(string.match(v, "0x%x+"))
 
 	-- calculate new volume
@@ -76,11 +77,11 @@ function pulse:change_volume(args)
 	-- show notify if need
 	if args.show_notify then
 		local vol = new_volume / 65536
-		rednotify:show({value = vol, text = string.format('%.0f', vol*100) .. "%", icon = pulse.notify_icon})
+		rednotify:show({ value = vol, text = string.format('%.0f', vol*100) .. "%", icon = pulse.notify_icon })
 	end
 
 	-- set new volume
-	awful.util.spawn("pacmd set-sink-volume " .. pulse_def_sink .. " " .. new_volume)
+	awful.spawn("pacmd set-sink-volume " .. pulse_def_sink .. " " .. new_volume)
 	-- update volume indicators
 	self:update_volume()
 end
@@ -88,12 +89,12 @@ end
 -- Set mute
 -----------------------------------------------------------------------------------------------------------------------
 function pulse:mute()
-	local mute = awful.util.pread("pacmd dump | grep set-sink-mute | grep " .. pulse_def_sink)
+	local mute = redutil.read_output("pacmd dump | grep set-sink-mute | grep " .. pulse_def_sink)
 
 	if string.find(mute, "no", -4) then
-		awful.util.spawn("pacmd set-sink-mute " .. pulse_def_sink .. " yes")
+		awful.spawn("pacmd set-sink-mute " .. pulse_def_sink .. " yes")
 	else
-		awful.util.spawn("pacmd set-sink-mute " .. pulse_def_sink .. " no")
+		awful.spawn("pacmd set-sink-mute " .. pulse_def_sink .. " no")
 	end
 	self:update_volume()
 end
@@ -108,8 +109,8 @@ function pulse:update_volume()
 	local mute
 
 	-- get current volume and mute state
-	local v = awful.util.pread("pacmd dump | grep set-sink-volume | grep " .. pulse_def_sink)
-	local m = awful.util.pread("pacmd dump | grep set-sink-mute | grep " .. pulse_def_sink)
+	local v = redutil.read_output("pacmd dump | grep set-sink-volume | grep " .. pulse_def_sink)
+	local m = redutil.read_output("pacmd dump | grep set-sink-mute | grep " .. pulse_def_sink)
 
 	if v then
 		local pv = string.match(v, "0x%x+")
@@ -154,7 +155,7 @@ function pulse.new(args, style)
 	-- Set tooltip
 	--------------------------------------------------------------------------------
 	if not pulse.tooltip then
-		pulse.tooltip = tooltip({ widg }, style.tooltip)
+		pulse.tooltip = tooltip({ objects = { widg } }, style.tooltip)
 	else
 		pulse.tooltip:add_to_object(widg)
 	end
@@ -179,7 +180,7 @@ pulse.startup_updater = timer({ timeout = 1 })
 pulse.startup_updater:connect_signal("timeout",
 	function()
 		counter = counter + 1
-		pulse_def_sink = awful.util.pread("pacmd dump|perl -ane 'print $F[1] if /set-default-sink/'")
+		pulse_def_sink = redutil.read_output("pacmd dump|perl -ane 'print $F[1] if /set-default-sink/'")
 		pulse:update_volume()
 		if counter > pulse.startup_time then pulse.startup_updater:stop() end
 	end

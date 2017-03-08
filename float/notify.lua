@@ -36,6 +36,7 @@ local function default_style()
 		border_width    = 2,
 		timeout         = 5,
 		icon            = nil,
+		progressbar     = {},
 		color           = { border = "#575757", icon = "#aaaaaa", wibox = "#202020" }
 	}
 	return redutil.table.merge(style, redutil.check(beautiful, "float.notify") or {})
@@ -87,7 +88,7 @@ function notify:init()
 		if args.value then
 			bar:set_value(args.value)
 			align_vertical:set_top(text)
-			align_vertical:set_bottom(bar_area)
+			align_vertical:set_bottom(bar)
 		else
 			align_vertical:set_middle(text)
 		end
@@ -123,9 +124,12 @@ function notify:show(args)
 	if not self.wibox then self:init() end
 	self:set(args)
 
-	if self.style.set_position then self.wibox:geometry(self.style.set_position()) end
-	redutil.placement.no_offscreen(self.wibox, self.style.screen_gap, mouse.screen.workarea)
-	if not self.wibox.visible then self.wibox.visible = true end
+	-- TODO: add placement update if active screen changed
+	if not self.wibox.visible then
+		if self.style.set_position then self.wibox:geometry(self.style.set_position()) end
+		redutil.placement.no_offscreen(self.wibox, self.style.screen_gap, mouse.screen.workarea)
+		self.wibox.visible = true
+	end
 
 	self.hidetimer:again()
 end
