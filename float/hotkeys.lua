@@ -122,7 +122,7 @@ local function build_tip(pack, style, keypressed)
 
 			-- set group title
 			coltxt = coltxt ..  string.format(
-				'\n<span font="%s" color="%s">%s</span>\n', style.titlefont, style.color.gray, name
+				'<span font="%s" color="%s">%s</span>\n', style.titlefont, style.color.gray, name
 			)
 
 			-- build key tip line
