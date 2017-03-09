@@ -10,6 +10,7 @@ local setmetatable = setmetatable
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local color = require("gears.color")
+local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
 local doublebar = require("redflat.gauge.doublebar")
@@ -60,7 +61,7 @@ function net.new(args, style)
 
 	-- Set tooltip
 	--------------------------------------------------------------------------------
-	local tp = tooltip({ widg }, style.tooltip)
+	local tp = tooltip({ objects = { widg } }, style.tooltip)
 
 	-- Set update timer
 	--------------------------------------------------------------------------------
@@ -68,6 +69,7 @@ function net.new(args, style)
 	t:connect_signal("timeout",
 		function()
 			local state = system.net_speed(args.interface, storage)
+			widg:set_value({1,1})
 
 			if args.autoscale then
 				if state[1] > args.speed.up then args.speed.up = state[1] end

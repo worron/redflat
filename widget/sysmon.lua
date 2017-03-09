@@ -9,7 +9,7 @@
 local setmetatable = setmetatable
 local wibox = require("wibox")
 local beautiful = require("beautiful")
-local util = require("awful.util")
+local timer = require("gears.timer")
 
 local monitor = require("redflat.gauge.monitor")
 local tooltip = require("redflat.float.tooltip")
@@ -46,7 +46,7 @@ function sysmon.new(args, style)
 
 	-- Set tooltip
 	--------------------------------------------------------------------------------
-	local tp = tooltip({ widg }, style.tooltip)
+	local tp = tooltip({ objects = { widg } }, style.tooltip)
 
 	-- Set update timer
 	--------------------------------------------------------------------------------
