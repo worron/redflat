@@ -102,8 +102,8 @@ function exaile:init()
 	self.box.artist:set_font(style.artistfont)
 
 	local text_area = wibox.layout.fixed.vertical()
-	text_area:add(wibox.layout.constraint(self.box.title, "exact", nil, style.line_height))
-	text_area:add(wibox.layout.constraint(self.box.artist, "exact", nil, style.line_height))
+	text_area:add(wibox.container.constraint(self.box.title, "exact", nil, style.line_height))
+	text_area:add(wibox.container.constraint(self.box.artist, "exact", nil, style.line_height))
 
 	-- Control line
 	------------------------------------------------------------
@@ -114,7 +114,7 @@ function exaile:init()
 	player_buttons:add(prev_button)
 
 	self.play_button = svgbox(style.icon.play, nil, style.color.icon)
-	player_buttons:add(wibox.layout.margin(self.play_button, unpack(style.pause_gap)))
+	player_buttons:add(wibox.container.margin(self.play_button, unpack(style.pause_gap)))
 
 	local next_button = svgbox(style.icon.next_tr, nil, style.color.icon)
 	player_buttons:add(next_button)
@@ -125,12 +125,12 @@ function exaile:init()
 
 	-- volume
 	self.volume = dashcontrol(style.dashcontrol)
-	local volumespace = wibox.layout.margin(self.volume, unpack(style.volume_gap))
-	local volume_area = wibox.layout.constraint(volumespace, "exact", style.volume_width, nil)
+	local volumespace = wibox.container.margin(self.volume, unpack(style.volume_gap))
+	local volume_area = wibox.container.constraint(volumespace, "exact", style.volume_width, nil)
 
 	-- full line
 	local control_align = wibox.layout.align.horizontal()
-	control_align:set_middle(wibox.layout.margin(player_buttons, unpack(style.buttons_margin)))
+	control_align:set_middle(wibox.container.margin(player_buttons, unpack(style.buttons_margin)))
 	control_align:set_right(self.box.time)
 	control_align:set_left(volume_area)
 
@@ -138,11 +138,11 @@ function exaile:init()
 	------------------------------------------------------------
 	local align_vertical = wibox.layout.align.vertical()
 	align_vertical:set_top(text_area)
-	align_vertical:set_middle(wibox.layout.margin(control_align, unpack(style.control_gap)))
-	align_vertical:set_bottom(wibox.layout.constraint(self.bar, "exact", nil, style.bar_width))
+	align_vertical:set_middle(wibox.container.margin(control_align, unpack(style.control_gap)))
+	align_vertical:set_bottom(wibox.container.constraint(self.bar, "exact", nil, style.bar_width))
 	local area = wibox.layout.fixed.horizontal()
 	area:add(self.box.image)
-	area:add(wibox.layout.margin(align_vertical, unpack(style.elements_gap)))
+	area:add(wibox.container.margin(align_vertical, unpack(style.elements_gap)))
 
 	-- Buttons
 	------------------------------------------------------------
@@ -177,7 +177,7 @@ function exaile:init()
 		border_color = style.color.border
 	})
 
-	self.wibox:set_widget(wibox.layout.margin(area, unpack(style.border_gap)))
+	self.wibox:set_widget(wibox.container.margin(area, unpack(style.border_gap)))
 	self.wibox:geometry(style.geometry)
 
 	-- Update info functions

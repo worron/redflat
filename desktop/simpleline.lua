@@ -12,6 +12,7 @@ local string = string
 
 local wibox = require("wibox")
 local beautiful = require("beautiful")
+local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
@@ -65,23 +66,27 @@ function sline.new(args, geometry, style)
 
 	-- construct line
 	for i, name in ipairs(args.sensors) do
-		local l = textbox(string.upper(args.names[i] or "mon"), style.lbox)
-		local boxlayout = wibox.layout.align.horizontal()
 		dwidget.item[i] = textbox("", style.rbox)
 
-		if style.icon then
-			dwidget.icon[i] = svgbox(style.icon)
-			boxlayout:set_middle(dwidget.icon[i])
-		end
+		if style.icon then dwidget.icon[i] = svgbox(style.icon) end
 
-		boxlayout:set_left(l)
-		boxlayout:set_right(dwidget.item[i])
+		local boxlayout = wibox.widget({
+			textbox(string.upper(args.names[i] or "mon"), style.lbox),
+			style.icon and {
+				nil, dwidget.icon[i], nil,
+				expand = "outside",
+				layout = wibox.layout.align.horizontal
+			},
+			dwidget.item[i],
+			forced_width = style.iwidth,
+			layout = wibox.layout.align.horizontal
+		})
 
 		if i == 1 then
-			dwidget.layout:set_left(wibox.layout.constraint(boxlayout, "exact", style.iwidth))
+			dwidget.layout:set_left(boxlayout)
 		else
 			local space = wibox.layout.align.horizontal()
-			space:set_right(wibox.layout.constraint(boxlayout, "exact", style.iwidth))
+			space:set_right(boxlayout)
 			mid:add(space)
 		end
 	end
@@ -97,7 +102,6 @@ function sline.new(args, geometry, style)
 			local icon_color = state.off and style.color.gray or style.color.main
 			local txt = redutil.text.dformat(state[2] or state[1], style.unit, style.digit_num)
 
-			--dwidget.item[i]:set_text(string.gsub(txt, "  ", " "))
 			dwidget.item[i]:set_text(txt)
 			dwidget.item[i]:set_color(text_color)
 			if dwidget.icon[i] then dwidget.icon[i]:set_color(icon_color) end

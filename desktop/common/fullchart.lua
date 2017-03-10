@@ -34,16 +34,14 @@ function fullchart.new(label_style, dashbar_style, chart_style, barvalue_height,
 	local dashbar_style = redutil.table.merge(dashbar_style, { maxm = maxm })
 
 	-- construct layout with indicators
-	widg.layout = wibox.layout.fixed.vertical()
-	local align_vertical = wibox.layout.align.vertical()
-	widg.layout:add(align_vertical)
-
 	widg.barvalue = dcommon.barvalue(dashbar_style, label_style)
 	widg.chart = dcommon.chart(chart_style)
-	local bv_const = wibox.layout.constraint(widg.barvalue.layout, "exact", nil, barvalue_height)
+	widg.barvalue.layout:set_forced_height(barvalue_height)
 
-	align_vertical:set_top(bv_const)
-	align_vertical:set_bottom(widg.chart)
+	widg.layout = wibox.widget({
+		widg.barvalue.layout, nil, widg.chart,
+		layout = wibox.layout.align.vertical,
+	})
 
 	return widg
 end

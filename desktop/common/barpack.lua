@@ -54,7 +54,7 @@ function barpack.new(num, style)
 
 	-- Construct group of lines
 	--------------------------------------------------------------------------------
-	pack.layout = wibox.layout.fixed.vertical()
+	pack.layout = wibox.layout.align.vertical()
 	local flex_vertical = wibox.layout.flex.vertical()
 	local lines = {}
 
@@ -62,29 +62,29 @@ function barpack.new(num, style)
 		lines[i] = {}
 
 		local line_align = wibox.layout.align.horizontal()
-		local line_const = wibox.layout.constraint(line_align, "exact", nil, style.line_height)
+		line_align:set_forced_height(style.line_height)
 		lines[i].bar = dcommon.dashbar(dashbar_style)
 		line_align:set_middle(lines[i].bar)
 
 		lines[i].label = dcommon.textbox("", label_style)
 		lines[i].label:set_width(0)
-		lines[i].label_margin = wibox.layout.margin(lines[i].label)
+		lines[i].label_margin = wibox.container.margin(lines[i].label)
 		line_align:set_left(lines[i].label_margin)
 
 		lines[i].text = dcommon.textbox("", text_style)
 		lines[i].text:set_width(0)
-		lines[i].text_margin = wibox.layout.margin(lines[i].text)
+		lines[i].text_margin = wibox.container.margin(lines[i].text)
 		line_align:set_right(lines[i].text_margin)
 
 		if i == 1 then
-			pack.layout:add(line_const)
+			pack.layout:set_top(line_align)
 		else
 			local line_space = wibox.layout.align.vertical()
-			line_space:set_bottom(line_const)
+			line_space:set_bottom(line_align)
 			flex_vertical:add(line_space)
 		end
 	end
-	pack.layout:add(flex_vertical)
+	pack.layout:set_middle(flex_vertical)
 
 	-- Setup functions
 	--------------------------------------------------------------------------------

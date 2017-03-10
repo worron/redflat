@@ -68,13 +68,13 @@ function chart.new(style)
 
 	-- Fit function
 	------------------------------------------------------------
-	chartwidg.fit = function(chartwidg, width, height)
+	function chartwidg:fit(context, width, height)
 		return style.width or width, style.height or height
 	end
 
 	-- Draw function
 	------------------------------------------------------------
-	chartwidg.draw = function(chartwidg, wibox, cr, width, height)
+	function chartwidg:draw(context, cr, width, height)
 
 		--scale
 		if style.autoscale then

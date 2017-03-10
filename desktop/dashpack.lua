@@ -13,6 +13,7 @@ local string = string
 
 local wibox = require("wibox")
 local beautiful = require("beautiful")
+local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
 local barpack = require("redflat.desktop.common.barpack")

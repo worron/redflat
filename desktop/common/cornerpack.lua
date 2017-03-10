@@ -30,20 +30,21 @@ function cornerpack.new(num, style)
 	local style = style or {}
 
 	-- construct group of corner indicators
-	pack.layout = wibox.layout.fixed.horizontal()
+	pack.layout = wibox.layout.align.horizontal()
 	local flex_horizontal = wibox.layout.flex.horizontal()
 	local crn = {}
 
 	for i = 1, num do
 		crn[i] = corners(style)
-		if i == 1 then pack.layout:add(crn[i])
+		if i == 1 then
+			pack.layout:set_left(crn[i])
 		else
 			local corner_space = wibox.layout.align.horizontal()
 			corner_space:set_right(crn[i])
 			flex_horizontal:add(corner_space)
 		end
 	end
-	pack.layout:add(flex_horizontal)
+	pack.layout:set_middle(flex_horizontal)
 
 	-- setup functions
 	function pack:set_values(values, n)

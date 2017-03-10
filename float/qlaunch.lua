@@ -176,7 +176,7 @@ local function build_item(key, style)
 	-- Label
 	------------------------------------------------------------
 	local label = wibox.widget.textbox()
-	local label_constraint = wibox.layout.constraint(label, "exact", nil, style.appline.lheight)
+	local label_constraint = wibox.container.constraint(label, "exact", nil, style.appline.lheight)
 	label:set_markup(string.format('<span color="%s">%s</span>', style.color.text, format_key(key)))
 	label:set_align("center")
 	label:set_font(style.label_font)
@@ -187,7 +187,7 @@ local function build_item(key, style)
 	------------------------------------------------------------
 	widg.svgbox = redflat.gauge.svgbox()
 	local icon_align = wibox.layout.align.horizontal()
-	local icon_constraint = wibox.layout.constraint(icon_align, "exact", style.appline.iwidth, nil)
+	local icon_constraint = wibox.container.constraint(icon_align, "exact", style.appline.iwidth, nil)
 	icon_align:set_middle(widg.svgbox)
 
 	-- State
@@ -198,7 +198,7 @@ local function build_item(key, style)
 	------------------------------------------------------------
 	widg.layout = wibox.layout.align.vertical()
 	widg.layout:set_top(widg.state)
-	widg.layout:set_middle(wibox.layout.margin(icon_constraint, unpack(style.appline.igap)))
+	widg.layout:set_middle(wibox.container.margin(icon_constraint, unpack(style.appline.igap)))
 	widg.layout:set_bottom(widg.background)
 
 	------------------------------------------------------------
@@ -226,10 +226,10 @@ local function build_switcher(keys, style)
 	------------------------------------------------------------
 	for _, key in ipairs(sk) do
 		widg.items[key] = build_item(key, style)
-		middle_layout:add(wibox.layout.margin(widg.items[key].layout, unpack(style.appline.im)))
+		middle_layout:add(wibox.container.margin(widg.items[key].layout, unpack(style.appline.im)))
 	end
 
-	widg.layout:set_middle(wibox.layout.margin(middle_layout, unpack(style.border_margin)))
+	widg.layout:set_middle(wibox.container.margin(middle_layout, unpack(style.border_margin)))
 
 	-- Winget functions
 	------------------------------------------------------------

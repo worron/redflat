@@ -121,13 +121,13 @@ function textbox.new(txt, style)
 
 	-- Fit
 	------------------------------------------------------------
-	textwidg.fit = function(barwidg, width, height)
+	function textwidg:fit(context, width, height)
 		return data.width or width, style.height or height
 	end
 
 	-- Draw
 	------------------------------------------------------------
-	textwidg.draw = function(textwidg, wibox, cr, width, height)
+	function textwidg:draw(context, cr, width, height)
 		cr:set_source(color(data.color))
 		redutil.cairo.set_font(cr, style.font)
 

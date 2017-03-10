@@ -60,11 +60,11 @@ function dubgicon.new(style)
 	-- Create widget
 	--------------------------------------------------------------------------------
 	local fixed = wibox.layout.fixed.horizontal()
-	local layout = wibox.layout.constraint(fixed, "exact", style.width)
+	local layout = wibox.container.constraint(fixed, "exact", style.width)
 	layout._icon1 = svgbox(style.icon1)
 	layout._icon2 = svgbox(style.icon2)
 
-	fixed:add(wibox.layout.margin(layout._icon1, 0, style.igap, 0, 0))
+	fixed:add(wibox.container.margin(layout._icon1, 0, style.igap, 0, 0))
 	fixed:add(layout._icon2)
 
 	-- User functions

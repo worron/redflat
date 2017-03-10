@@ -14,6 +14,7 @@ local awful = require("awful")
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local color = require("gears.color")
+local timer = require("gears.timer")
 
 local fullchart = require("redflat.desktop.common.fullchart")
 local system = require("redflat.system")
@@ -83,15 +84,15 @@ local function speed_line(image, maxm, el_style, style)
 	local icon
 
 	align:set_right(fc.layout)
+	align:set_forced_height(style.fullchart_height)
 
 	if image then
 		icon = svgbox(image)
 		icon:set_color(style.color.gray)
-		align:set_left(wibox.layout.margin(icon, 0, style.image_gap))
+		align:set_left(wibox.container.margin(icon, 0, style.image_gap))
 	end
 
-	local layout = wibox.layout.constraint(align, "exact", nil, style.fullchart_height)
-	return fc, layout, icon
+	return fc, align, icon
 end
 
 
@@ -123,14 +124,13 @@ function speedmeter.new(args, geometry, style)
 
 	-- Construct indicators
 	--------------------------------------------------------------------------------
-	local total_align = wibox.layout.align.vertical()
-	dwidget.wibox:set_widget(total_align)
-
 	local up_widget, up_layout, up_icon = speed_line(style.images[1], maxspeed.up, elements_style, style)
 	local down_widget, down_layout, down_icon = speed_line(style.images[2], maxspeed.down, elements_style, style)
 
-	total_align:set_top(up_layout)
-	total_align:set_bottom(down_layout)
+	dwidget.wibox:setup({
+		up_layout, nil, down_layout,
+		layout = wibox.layout.align.vertical
+	})
 
 	-- Update info
 	--------------------------------------------------------------------------------
