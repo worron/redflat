@@ -37,7 +37,7 @@ function system.fs_info(args)
 
 	-- Get data from df
 	------------------------------------------------------------
-	local line = awful.util.pread("LC_ALL=C df -kP " .. args .. " | tail -1")
+	local line = redutil.read_output("LC_ALL=C df -kP " .. args .. " | tail -1")
 
 	-- Parse data
 	------------------------------------------------------------
@@ -319,7 +319,7 @@ end
 ------------------------------------------------------------
 function system.thermal.sensors(args)
 	local args = args or "'Physical id 0'"
-	local output = awful.util.pread("sensors | grep " .. args)
+	local output = redutil.read_output("sensors | grep " .. args)
 
 	local temp = string.match(output, "%+(%d+%.%d)°[CF]")
 
@@ -332,7 +332,7 @@ function system.thermal.sensors_core(args)
 	local args = args or {}
 	local index = args.index or 0
 
-	if args.main then sensors_store = awful.util.pread("sensors | grep Core") end
+	if args.main then sensors_store = redutil.read_output("sensors | grep Core") end
 	local line = string.match(sensors_store, "Core " .. index .."(.-)\r?\n")
 	local temp = string.match(line, "%+(%d+%.%d)°[CF]")
 
@@ -346,7 +346,7 @@ function system.thermal.hddtemp(args)
 	local port = args.port or "7634"
 	local disk = args.disk or "/dev/sda"
 
-	local output = awful.util.pread(
+	local output = redutil.read_output(
 		"echo | curl --connect-timeout 1 -fsm 3 telnet://127.0.0.1:" .. port .. " | grep " .. disk
 	)
 	local temp = string.match(output, "|(%d+)|[CF]|")
@@ -358,10 +358,10 @@ end
 ------------------------------------------------------------
 function system.thermal.nvoptimus()
 	local temp = 0
-	local nvidia_on = string.find(awful.util.pread("cat /proc/acpi/bbswitch"), "ON")
+	local nvidia_on = string.find(redutil.read_output("cat /proc/acpi/bbswitch"), "ON")
 
 	if nvidia_on ~= nil then
-		temp = string.match(awful.util.pread("optirun -b none nvidia-settings -c :8 -q gpucoretemp -t"), "[^\n]+")
+		temp = string.match(redutil.read_output("optirun -b none nvidia-settings -c :8 -q gpucoretemp -t"), "[^\n]+")
 	end
 
 	return { tonumber(temp), off = nvidia_on == nil }
@@ -371,10 +371,10 @@ end
 ------------------------------------------------------------
 function system.thermal.nvprime()
 	local temp = 0
-	local nvidia_on = string.find(awful.util.pread("prime-select query"), "nvidia")
+	local nvidia_on = string.find(redutil.read_output("prime-select query"), "nvidia")
 
 	if nvidia_on ~= nil then
-		t = string.match(awful.util.pread("nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader"), "%d%d")
+		t = string.match(redutil.read_output("nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader"), "%d%d")
 		if t then temp = t end
 	end
 
@@ -389,7 +389,7 @@ end
 --------------------------------------------------------------------------------
 local function is_transmission_running(args)
 	local t_client = args or "transmission-gtk"
-	return awful.util.pread("pidof -x " .. t_client) ~= ""
+	return redutil.read_output("pidof -x " .. t_client) ~= ""
 end
 
 -- Function for torrents sorting (downloading and paused first)
@@ -476,7 +476,7 @@ function system.proc_info(cpu_storage)
 
 	-- get processes list with ps utility
 	-- !!! TODO: get processes list from fs directly !!!
-	local output = awful.util.pread("ps -eo pid | tail -n +2")
+	local output = redutil.read_output("ps -eo pid | tail -n +2")
 
 	-- get total cpu time diff from previous call
 	local cpu_diff = system.cpu_usage(cpu_storage).diff
