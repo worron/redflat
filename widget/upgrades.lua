@@ -11,12 +11,13 @@ local table = table
 local string = string
 
 local beautiful = require("beautiful")
+local awful = require("awful")
+local timer = require("gears.timer")
 
 local rednotify = require("redflat.float.notify")
 local tooltip = require("redflat.float.tooltip")
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
-local asyncshell = require("redflat.asyncshell")
 
 
 -- Initialize tables for module
@@ -27,7 +28,7 @@ local upgrades = { objects = {}, mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		icon        = nil,
+		icon        = redutil.placeholder(),
 		notify_icon = nil,
 		firstrun    = false,
 		need_notify = true,
@@ -55,7 +56,7 @@ function upgrades.new(update_timeout, style)
 
 	-- Set tooltip
 	--------------------------------------------------------------------------------
-	object.tp = tooltip({ object.widget }, style.tooltip)
+	object.tp = tooltip({ objects =  { object.widget } }, style.tooltip)
 
 	-- Update info function
 	--------------------------------------------------------------------------------
@@ -74,7 +75,7 @@ function upgrades.new(update_timeout, style)
 	function object.update(args)
 		local args = args or {}
 		force_notify = args.is_force
-		asyncshell.request("apt-get --just-print upgrade", update_count, 30)
+		awful.spawn.easy_async("apt-get --just-print upgrade", update_count)
 	end
 
 	-- Set update timer
