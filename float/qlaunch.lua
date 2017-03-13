@@ -94,7 +94,7 @@ local function default_style()
 		configfile      = os.getenv("HOME") .. "/.cache/awesome/applist",
 		label_font      = "Sans 14",
 		border_width    = 2,
-		keytip          = { geometry = { width = 500, height = 400 } },
+		keytip          = { geometry = { width = 500, height = 400 }, exit = false },
 		color           = { border = "#575757", text = "#aaaaaa", main = "#b1222b", urgent = "#32882d",
 		                    wibox  = "#202020", icon = "#a0a0a0", bg   = "#161616", gray   = "#575757" }
 	}
@@ -328,10 +328,8 @@ function qlaunch:init(args, style)
 	local keys = args.keys or switcher_keys
 
 	local style = redutil.table.merge(default_style(), style or {})
-	self.configfile = style.configfile
+	self.style = style
 	self.icon_db = redflat.service.dfparser.icon_list(style.parser)
-	self.notify_icon = style.notify_icon
-	self.keytip = style.keytip
 
 	self:load_config(keys)
 
@@ -380,8 +378,8 @@ function qlaunch:show()
 	awful.keygrabber.run(self.keygrabber)
 
 	redtip:set_pack(
-		"Quicklaunch widget", self.tip, self.keytip.column, self.keytip.geometry,
-		function() self:hide() end
+		"Quicklaunch widget", self.tip, self.style.keytip.column, self.style.keytip.geometry,
+		self.style.keytip.exit and function() self:hide() end
 	)
 end
 
@@ -440,13 +438,13 @@ function qlaunch:set_new_app(key)
 		self.store[key] = { app = client.focus.class:lower(), run = run_command }
 		redflat.float.notify:show({
 			text = string.format("%s binded with '%s'", client.focus.class, key),
-			icon = self.notify_icon,
+			icon = self.style.notify_icon,
 		})
 	else
 		self.store[key] = { app = "", run = "" }
 		redflat.float.notify:show({
 			text = string.format("'%s' key unbinded", key),
-			icon = self.notify_icon,
+			icon = self.style.notify_icon,
 		})
 	end
 
@@ -468,8 +466,8 @@ end
 -- Application list save/load
 --------------------------------------------------------------------------------
 function qlaunch:load_config(default_keys)
-	if is_file_exists(self.configfile) then
-		for line in io.lines(self.configfile) do
+	if is_file_exists(self.style.configfile) then
+		for line in io.lines(self.style.configfile) do
 			local key, app, run = string.match(line, "key=(.+);app=(.*);run=(.*);")
 			self.store[key] = { app = app, run = run }
 		end
@@ -479,7 +477,7 @@ function qlaunch:load_config(default_keys)
 end
 
 function qlaunch:save_config()
-	local file = io.open(self.configfile, "w+")
+	local file = io.open(self.style.configfile, "w+")
 	for key, data in pairs(self.store) do
 		file:write(string.format("key=%s;app=%s;run=%s;\n", key, data.app, data.run))
 	end

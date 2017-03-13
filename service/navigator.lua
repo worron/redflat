@@ -33,7 +33,7 @@ local function default_style()
 		marksize     = { width = 200, height = 100, r = 20 },
 		gradstep     = 100,
 		linegap      = 35,
-		keytip       = { base = { geometry = { width = 600, height = 600 } } },
+		keytip       = { base = { geometry = { width = 600, height = 600 }, exit = true } },
 		titlefont    = { font = "Sans", size = 28, face = 1, slant = 0 },
 		num          = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "F1", "F3", "F4", "F5" },
 		font         = { font = "Sans", size = 22, face = 1, slant = 0 },
@@ -226,7 +226,7 @@ function navigator:run()
 		local tip_style = self.style.keytip[l] or self.style.keytip.base
 		redtip:set_pack(
 			"Layout " .. l.name, tip, tip_style.column, tip_style.geometry,
-			function() redflat.layout.common.action.exit() end -- fix this?
+			self.style.keytip.base.exit and function() redflat.layout.common.action.exit() end -- fix this?
 		)
 	end
 end
