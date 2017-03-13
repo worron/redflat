@@ -86,6 +86,7 @@ local function default_style()
 		df_icon         = redutil.placeholder({ txt = "X" }),
 		no_icon         = redutil.placeholder(),
 		parser          = {},
+		recoloring      = false,
 		notify_icon     = nil,
 		geometry        = { width = 1680, height = 180 },
 		border_margin   = { 20, 20, 10, 10 },
@@ -216,6 +217,7 @@ local function build_item(key, style)
 		markup = string.format('<span color="%s">%s</span>', style.color.text, key),
 		align  = "center",
 		font = style.label_font,
+		forced_height = style.appline.lheight,
 		widget = wibox.widget.textbox,
 	})
 
@@ -256,8 +258,6 @@ local function build_switcher(keys, style)
 	local widg = { items = {}, selected = nil }
 	local middle_layout = wibox.layout.fixed.horizontal()
 
-	widg.layout = wibox.layout.align.horizontal()
-
 	-- Sorted keys
 	------------------------------------------------------------
 	local sk = {}
@@ -271,7 +271,12 @@ local function build_switcher(keys, style)
 		middle_layout:add(wibox.container.margin(widg.items[key].layout, unpack(style.appline.im)))
 	end
 
-	widg.layout:set_middle(wibox.container.margin(middle_layout, unpack(style.border_margin)))
+	widg.layout = wibox.widget({
+		nil,
+		wibox.container.margin(middle_layout, unpack(style.border_margin)),
+		expand = "outside",
+		layout = wibox.layout.align.horizontal,
+	})
 
 	-- Winget functions
 	------------------------------------------------------------
@@ -280,7 +285,7 @@ local function build_switcher(keys, style)
 		for key, data in pairs(store) do
 			local icon = data.app == "" and style.no_icon or idb[data.app] or style.df_icon
 			self.items[key].svgbox:set_image(icon)
-			self.items[key].svgbox:set_color(style.color.icon)
+			if style.recoloring then self.items[key].svgbox:set_color(style.color.icon) end
 		end
 	end
 
