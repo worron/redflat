@@ -35,12 +35,14 @@ local function default_style()
 		geometry      = { width = 800, height = 600 },
 		border_margin = { 10, 10, 10, 10 },
 		tspace        = 5,
+		delim         = "   ",
 		border_width  = 2,
 		ltimeout      = 0.05,
 		font          = "Sans 12",
 		keyfont       = "Sans bold 12",
 		titlefont     = "Sans bold 14",
 		is_align      = false,
+		separator     = {},
 		color         = { border = "#575757", text = "#aaaaaa", main = "#b1222b", wibox = "#202020",
 		                  gray = "#575757" }
 	}
@@ -61,18 +63,35 @@ end
 
 -- Parse raw key table
 --------------------------------------------------------------------------------
+local keysort = function(a, b)
+	if a.length ~= b.length then
+		return a.length < b.length
+	else
+		return a.key < b.key
+	end
+end
+
 local function parse(rawkeys, columns)
 	local keys = {}
 	local columns = columns or 1
-	local rk = { unpack(rawkeys) }
 	local p = math.ceil(#rawkeys / columns)
 
-	-- dirty trick for sorting
+	local rk = {}
+	for _, k in ipairs(rawkeys) do if k[#k].description then table.insert(rk, k) end end
+
+	-- dirty trick for raw sorting
 	local sp = {}
 	for _, v in ipairs(rk) do
 		if not hasitem(sp, v[#v].group) then table.insert(sp, v[#v].group) end
 	end
-	table.sort(rk, function(a, b) return hasitem(sp, a[#a].group) < hasitem(sp, b[#b].group) end)
+	table.sort(rk, function(a, b)
+		local ai, bi = hasitem(sp, a[#a].group), hasitem(sp, b[#b].group)
+		if ai ~= bi then
+			return ai < bi
+		else
+			return a[2] < b[2]
+		end
+	end)
 
 	-- split keys to columns
 	for i = 1, columns do
@@ -91,22 +110,18 @@ local function parse(rawkeys, columns)
 				length      = check_key_len({ mod = v[1], key = v[2] })
 			}
 
-			if k.description then
-				if not keys[i].groups[k.group] then
-					keys[i].groups[k.group] = {}
-					table.insert(keys[i].names, k.group) -- sorted names list to save group order
-				end
-				table.insert(keys[i].groups[k.group], k)
-
-				-- calculate max tip lenght
-				if not keys[i].length or keys[i].length < k.length then keys[i].length = k.length end
+			if not keys[i].groups[k.group] then
+				keys[i].groups[k.group] = {}
+				table.insert(keys[i].names, k.group) -- sorted names list to save group order
 			end
+			table.insert(keys[i].groups[k.group], k)
+
+			-- calculate max tip lenght
+			if not keys[i].length or keys[i].length < k.length then keys[i].length = k.length end
 		end
 
 		-- sort key by lenght inside group
-		for name, group in pairs(keys[i].groups) do
-			table.sort(group, function(a, b) return a.length < b.length end)
-		end
+		for name, group in pairs(keys[i].groups) do table.sort(group, keysort) end
 	end
 
 	return keys
@@ -148,8 +163,8 @@ local function build_tip(pack, style, keypressed)
 				-- key with description
 				local clr = keypressed and hasitem(key.keyset, keypressed) and style.color.main or style.color.text
 				line = string.format(
-					'<span color="%s"><span font="%s">%s</span>   %s</span>',
-					clr, style.keyfont, line, key.description
+					'<span color="%s"><span font="%s">%s</span>%s%s</span>',
+					clr, style.keyfont, line, style.delim, key.description
 				)
 				coltxt = coltxt .. line .. "\n"
 			end
@@ -199,7 +214,7 @@ function hotkeys:init()
 					align = "center",
 					widget = wibox.widget.textbox
 				},
-				redflat.gauge.separator.horizontal(),
+				redflat.gauge.separator.horizontal(style.separator),
 				spacing = style.tspace,
 				layout = wibox.layout.fixed.vertical,
 			},
