@@ -32,7 +32,6 @@ local TPI = math.pi * 2
 local switcher_keys = {}
 for i = 1, 9 do switcher_keys[tostring(i)] = { app = "", run = "" } end
 
-
 -- key bindings
 qlaunch.forcemod = { "Control" }
 qlaunch.keys = {
@@ -54,14 +53,12 @@ qlaunch.keys = {
 	},
 }
 
-
 qlaunch._fake_keys = {
 	{
 		{}, "N", nil,
 		{ description = "Select app by key", group = "Action",
 		  keyset = { "1", "2", "3", "4", "5", "6", "7", "8", "9" } }
 	},
-
 	{
 		{}, "N N", nil,
 		{ description = "Run or rise app by key", group = "Action",
