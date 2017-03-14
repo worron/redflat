@@ -60,7 +60,8 @@ local function default_style()
 		icon           = {},
 		micon          = {},
 		layout_icon    = {},
-		titleline      = { font = "Sans 16 bold", height = 35},
+		titleline      = { font = "Sans 16 bold", height = 35 },
+		stateline      = { height = 35 },
 		state_iconsize = { width = 20, height = 20 },
 		sep_margin     = { 3, 3, 5, 5 },
 		tagmenu        = { icon_margin = { 10, 10, 10, 10 } },
@@ -451,7 +452,7 @@ function redtasklist.winmenu:init(style)
 	local stateline_vertical = wibox.layout.align.vertical()
 	stateline_vertical:set_second(stateline_horizontal)
 	stateline_vertical:set_expand("outside")
-	local stateline = wibox.container.constraint(stateline_vertical, "exact", nil, style.titleline.height)
+	local stateline = wibox.container.constraint(stateline_vertical, "exact", nil, style.stateline.height)
 
 	-- set all state icons in line
 	local stateboxes = state_line_construct(state_icons, stateline_horizontal, style)
