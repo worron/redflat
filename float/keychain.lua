@@ -7,6 +7,7 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local string = string
+local table = table
 
 local wibox = require("wibox")
 local awful = require("awful")
@@ -117,8 +118,12 @@ function keychain:init(style)
 	-- Keygrabber
 	------------------------------------------------------------
 	self.keygrabber = function(mod, key, event)
-		if event == "press" then return false
-		elseif awful.util.table.hasitem(self.service.close,    key) then self:hide()
+		if event == "press" then return false end
+
+		-- dirty fix for first key release
+		if self.actkey == key and #mod == 0 then self.actkey = nil; return end
+
+		if awful.util.table.hasitem(self.service.close,    key) then self:hide()
 		elseif awful.util.table.hasitem(self.service.stepback, key) then self:undo()
 		elseif awful.util.table.hasitem(self.service.help,     key) then redtip:show()
 		else
@@ -133,6 +138,7 @@ end
 --------------------------------------------------------------------------------
 function keychain:activate(item, keytip)
 	if not self.wibox then self:init() end
+	self.actkey = keytip and item[2]
 
 	if type(item[3]) == "function" then
 		item[3]()
