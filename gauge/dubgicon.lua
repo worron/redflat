@@ -24,8 +24,8 @@ local dubgicon = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		icon1       = nil,
-		icon2       = nil,
+		icon1       = redutil.placeholder(),
+		icon2       = redutil.placeholder(),
 		igap        = 8,
 		is_vertical = false,
 		color       = { main = "#b1222b", icon = "#a0a0a0" }

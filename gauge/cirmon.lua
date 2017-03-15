@@ -72,7 +72,7 @@ function cirmon.new(style)
 
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height)
+	function widg:fit(context, width, height)
 		if data.width then
 			return data.width, height
 		else
@@ -83,7 +83,7 @@ function cirmon.new(style)
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
+	function widg:draw(context, cr, width, height)
 
 		-- center circle
 		cr:set_source(color(data.color))
