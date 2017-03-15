@@ -36,7 +36,7 @@ local function default_style()
 		                 wibox = "#202020", empty = "#575757"}
 	}
 
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.orangetag") or {})
+	return redutil.table.merge(style, redutil.check(beautiful, "gauge.tag.orange") or {})
 end
 
 -- Create a new tag widget
@@ -71,7 +71,7 @@ function orangetag.new(style)
 
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height)
+	function widg:fit(context, width, height)
 		if data.width then
 			return math.min(width, data.width), height
 		else
@@ -81,7 +81,7 @@ function orangetag.new(style)
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
+	function widg:draw(context, cr, width, height)
 
 		local sections = math.max(#data.state.list, style.min_sections)
 		local step = (TPI - sections * style.cgap) / sections
