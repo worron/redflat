@@ -56,22 +56,12 @@ qlaunch.keys = {
 qlaunch._fake_keys = {
 	{
 		{}, "N", nil,
-		{ description = "Select app by key", group = "Action",
-		  keyset = { "1", "2", "3", "4", "5", "6", "7", "8", "9" } }
-	},
-	{
-		{}, "N N", nil,
-		{ description = "Run or rise app by key", group = "Action",
-		  keyset = { "1", "2", "3", "4", "5", "6", "7", "8", "9" } }
-	},
-	{
-		{}, "N N", nil,
-		{ description = "Run app by key", group = "Action",
+		{ description = "Select app (run or rise if selected already) by key", group = "Action",
 		  keyset = { "1", "2", "3", "4", "5", "6", "7", "8", "9" } }
 	},
 	{
 		{}, "N", nil,
-		{ description = "Run selected app", group = "Action" }
+		{ description = "Select app (launch if selected already) by key", group = "Action" }
 	},
 }
 
@@ -380,7 +370,7 @@ function qlaunch:show()
 	awful.keygrabber.run(self.keygrabber)
 
 	redtip:set_pack(
-		"Quicklaunch widget", self.tip, self.style.keytip.column, self.style.keytip.geometry,
+		"Quick launch", self.tip, self.style.keytip.column, self.style.keytip.geometry,
 		self.style.keytip.exit and function() self:hide() end
 	)
 end
@@ -490,7 +480,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function qlaunch:set_keys(keys)
 	if keys then self.keys = keys end
-	for i = 3, 4 do self._fake_keys[i][1] = self.forcemod end
+	self._fake_keys[2][1] = self.forcemod
 	self.tip = awful.util.table.join(self.keys, self._fake_keys)
 end
 

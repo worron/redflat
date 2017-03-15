@@ -410,7 +410,7 @@ function appswitcher:show(args)
 	self.wibox.visible = true
 
 	redtip:set_pack(
-		"Appswitcher widget", self.tip, self.keytip.column, self.keytip.geometry,
+		"Appswitcher", self.tip, self.keytip.column, self.keytip.geometry,
 		self.keytip.exit and  function() appswitcher:hide(true) end
 	)
 end

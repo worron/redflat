@@ -317,7 +317,7 @@ function apprunner:show()
 
 	redutil.placement.centered(self.wibox, nil, mouse.screen.workarea)
 	self.wibox.visible = true
-	redtip:set_pack("Apprunner widget", self.keys, self.keytip.column, self.keytip.geometry)
+	redtip:set_pack("Apprunner", self.keys, self.keytip.column, self.keytip.geometry)
 
 	return awful.prompt.run({
 		prompt = "",

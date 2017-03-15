@@ -232,7 +232,7 @@ function top:init()
 		for _, k in ipairs(self.keys) do
 			if redutil.key.match_grabber(k, mod, key) then k[3](); return end
 		end
-		if string.match(key, "%d") then select_item(tonumber(key)) end
+		if string.match("123456789", key) then select_item(tonumber(key)) end
 	end
 
 	-- Build title
