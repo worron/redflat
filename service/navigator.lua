@@ -223,7 +223,7 @@ function navigator:run()
 	-- set keys tip
 	self.tip_settled = tip
 	if tip then
-		local tip_style = self.style.keytip[l] or self.style.keytip.base
+		local tip_style = self.style.keytip[awful.layout.getname(l)] or self.style.keytip.base
 		redtip:set_pack(
 			"Layout " .. l.name, tip, tip_style.column, tip_style.geometry,
 			self.style.keytip.base.exit and function() redflat.layout.common.action.exit() end -- fix this?
