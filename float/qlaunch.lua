@@ -44,8 +44,12 @@ qlaunch.keys = {
 		{ description = "Run or rise selected app", group = "Action" }
 	},
 	{
-		{}, "s", function() qlaunch:set_new_app(qlaunch.switcher.selected) end,
+		{}, "s", function() qlaunch:set_new_app(qlaunch.switcher.selected, client.focus) end,
 		{ description = "Bind focused app to selected key", group = "Action" }
+	},
+	{
+		{}, "d", function() qlaunch:set_new_app(qlaunch.switcher.selected) end,
+		{ description = "Clear selected key", group = "Action" }
 	},
 	{
 		{ "Mod4" }, "F1", function() redtip:show() end,
@@ -422,14 +426,14 @@ end
 
 -- Bind new application to given hotkey
 --------------------------------------------------------------------------------
-function qlaunch:set_new_app(key)
+function qlaunch:set_new_app(key, c)
 	if not key  then return end
 
-	if client.focus then
-		local run_command = redutil.read_output(string.format("tr '\\0' ' ' < /proc/%s/cmdline", client.focus.pid))
-		self.store[key] = { app = client.focus.class:lower(), run = run_command }
+	if c then
+		local run_command = redutil.read_output(string.format("tr '\\0' ' ' < /proc/%s/cmdline", c.pid))
+		self.store[key] = { app = c.class:lower(), run = run_command }
 		redflat.float.notify:show({
-			text = string.format("%s binded with '%s'", client.focus.class, key),
+			text = string.format("%s binded with '%s'", c.class, key),
 			icon = self.style.notify_icon,
 		})
 	else
@@ -441,6 +445,7 @@ function qlaunch:set_new_app(key)
 	end
 
 	self.switcher:update(self.store, self.icon_db)
+	self.switcher:reset()
 end
 
 -- Save information about last focused client in widget store
