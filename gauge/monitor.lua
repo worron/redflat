@@ -11,6 +11,7 @@ local math = math
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local color = require("gears.color")
+local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
 
@@ -77,7 +78,7 @@ function monitor.new(style)
 
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height)
+	function widg:fit(context, width, height)
 		if data.width then
 			return data.width, height
 		else
@@ -88,7 +89,7 @@ function monitor.new(style)
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
+	function widg:draw(context, cr, width, height)
 
 		-- label
 		cr:set_source(color(data.color))
