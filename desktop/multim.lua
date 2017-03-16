@@ -135,11 +135,11 @@ function multim.new(args, geometry, style)
 		get_and_set(args.meter.args)
 	end
 
-	local function update_asyncshell()
-		awful.spawn.easy_async(args.asyncshell, get_and_set)
+	local function update_async()
+		awful.spawn.easy_async(args.async, get_and_set)
 	end
 
-	local update = args.asyncshell and update_asyncshell or update_plain
+	local update = args.async and update_async or update_plain
 
 	-- Set update timer
 	--------------------------------------------------------------------------------

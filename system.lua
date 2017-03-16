@@ -383,7 +383,7 @@ function system.thermal.nvprime()
 end
 
 -- Get info from transmission-remote client
--- This function adapted special for asyncshell
+-- This function adapted special for async reading
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Check if transmission client running
