@@ -65,11 +65,11 @@ local function default_style()
 		comment_font     = "Sans 12",
 		border_width     = 2,
 		keytip           = { geometry = { width = 400, height = 300 } },
-		dimage           = redutil.placeholder(),
+		dimage           = redutil.base.placeholder(),
 		color            = { border = "#575757", text = "#aaaaaa", highlight = "#eeeeee", main = "#b1222b",
 		                     bg = "#161616", bg_second = "#181818", wibox = "#202020", icon = "a0a0a0" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "float.apprunner") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "float.apprunner") or {})
 end
 
 -- Support functions

@@ -40,7 +40,7 @@ local appswitcher = { clients_list = {}, index = 1, hotkeys = {}, svgsize = 256 
 
 local cache = { border_color = nil }
 local svgcache = {}
-local _empty_surface = redutil.placeholder({ txt = " " })
+local _empty_surface = redutil.base.placeholder({ txt = " " })
 
 -- key bindings
 appswitcher.keys = {
@@ -94,7 +94,7 @@ local function default_style()
 		                    wibox  = "#202020", icon = "#a0a0a0", bg   = "#161616", gray = "#575757" }
 	}
 
-	return redutil.table.merge(style, redutil.check(beautiful, "float.appswitcher") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "float.appswitcher") or {})
 end
 
 -- Support functions
@@ -335,7 +335,7 @@ function appswitcher:init()
 			local txt = style.hotkeys[i] or "?"
 			cr:set_source(gears.color(i == self.index and style.color.main or style.color.text))
 			redutil.cairo.set_font(cr, style.font)
-			redutil.cairo.tcenter_horizontal(cr, { psize.width/2, psize.height + style.label_height }, txt)
+			redutil.cairo.textcentre.horizontal(cr, { psize.width/2, psize.height + style.label_height }, txt)
 		end
 
 		collectgarbage() -- prevents memory leak after complex draw function

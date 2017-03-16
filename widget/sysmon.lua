@@ -28,7 +28,7 @@ local function default_style()
 		width   = nil,
 		widget = monitor.new
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "widget.sysmon") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.sysmon") or {})
 end
 
 -- Create a new cpu monitor widget

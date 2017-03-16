@@ -40,7 +40,7 @@ local function default_style()
 		wm_name           = nil,
 	}
 
-	return redutil.table.merge(style, redutil.check(beautiful, "service.dfparser") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "service.dfparser") or {})
 end
 
 -- Support functions
@@ -259,7 +259,7 @@ local function parse_dir(dir, style)
 	local cached = check_cached(req)
 
 	if not cached then
-		local files = redutil.read_output('find '.. dir ..' -maxdepth 1 -name "*.desktop" 2>/dev/null')
+		local files = redutil.read.output('find '.. dir ..' -maxdepth 1 -name "*.desktop" 2>/dev/null')
 
 		for file in string.gmatch(files, "[^\n]+") do
 			local program = parse(file, style)

@@ -39,7 +39,7 @@ end
 
 -- get time stamp
 function timestamp.get()
-	res = redutil.read_ffile(timestamp.path)
+	res = redutil.read.file(timestamp.path)
 	if res then return tonumber(res) end
 end
 

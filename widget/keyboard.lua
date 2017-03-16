@@ -32,11 +32,11 @@ local pre_command = "dbus-send --dest=ru.gentoo.KbddService /ru/gentoo/KbddServi
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		icon         = redutil.placeholder(),
+		icon         = redutil.base.placeholder(),
 		micon        = {},
 		layout_color = {}
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "widget.keyboard") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.keyboard") or {})
 end
 
 -- Initialize layout menu

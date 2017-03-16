@@ -81,7 +81,7 @@ local function default_style()
 		nohide       = true
 	}
 
-	return redutil.table.merge(style, redutil.check(beautiful, "widget.tasklist") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.tasklist") or {})
 end
 
 -- Support functions
@@ -354,7 +354,7 @@ local function tasklist_construct(client_groups, layout, data, buttons, style)
 		-- set info and buttons to widget
 		local state = get_state(c_group, style.char_digit, style.appnames)
 		task.widg:set_state(state)
-		task.widg:buttons(redutil.create_buttons(buttons, { group = c_group }))
+		task.widg:buttons(redutil.base.buttons(buttons, { group = c_group }))
 
 		-- construct
 		layout:add(task.l)
@@ -391,7 +391,7 @@ local function construct_tasktip(c_group, layout, data, buttons, style)
 			if state.urgent    then line:mark_urgent()    end
 
 			local gap = (i - 1) * (tb_h + style.margin[3] + style.margin[4])
-			if buttons then line.field:buttons(redutil.create_buttons(buttons, { group = { c }, gap = gap })) end
+			if buttons then line.field:buttons(redutil.base.buttons(buttons, { group = { c }, gap = gap })) end
 		else
 			if buttons then line.field:buttons({}) end
 		end

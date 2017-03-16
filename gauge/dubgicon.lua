@@ -24,13 +24,13 @@ local dubgicon = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		icon1       = redutil.placeholder(),
-		icon2       = redutil.placeholder(),
+		icon1       = redutil.base.placeholder(),
+		icon2       = redutil.base.placeholder(),
 		igap        = 8,
 		is_vertical = false,
 		color       = { main = "#b1222b", icon = "#a0a0a0" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.dubgicon") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.dubgicon") or {})
 end
 
 -- Support functions

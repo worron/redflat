@@ -28,7 +28,7 @@ local function default_style()
 		spacing = 0,
 		color = { gray = "#525252" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "desktop.textset") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.textset") or {})
 end
 
 -- Create a textset widget. It draws the time it is in a textbox.

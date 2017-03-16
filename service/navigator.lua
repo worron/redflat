@@ -40,7 +40,7 @@ local function default_style()
 		color        = { border = "#575757", wibox = "#00000000", bg1 = "#57575740", bg2 = "#57575720",
 		                 fbg1 = "#b1222b40", fbg2 = "#b1222b20", mark = "#575757", text = "#202020" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "service.navigator") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "service.navigator") or {})
 end
 
 -- Support functions
@@ -119,9 +119,9 @@ function navigator.make_paint(c)
 
 		cr:set_source(color(style.color.text))
 		redutil.cairo.set_font(cr, style.titlefont)
-		redutil.cairo.tcenter(cr, { width/2, height/2 - style.linegap / 2 }, index)
+		redutil.cairo.textcentre.vertical(cr, { width/2, height/2 - style.linegap / 2 }, index)
 		redutil.cairo.set_font(cr, style.font)
-		redutil.cairo.tcenter(cr, { width/2, height/2 + style.linegap / 2 }, g.width .. " x " .. g.height)
+		redutil.cairo.textcentre.vertical(cr, { width/2, height/2 + style.linegap / 2 }, g.width .. " x " .. g.height)
 	end
 
 	------------------------------------------------------------

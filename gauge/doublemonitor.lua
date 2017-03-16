@@ -24,12 +24,12 @@ local doublemonitor = { mt = {} }
 local function default_style()
 	local style = {
 		line    = { width = 4, v_gap = 6, gap = 4, num = 5 },
-		icon    = redutil.placeholder(),
+		icon    = redutil.base.placeholder(),
 		dmargin = { 10, 0, 0, 0 },
 		width   = 100,
 		color   = { main = "#b1222b", gray = "#575757", icon = "#a0a0a0", urgent = "#32882d" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.doublemonitor") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.doublemonitor") or {})
 end
 
 -- Create progressbar widget

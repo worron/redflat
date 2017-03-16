@@ -33,7 +33,7 @@ local function default_style()
 	local style = {
 		notify_icon = nil,
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "widget.brightness") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.brightness") or {})
 end
 
 -- Change brightness level
@@ -57,7 +57,7 @@ function brightness:change_with_gsd(args)
 	local args = redutil.table.merge(defaults, args or {})
 
 	-- correction because of strange dbus output rounding
-	local dbus_output = redutil.read_output(gsd_command .. gsd_get)
+	local dbus_output = redutil.read.output(gsd_command .. gsd_get)
 	local brightness_level = string.match(dbus_output, "uint32%s(%d+)") + self.dbus_correction
 
 	-- increase/decrease
@@ -80,7 +80,7 @@ end
 ------------------------------------------------------------
 function brightness.info_with_xbacklight()
 	if not brightness.style then brightness.style = default_style() end
-	local brightness_level = redutil.read_output("xbacklight -get")
+	local brightness_level = redutil.read.output("xbacklight -get")
 
 	rednotify:show({
 		value = brightness_level / 100,
@@ -95,7 +95,7 @@ function brightness.info_with_gsd(brightness_level)
 	if not brightness.style then brightness.style = default_style() end
 
 	if not brightness_level then
-		local brightness_level = string.match(redutil.read_output(gsd_command .. gsd_get), "uint32%s(%d+)")
+		local brightness_level = string.match(redutil.read.output(gsd_command .. gsd_get), "uint32%s(%d+)")
 	end
 
 	rednotify:show({

@@ -74,8 +74,8 @@ qlaunch._fake_keys = {
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		df_icon         = redutil.placeholder({ txt = "X" }),
-		no_icon         = redutil.placeholder(),
+		df_icon         = redutil.base.placeholder({ txt = "X" }),
+		no_icon         = redutil.base.placeholder(),
 		parser          = {},
 		recoloring      = false,
 		notify_icon     = nil,
@@ -91,7 +91,7 @@ local function default_style()
 		                    wibox  = "#202020", icon = "#a0a0a0", bg   = "#161616", gray   = "#575757" }
 	}
 
-	return redutil.table.merge(style, redutil.check(beautiful, "float.qlaunch") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "float.qlaunch") or {})
 end
 
 
@@ -430,7 +430,7 @@ function qlaunch:set_new_app(key, c)
 	if not key  then return end
 
 	if c then
-		local run_command = redutil.read_output(string.format("tr '\\0' ' ' < /proc/%s/cmdline", c.pid))
+		local run_command = redutil.read.output(string.format("tr '\\0' ' ' < /proc/%s/cmdline", c.pid))
 		self.store[key] = { app = c.class:lower(), run = run_command }
 		redflat.float.notify:show({
 			text = string.format("%s binded with '%s'", c.class, key),

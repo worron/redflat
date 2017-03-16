@@ -40,7 +40,7 @@ local function default_style()
 		occupied  = { x = 65, y = 10, width = 10, height = 15 }
 	}
 
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.tag.red") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.tag.red") or {})
 end
 
 local function fill_geometry(width, height, geometry)
@@ -140,7 +140,7 @@ function redtag.new(style)
 		-- text
 		cr:set_source(color(style.color.icon))
 		redutil.cairo.set_font(cr, style.font)
-		redutil.cairo.tcenter_horizontal(cr, { width/2, style.text_gap }, data.state.text)
+		redutil.cairo.textcentre.horizontal(cr, { width/2, style.text_gap }, data.state.text)
 
 		-- active mark
 		cr:set_source(color(data.state.active and style.color.main or style.color.gray))
@@ -172,7 +172,7 @@ function redtag.new(style)
 			cr:fill()
 
 			cr:set_source(color(style.color.icon))
-			redutil.cairo.tcenter(cr, style.counter.coord, tostring(#data.state.list))
+			redutil.cairo.textcentre.vertical(cr, style.counter.coord, tostring(#data.state.list))
 		end
 	end
 

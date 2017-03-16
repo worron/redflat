@@ -28,7 +28,7 @@ local function default_style()
 		icon  = {},
 		color = { main = "#b1222b", icon = "#a0a0a0", mute = "#404040" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.audio.red") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.audio.red") or {})
 end
 
 -- Support functions
@@ -49,9 +49,9 @@ function audio.new(style)
 	-- Icon widgets
 	------------------------------------------------------------
 	local icon = {}
-	icon.ready = svgbox(style.icon.ready or redutil.placeholder())
+	icon.ready = svgbox(style.icon.ready or redutil.base.placeholder())
 	icon.ready:set_color(style.color.icon)
-	icon.mute = svgbox(style.icon.mute or redutil.placeholder())
+	icon.mute = svgbox(style.icon.mute or redutil.base.placeholder())
 	icon.mute:set_color(style.color.mute)
 
 	-- Create widget

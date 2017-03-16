@@ -38,7 +38,7 @@ local function default_style()
 		color           = { border = "#575757", wibox = "#202020" }
 	}
 
-	return redflat.util.table.merge(style, redflat.util.check(beautiful, "float.keychain") or {})
+	return redflat.util.table.merge(style, redflat.util.table.check(beautiful, "float.keychain") or {})
 end
 
 -- Support functions

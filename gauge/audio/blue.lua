@@ -27,12 +27,12 @@ local audio = { mt = {} }
 local function default_style()
 	local style = {
 		width   = 100,
-		icon    = redutil.placeholder(),
+		icon    = redutil.base.placeholder(),
 		dash    = {},
 		dmargin = { 10, 0, 0, 0 },
 		color   = { icon = "#a0a0a0", mute = "#404040" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.audio.blue") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.audio.blue") or {})
 end
 
 -- Create a new audio widget

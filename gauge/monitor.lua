@@ -30,7 +30,7 @@ local function default_style()
 		width    = nil,
 		color    = { main = "#b1222b", gray = "#575757", icon = "#a0a0a0" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.monitor") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.monitor") or {})
 end
 
 -- Create a new monitor widget
@@ -94,7 +94,7 @@ function monitor.new(style)
 		-- label
 		cr:set_source(color(data.color))
 		redutil.cairo.set_font(cr, style.font)
-		redutil.cairo.tcenter_horizontal(cr, { width/2, style.text_gap }, data.label)
+		redutil.cairo.textcentre.horizontal(cr, { width/2, style.text_gap }, data.label)
 
 		-- progressbar
 		local wd = { width, width * data.value }

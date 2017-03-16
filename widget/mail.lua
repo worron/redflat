@@ -27,13 +27,13 @@ local mail = { objects = {}, mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		icon        = redutil.placeholder(),
+		icon        = redutil.base.placeholder(),
 		notify_icon = nil,
 		need_notify = true,
 		firstrun    = false,
 		color       = { main = "#b1222b", icon = "#a0a0a0" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "widget.mail") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.mail") or {})
 end
 
 -- Mail check functions
