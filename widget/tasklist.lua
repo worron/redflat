@@ -174,7 +174,12 @@ local function state_line_construct(state_icons, setup_layout, style)
 		setup_layout:add(l)
 
 		-- set mouse action
-		stateboxes[i]:buttons(awful.util.table.join(awful.button({}, 1, v.act)))
+		stateboxes[i]:buttons(awful.util.table.join(awful.button({}, 1,
+			function()
+				v.action()
+				stateboxes[i]:set_color(v.indicator(last.client) and style.color.main or style.color.gray)
+			end
+		)))
 	end
 
 	return stateboxes
@@ -418,9 +423,9 @@ function redtasklist.winmenu:init(style)
 	--------------------------------------------------------------------------------
 	local function icon_table_ganerator(property)
 		return {
-			icon = style.icon[property],
-			act  = function() last.client[property] = not last.client[property] end,
-			ind  = function(c) return c[property] end
+			icon      = style.icon[property],
+			action    = function() last.client[property] = not last.client[property] end,
+			indicator = function(c) return c[property] end
 		}
 	end
 
@@ -429,8 +434,7 @@ function redtasklist.winmenu:init(style)
 		icon_table_ganerator("sticky"),
 		icon_table_ganerator("ontop"),
 		icon_table_ganerator("below"),
-		icon_table_ganerator("maximized_horizontal"),
-		icon_table_ganerator("maximized_vertical"),
+		icon_table_ganerator("maximized"),
 	}
 
 	-- Construct menu
@@ -460,7 +464,7 @@ function redtasklist.winmenu:init(style)
 	-- update function for state icons
 	local function stateboxes_update(c, state_icons, stateboxes)
 		for i, v in ipairs(state_icons) do
-			stateboxes[i]:set_color(v.ind(c) and style.color.main or style.color.gray)
+			stateboxes[i]:set_color(v.indicator(c) and style.color.main or style.color.gray)
 		end
 	end
 
@@ -483,9 +487,9 @@ function redtasklist.winmenu:init(style)
 			menusep,
 			{ "Move to tag", { items = movemenu_items, theme = style.tagmenu} },
 			{ "Add to tag",  { items = addmenu_items,  theme = style.tagmenu} },
-			{ "Maximize",    maximize, nil, style.icon.maximize },
-			{ "Minimize",    minimize, nil, style.icon.minimize },
-			{ "Close",       close,    nil, style.icon.close    },
+			{ "Maximize",    maximize, nil, style.icon.maximized },
+			{ "Minimize",    minimize, nil, style.icon.minimize  },
+			{ "Close",       close,    nil, style.icon.close     },
 			menusep,
 			{ widget = stateline }
 		}
@@ -506,8 +510,7 @@ function redtasklist.winmenu:init(style)
 	-- and does not connected to tasklist
 	--------------------------------------------------------------------------------
 	local client_signals = {
-		"property::ontop", "property::floating", "property::below",
-		"property::maximized_horizontal", "property::maximized_vertical"
+		"property::ontop", "property::floating", "property::below", "property::maximized",
 	}
 	for _, sg in ipairs(client_signals) do
 		client.connect_signal(sg, function() self:update(last.client) end)
