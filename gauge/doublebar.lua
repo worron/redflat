@@ -22,7 +22,6 @@ local doublebar = { mt = {} }
 local function default_style()
 	local style = {
 		line  = { width = 4, gap = 5 },
-		v_gap = 8,
 		color = { main = "#b1222b", gray = "#575757" }
 	}
 	return redutil.table.merge(style, redutil.check(beautiful, "gauge.doublebar") or {})
@@ -56,24 +55,22 @@ function doublebar.new(style)
 
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height)
+	function widg:fit(context, width, height)
 		local width = 2 * style.line.width + style.line.gap
 		return width, height
 	end
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
-		local bar_height = height - 2*style.v_gap
-
+	function widg:draw(context, cr, width, height)
 		cr:set_source(color(style.color.gray))
-		cr:rectangle(0, style.v_gap, style.line.width, bar_height)
-		cr:rectangle(width - style.line.width, style.v_gap, style.line.width, bar_height)
+		cr:rectangle(0, 0, style.line.width, height)
+		cr:rectangle(width - style.line.width, 0, style.line.width, height)
 		cr:fill()
 
 		cr:set_source(color(style.color.main))
-		cr:rectangle(0, height - style.v_gap, style.line.width, - bar_height * data.value[1])
-		cr:rectangle(width - style.line.width, height - style.v_gap, style.line.width, - bar_height * data.value[2])
+		cr:rectangle(0, height, style.line.width, - height * data.value[1])
+		cr:rectangle(width - style.line.width, height, style.line.width, - height * data.value[2])
 		cr:fill()
 	end
 
