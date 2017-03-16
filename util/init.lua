@@ -9,6 +9,6 @@ end
 
 local setmetatable = setmetatable
 
-local lib = { _NAME = "redflat.newutil" }
+local lib = { _NAME = "redflat.util", wrequire = wrequire }
 
 return setmetatable(lib, { __index = wrequire })
