@@ -29,7 +29,7 @@ local function default_style()
 		tooltip = {},
 		color = { text = "#aaaaaa" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "widget.textclock") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.textclock") or {})
 end
 
 -- Create a textclock widget. It draws the time it is in a textbox.

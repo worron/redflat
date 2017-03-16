@@ -81,7 +81,7 @@ local function default_style()
 		nohide       = true
 	}
 
-	return redutil.table.merge(style, redutil.check(beautiful, "widget.tasklist") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.tasklist") or {})
 end
 
 -- Support functions

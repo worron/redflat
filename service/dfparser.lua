@@ -40,7 +40,7 @@ local function default_style()
 		wm_name           = nil,
 	}
 
-	return redutil.table.merge(style, redutil.check(beautiful, "service.dfparser") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "service.dfparser") or {})
 end
 
 -- Support functions

@@ -24,7 +24,7 @@ local function default_style()
 		line  = { width = 4, gap = 5 },
 		color = { main = "#b1222b", gray = "#575757" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.doublebar") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.doublebar") or {})
 end
 
 -- Create a new doublebar widget

@@ -39,7 +39,7 @@ local function default_style()
 		progressbar     = {},
 		color           = { border = "#575757", icon = "#aaaaaa", wibox = "#202020" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "float.notify") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "float.notify") or {})
 end
 
 -- Initialize notify widget

@@ -44,7 +44,7 @@ local function default_style()
 		widget      = audio.new,
 		audio       = {}
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "widget.pulse") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.pulse") or {})
 end
 
 local change_volume_default_args = {

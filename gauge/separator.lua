@@ -26,7 +26,7 @@ local function default_style()
 		marginh = { 0, 0, 0, 0 },
 		color  = { shadow1 = "#141414", shadow2 = "#313131" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.separator") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.separator") or {})
 end
 
 -- Create a new separator widget

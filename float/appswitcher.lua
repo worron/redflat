@@ -94,7 +94,7 @@ local function default_style()
 		                    wibox  = "#202020", icon = "#a0a0a0", bg   = "#161616", gray = "#575757" }
 	}
 
-	return redutil.table.merge(style, redutil.check(beautiful, "float.appswitcher") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "float.appswitcher") or {})
 end
 
 -- Support functions

@@ -36,7 +36,7 @@ local function default_style()
 		micon        = {},
 		layout_color = {}
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "widget.keyboard") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.keyboard") or {})
 end
 
 -- Initialize layout menu

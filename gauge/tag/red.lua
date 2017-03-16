@@ -40,7 +40,7 @@ local function default_style()
 		occupied  = { x = 65, y = 10, width = 10, height = 15 }
 	}
 
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.tag.red") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.tag.red") or {})
 end
 
 local function fill_geometry(width, height, geometry)

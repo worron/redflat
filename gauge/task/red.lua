@@ -30,7 +30,7 @@ local function default_style()
 		color    = { main = "#b1222b", gray = "#575757", icon = "#a0a0a0",
 		            urgent = "#32882d", wibox = "#202020" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.task.red") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.task.red") or {})
 end
 
 -- Create a new redtask widget

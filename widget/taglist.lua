@@ -40,7 +40,7 @@ local function default_style()
 		timeout   = 0.05,
 		separator = nil
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "widget.taglist") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.taglist") or {})
 end
 
 -- Support functions

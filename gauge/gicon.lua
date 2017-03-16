@@ -29,7 +29,7 @@ local function default_style()
 		is_vertical = false,
 		color       = { main = "#b1222b", icon = "#a0a0a0", urgent = "#32882d" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.gicon") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.gicon") or {})
 end
 
 -- Support functions

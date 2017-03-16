@@ -40,7 +40,7 @@ local function default_style()
 		name_alias = {},
 		color      = { icon = "#a0a0a0" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "widget.layoutbox") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.layoutbox") or {})
 end
 
 -- Initialize layoutbox

@@ -34,7 +34,7 @@ local function default_style()
 		need_notify = true,
 		color       = { main = "#b1222b", icon = "#a0a0a0" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "widget.upgrades") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.upgrades") or {})
 end
 
 -- Create a new upgrades widget

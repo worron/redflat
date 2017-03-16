@@ -31,6 +31,7 @@ util.key = require("redflat.newutil.key")
 util.desktop = require("redflat.newutil.desktop")
 util.client = require("redflat.newutil.client")
 util.placement = require("redflat.newutil.placement")
+util.table = require("redflat.newutil.table")
 
 -----------------------------------------------------------------------------------------------------------------------
 function util.placeholder(args)
@@ -70,19 +71,19 @@ end
 
 -- Check if deep key exists
 -----------------------------------------------------------------------------------------------------------------------
-function util.check(t, s)
-    local v = t
+-- function util.table.check(t, s)
+--     local v = t
 
-    for key in string.gmatch(s, "([^%.]+)(%.?)") do
-        if v[key] then
-            v = v[key]
-        else
-            return nil
-        end
-    end
+--     for key in string.gmatch(s, "([^%.]+)(%.?)") do
+--         if v[key] then
+--             v = v[key]
+--         else
+--             return nil
+--         end
+--     end
 
-    return v
-end
+--     return v
+-- end
 
 -- Format text
 -----------------------------------------------------------------------------------------------------------------------
@@ -172,21 +173,21 @@ end
 -- Table operations
 -----------------------------------------------------------------------------------------------------------------------
 
--- Merge two table to new one
-------------------------------------------------------------
-function util.table.merge(t1, t2)
-	local ret = awful.util.table.clone(t1)
+-- -- Merge two table to new one
+-- ------------------------------------------------------------
+-- function util.table.merge(t1, t2)
+-- 	local ret = awful.util.table.clone(t1)
 
-	for k, v in pairs(t2) do
-		if type(v) == "table" and ret[k] and type(ret[k]) == "table" then
-			ret[k] = util.table.merge(ret[k], v)
-		else
-			ret[k] = v
-		end
-	end
+-- 	for k, v in pairs(t2) do
+-- 		if type(v) == "table" and ret[k] and type(ret[k]) == "table" then
+-- 			ret[k] = util.table.merge(ret[k], v)
+-- 		else
+-- 			ret[k] = v
+-- 		end
+-- 	end
 
-	return ret
-end
+-- 	return ret
+-- end
 
 -- Table elements sum
 ------------------------------------------------------------
