@@ -430,7 +430,7 @@ function qlaunch:set_new_app(key, c)
 	if not key  then return end
 
 	if c then
-		local run_command = redutil.read_output(string.format("tr '\\0' ' ' < /proc/%s/cmdline", c.pid))
+		local run_command = redutil.read.output(string.format("tr '\\0' ' ' < /proc/%s/cmdline", c.pid))
 		self.store[key] = { app = c.class:lower(), run = run_command }
 		redflat.float.notify:show({
 			text = string.format("%s binded with '%s'", c.class, key),

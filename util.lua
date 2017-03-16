@@ -24,6 +24,7 @@ local surface = require("gears.surface")
 local util = { text = {}, cairo = {}, table = {}, desktop = {}, placement = {}, client = {}, key = {} }
 
 util.floating_layout = {}
+util.read = require("redflat.newutil.read")
 
 -----------------------------------------------------------------------------------------------------------------------
 function util.placeholder(args)
@@ -40,26 +41,26 @@ end
 
 -- Read from file
 -----------------------------------------------------------------------------------------------------------------------
-function util.read_ffile(path)
-	local file = io.open(path)
+-- function util.read.file(path)
+-- 	local file = io.open(path)
 
-	if file then
-		output = file:read("*a")
-		file:close()
-	else
-		return nil
-	end
+-- 	if file then
+-- 		output = file:read("*a")
+-- 		file:close()
+-- 	else
+-- 		return nil
+-- 	end
 
-	return output
-end
+-- 	return output
+-- end
 
-function util.read_output(cmd)
-	local file = assert(io.popen(cmd, 'r'))
-	local output = file:read('*all')
-	file:close()
+-- function util.read_output(cmd)
+-- 	local file = assert(io.popen(cmd, 'r'))
+-- 	local output = file:read('*all')
+-- 	file:close()
 
-	return output
-end
+-- 	return output
+-- end
 
 -- Check if deep key exists
 -----------------------------------------------------------------------------------------------------------------------
