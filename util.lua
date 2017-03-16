@@ -28,6 +28,7 @@ util.read = require("redflat.newutil.read")
 util.text = require("redflat.newutil.text")
 util.cairo = require("redflat.newutil.cairo")
 util.key = require("redflat.newutil.key")
+util.desktop = require("redflat.newutil.desktop")
 
 -----------------------------------------------------------------------------------------------------------------------
 function util.placeholder(args)
@@ -187,14 +188,14 @@ end
 
 -- Table elements sum
 ------------------------------------------------------------
-function util.table.sum(t, n)
-	local s = 0
-	local n = n or #t
+-- function util.table.sum(t, n)
+-- 	local s = 0
+-- 	local n = n or #t
 
-	for i = 1, n do s = s + t[i] end
+-- 	for i = 1, n do s = s + t[i] end
 
-	return s
-end
+-- 	return s
+-- end
 
 -- Key utilits
 -----------------------------------------------------------------------------------------------------------------------
@@ -237,53 +238,53 @@ end
 -- Desktop utilits
 -----------------------------------------------------------------------------------------------------------------------
 
-local function wposition(grid, n, workarea, dir)
-	local total = util.table.sum(grid[dir])
-	local full_gap = util.table.sum(grid.edge[dir])
-	local gap = #grid[dir] > 1 and (workarea[dir] - total - full_gap) / (#grid[dir] - 1) or 0
+-- local function wposition(grid, n, workarea, dir)
+-- 	local total = util.table.sum(grid[dir])
+-- 	local full_gap = util.table.sum(grid.edge[dir])
+-- 	local gap = #grid[dir] > 1 and (workarea[dir] - total - full_gap) / (#grid[dir] - 1) or 0
 
-	local current = util.table.sum(grid[dir], n - 1)
-	local pos = grid.edge[dir][1] + (n - 1) * gap + current
+-- 	local current = util.table.sum(grid[dir], n - 1)
+-- 	local pos = grid.edge[dir][1] + (n - 1) * gap + current
 
-	return pos
-end
+-- 	return pos
+-- end
 
 
--- Calculate size and position for desktop widget
-------------------------------------------------------------
-function util.desktop.wgeometry(grid, place, workarea)
-	return {
-		x = wposition(grid, place[1], workarea, "width"),
-		y = wposition(grid, place[2], workarea, "height"),
-		width  = grid.width[place[1]],
-		height = grid.height[place[2]]
-	}
-end
+-- -- Calculate size and position for desktop widget
+-- ------------------------------------------------------------
+-- function util.desktop.wgeometry(grid, place, workarea)
+-- 	return {
+-- 		x = wposition(grid, place[1], workarea, "width"),
+-- 		y = wposition(grid, place[2], workarea, "height"),
+-- 		width  = grid.width[place[1]],
+-- 		height = grid.height[place[2]]
+-- 	}
+-- end
 
 -- Edge constructor
 ------------------------------------------------------------
-function util.desktop.edge(direction, zone)
-	local edge = { area = {} }
+-- function util.desktop.edge(direction, zone)
+-- 	local edge = { area = {} }
 
-	edge.wibox = wibox({
-		bg      = "#00000000",  -- transparent without compositing manager
-		opacity = 0,            -- transparent with compositing manager
-		ontop   = true,
-		visible = true
-	})
+-- 	edge.wibox = wibox({
+-- 		bg      = "#00000000",  -- transparent without compositing manager
+-- 		opacity = 0,            -- transparent with compositing manager
+-- 		ontop   = true,
+-- 		visible = true
+-- 	})
 
-	edge.layout = wibox.layout.fixed[direction]()
-	edge.wibox:set_widget(edge.layout)
+-- 	edge.layout = wibox.layout.fixed[direction]()
+-- 	edge.wibox:set_widget(edge.layout)
 
-	if zone then
-		for i, z in ipairs(zone) do
-			edge.area[i] = wibox.container.margin(nil, 0, 0, z)
-			edge.layout:add(edge.area[i])
-		end
-	end
+-- 	if zone then
+-- 		for i, z in ipairs(zone) do
+-- 			edge.area[i] = wibox.container.margin(nil, 0, 0, z)
+-- 			edge.layout:add(edge.area[i])
+-- 		end
+-- 	end
 
-	return edge
-end
+-- 	return edge
+-- end
 
 -- Placement utilits
 -----------------------------------------------------------------------------------------------------------------------
