@@ -23,12 +23,13 @@ local surface = require("gears.surface")
 -----------------------------------------------------------------------------------------------------------------------
 local util = { text = {}, cairo = {}, table = {}, desktop = {}, placement = {}, client = {}, key = {} }
 
-util.floating_layout = {}
+-- util.floating_layout = {}
 util.read = require("redflat.newutil.read")
 util.text = require("redflat.newutil.text")
 util.cairo = require("redflat.newutil.cairo")
 util.key = require("redflat.newutil.key")
 util.desktop = require("redflat.newutil.desktop")
+util.client = require("redflat.newutil.client")
 
 -----------------------------------------------------------------------------------------------------------------------
 function util.placeholder(args)
@@ -342,47 +343,47 @@ util.placement.centered.vertical = centered_base(false, true)
 
 -- Client utilits
 -----------------------------------------------------------------------------------------------------------------------
-local function size_correction(c, geometry, is_restore)
-	local sign = is_restore and - 1 or 1
-	local bg = sign * 2 * c.border_width
+-- local function size_correction(c, geometry, is_restore)
+-- 	local sign = is_restore and - 1 or 1
+-- 	local bg = sign * 2 * c.border_width
 
-	if geometry.width  then geometry.width	= geometry.width  - bg end
-	if geometry.height then geometry.height = geometry.height - bg end
-end
+-- 	if geometry.width  then geometry.width	= geometry.width  - bg end
+-- 	if geometry.height then geometry.height = geometry.height - bg end
+-- end
 
--- Client geometry correction by border width
---------------------------------------------------------------------------------
-function util.client.fullgeometry(c, g)
-	local ng
+-- -- Client geometry correction by border width
+-- --------------------------------------------------------------------------------
+-- function util.client.fullgeometry(c, g)
+-- 	local ng
 
-	if g then
-		if g.width  and g.width  <= 1 then return end
-		if g.height and g.height <= 1 then return end
+-- 	if g then
+-- 		if g.width  and g.width  <= 1 then return end
+-- 		if g.height and g.height <= 1 then return end
 
-		size_correction(c, g, false)
-		ng = c:geometry(g)
-	else
-		ng = c:geometry()
-	end
+-- 		size_correction(c, g, false)
+-- 		ng = c:geometry(g)
+-- 	else
+-- 		ng = c:geometry()
+-- 	end
 
-	size_correction(c, ng, true)
+-- 	size_correction(c, ng, true)
 
-	return ng
-end
+-- 	return ng
+-- end
 
--- Smart swap include floating layout
---------------------------------------------------------------------------------
-function util.client.swap(c1, c2)
-	local lay = awful.layout.get(c1.screen)
-	if awful.util.table.hasitem(util.floating_layout, lay) then
-		local g1, g2 = util.client.fullgeometry(c1), util.client.fullgeometry(c2)
+-- -- Smart swap include floating layout
+-- --------------------------------------------------------------------------------
+-- function util.client.swap(c1, c2)
+-- 	local lay = awful.layout.get(c1.screen)
+-- 	if awful.util.table.hasitem(util.floating_layout, lay) then
+-- 		local g1, g2 = util.client.fullgeometry(c1), util.client.fullgeometry(c2)
 
-		util.client.fullgeometry(c1, g2)
-		util.client.fullgeometry(c2, g1)
-	end
+-- 		util.client.fullgeometry(c1, g2)
+-- 		util.client.fullgeometry(c2, g1)
+-- 	end
 
-	c1:swap(c2)
-end
+-- 	c1:swap(c2)
+-- end
 
 
 -----------------------------------------------------------------------------------------------------------------------
