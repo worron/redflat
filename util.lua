@@ -27,6 +27,7 @@ util.floating_layout = {}
 util.read = require("redflat.newutil.read")
 util.text = require("redflat.newutil.text")
 util.cairo = require("redflat.newutil.cairo")
+util.key = require("redflat.newutil.key")
 
 -----------------------------------------------------------------------------------------------------------------------
 function util.placeholder(args)
@@ -198,39 +199,39 @@ end
 -- Key utilits
 -----------------------------------------------------------------------------------------------------------------------
 
--- Build awful keys from reflat raw keys table
-------------------------------------------------------------
-function util.key.build(t)
-	local temp = {}
+-- -- Build awful keys from reflat raw keys table
+-- ------------------------------------------------------------
+-- function util.key.build(t)
+-- 	local temp = {}
 
-	for _, v in ipairs(t) do
-		table.insert(temp, awful.key(unpack(v)))
-	end
+-- 	for _, v in ipairs(t) do
+-- 		table.insert(temp, awful.key(unpack(v)))
+-- 	end
 
-	return awful.util.table.join(unpack(temp))
-end
+-- 	return awful.util.table.join(unpack(temp))
+-- end
 
--- Check if redflat raw key matched with awful prompt key
-------------------------------------------------------------
-function util.key.match_prompt(rawkey, mod, key)
-	local modcheck = true
-	local count = 0
+-- -- Check if redflat raw key matched with awful prompt key
+-- ------------------------------------------------------------
+-- function util.key.match_prompt(rawkey, mod, key)
+-- 	local modcheck = true
+-- 	local count = 0
 
-	for k, _ in pairs(mod) do
-		modcheck = modcheck and awful.util.table.hasitem(rawkey[1], k)
-		count = count + 1
-	end
+-- 	for k, _ in pairs(mod) do
+-- 		modcheck = modcheck and awful.util.table.hasitem(rawkey[1], k)
+-- 		count = count + 1
+-- 	end
 
-	return #rawkey[1] == count and modcheck and key:lower() == rawkey[2]:lower()
-end
+-- 	return #rawkey[1] == count and modcheck and key:lower() == rawkey[2]:lower()
+-- end
 
--- Check if redflat raw key matched with awful prompt key
-------------------------------------------------------------
-function util.key.match_grabber(rawkey, mod, key)
-	local modcheck = #mod == #rawkey[1]
-	for _, v in ipairs(mod) do modcheck = modcheck and awful.util.table.hasitem(rawkey[1], v) end
-	return modcheck and key:lower() == rawkey[2]:lower()
-end
+-- -- Check if redflat raw key matched with awful prompt key
+-- ------------------------------------------------------------
+-- function util.key.match_grabber(rawkey, mod, key)
+-- 	local modcheck = #mod == #rawkey[1]
+-- 	for _, v in ipairs(mod) do modcheck = modcheck and awful.util.table.hasitem(rawkey[1], v) end
+-- 	return modcheck and key:lower() == rawkey[2]:lower()
+-- end
 
 
 -- Desktop utilits
