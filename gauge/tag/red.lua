@@ -40,7 +40,7 @@ local function default_style()
 		occupied  = { x = 65, y = 10, width = 10, height = 15 }
 	}
 
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.redtag") or {})
+	return redutil.table.merge(style, redutil.check(beautiful, "gauge.tag.red") or {})
 end
 
 local function fill_geometry(width, height, geometry)
@@ -125,7 +125,7 @@ function redtag.new(style)
 
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height)
+	function widg:fit(context, width, height)
 		if data.width then
 			return math.min(width, data.width), height
 		else
@@ -135,7 +135,7 @@ function redtag.new(style)
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
+	function widg:draw(context, cr, width, height)
 
 		-- text
 		cr:set_source(color(style.color.icon))

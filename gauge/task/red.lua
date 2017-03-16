@@ -30,7 +30,7 @@ local function default_style()
 		color    = { main = "#b1222b", gray = "#575757", icon = "#a0a0a0",
 		            urgent = "#32882d", wibox = "#202020" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.task") or {})
+	return redutil.table.merge(style, redutil.check(beautiful, "gauge.task.red") or {})
 end
 
 -- Create a new redtask widget
@@ -65,7 +65,7 @@ function redtask.new(style)
 
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height)
+	function widg:fit(context, width, height)
 		if data.width then
 			return math.min(width, data.width), height
 		else
@@ -75,7 +75,7 @@ function redtask.new(style)
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
+	function widg:draw(context, cr, width, height)
 
 		-- label
 		cr:set_source(color(data.state.minimized and style.color.gray or style.color.icon))
