@@ -335,7 +335,7 @@ function appswitcher:init()
 			local txt = style.hotkeys[i] or "?"
 			cr:set_source(gears.color(i == self.index and style.color.main or style.color.text))
 			redutil.cairo.set_font(cr, style.font)
-			redutil.cairo.tcenter_horizontal(cr, { psize.width/2, psize.height + style.label_height }, txt)
+			redutil.cairo.textcentre.horizontal(cr, { psize.width/2, psize.height + style.label_height }, txt)
 		end
 
 		collectgarbage() -- prevents memory leak after complex draw function

@@ -94,7 +94,7 @@ function monitor.new(style)
 		-- label
 		cr:set_source(color(data.color))
 		redutil.cairo.set_font(cr, style.font)
-		redutil.cairo.tcenter_horizontal(cr, { width/2, style.text_gap }, data.label)
+		redutil.cairo.textcentre.horizontal(cr, { width/2, style.text_gap }, data.label)
 
 		-- progressbar
 		local wd = { width, width * data.value }

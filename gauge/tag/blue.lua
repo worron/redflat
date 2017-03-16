@@ -90,7 +90,7 @@ function bluetag.new(style)
 			or style.color.icon
 		))
 		redutil.cairo.set_font(cr, style.font)
-		redutil.cairo.tcenter_horizontal(cr, { width / 2, style.text_gap }, data.state.text)
+		redutil.cairo.textcentre.horizontal(cr, { width / 2, style.text_gap }, data.state.text)
 
 		-- occupied mark
 		local x = (width - style.point.width) / 2

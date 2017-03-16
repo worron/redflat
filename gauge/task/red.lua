@@ -80,7 +80,7 @@ function redtask.new(style)
 		-- label
 		cr:set_source(color(data.state.minimized and style.color.gray or style.color.icon))
 		redutil.cairo.set_font(cr, style.font)
-		redutil.cairo.tcenter_horizontal(cr, { width / 2, style.text_gap }, data.state.text)
+		redutil.cairo.textcentre.horizontal(cr, { width / 2, style.text_gap }, data.state.text)
 
 		-- line
 		local line_color = data.state.focus and style.color.main
@@ -103,7 +103,7 @@ function redtask.new(style)
 
 			cr:set_source(color(style.color.icon))
 			local coord = { width / 2, style.line.v_gap + style.counter.size / 2 }
-			redutil.cairo.tcenter_horizontal(cr, coord, tostring(data.state.num))
+			redutil.cairo.textcentre.horizontal(cr, coord, tostring(data.state.num))
 		end
 	end
 

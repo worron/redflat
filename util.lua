@@ -26,6 +26,7 @@ local util = { text = {}, cairo = {}, table = {}, desktop = {}, placement = {}, 
 util.floating_layout = {}
 util.read = require("redflat.newutil.read")
 util.text = require("redflat.newutil.text")
+util.cairo = require("redflat.newutil.cairo")
 
 -----------------------------------------------------------------------------------------------------------------------
 function util.placeholder(args)
@@ -141,28 +142,28 @@ end
 -- Cairo drawing functions
 -----------------------------------------------------------------------------------------------------------------------
 
--- Draw text aligned by center
-------------------------------------------------------------
-function util.cairo.tcenter(cr, coord, text)
-	local ext = cr:text_extents(text)
-	cr:move_to(coord[1] - (ext.width/2 + ext.x_bearing), coord[2] - (ext.height/2 + ext.y_bearing))
-	cr:show_text(text)
-end
+-- -- Draw text aligned by center
+-- ------------------------------------------------------------
+-- function util.cairo.tcenter(cr, coord, text)
+-- 	local ext = cr:text_extents(text)
+-- 	cr:move_to(coord[1] - (ext.width/2 + ext.x_bearing), coord[2] - (ext.height/2 + ext.y_bearing))
+-- 	cr:show_text(text)
+-- end
 
--- Draw text aligned by center horizontal only
-------------------------------------------------------------
-function util.cairo.tcenter_horizontal(cr, coord, text)
-	local ext = cr:text_extents(text)
-	cr:move_to(coord[1] - (ext.width/2 + ext.x_bearing), coord[2])
-	cr:show_text(text)
-end
+-- -- Draw text aligned by center horizontal only
+-- ------------------------------------------------------------
+-- function util.cairo.tcenter_horizontal(cr, coord, text)
+-- 	local ext = cr:text_extents(text)
+-- 	cr:move_to(coord[1] - (ext.width/2 + ext.x_bearing), coord[2])
+-- 	cr:show_text(text)
+-- end
 
--- Set font
-------------------------------------------------------------
-function util.cairo.set_font(cr, font)
-	cr:set_font_size(font.size)
-	cr:select_font_face(font.font, font.slant, font.face)
-end
+-- -- Set font
+-- ------------------------------------------------------------
+-- function util.cairo.set_font(cr, font)
+-- 	cr:set_font_size(font.size)
+-- 	cr:select_font_face(font.font, font.slant, font.face)
+-- end
 
 -- Table operations
 -----------------------------------------------------------------------------------------------------------------------
