@@ -28,7 +28,7 @@ local upgrades = { objects = {}, mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		icon        = redutil.placeholder(),
+		icon        = redutil.base.placeholder(),
 		notify_icon = nil,
 		firstrun    = false,
 		need_notify = true,

@@ -27,7 +27,7 @@ local audio = { mt = {} }
 local function default_style()
 	local style = {
 		width   = 100,
-		icon    = redutil.placeholder(),
+		icon    = redutil.base.placeholder(),
 		dash    = {},
 		dmargin = { 10, 0, 0, 0 },
 		color   = { icon = "#a0a0a0", mute = "#404040" }

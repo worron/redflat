@@ -74,8 +74,8 @@ qlaunch._fake_keys = {
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		df_icon         = redutil.placeholder({ txt = "X" }),
-		no_icon         = redutil.placeholder(),
+		df_icon         = redutil.base.placeholder({ txt = "X" }),
+		no_icon         = redutil.base.placeholder(),
 		parser          = {},
 		recoloring      = false,
 		notify_icon     = nil,

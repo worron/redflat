@@ -27,7 +27,7 @@ local mail = { objects = {}, mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		icon        = redutil.placeholder(),
+		icon        = redutil.base.placeholder(),
 		notify_icon = nil,
 		need_notify = true,
 		firstrun    = false,

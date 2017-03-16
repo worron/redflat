@@ -25,7 +25,7 @@ local gicon = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		icon        = redutil.placeholder(),
+		icon        = redutil.base.placeholder(),
 		is_vertical = false,
 		color       = { main = "#b1222b", icon = "#a0a0a0", urgent = "#32882d" }
 	}

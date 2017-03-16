@@ -2,9 +2,9 @@
 --                                                   RedFlat library                                                 --
 -----------------------------------------------------------------------------------------------------------------------
 
-local wrequire(table, key)
-	local module = rawget(table, key)
-	return module or require(table._NAME .. '.' .. key)
+local wrequire = function(table_, key)
+	local module = rawget(table_, key)
+	return module or require(table_._NAME .. '.' .. key)
 end
 
 local setmetatable = setmetatable

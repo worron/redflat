@@ -32,7 +32,7 @@ local pre_command = "dbus-send --dest=ru.gentoo.KbddService /ru/gentoo/KbddServi
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		icon         = redutil.placeholder(),
+		icon         = redutil.base.placeholder(),
 		micon        = {},
 		layout_color = {}
 	}

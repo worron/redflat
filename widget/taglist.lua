@@ -122,7 +122,7 @@ function taglist.new(args, style)
 				widg = cache
 			else
 				widg = style.widget(style.tag)
-				if args.buttons then  widg:buttons(redutil.create_buttons(args.buttons, t)) end
+				if args.buttons then  widg:buttons(redutil.base.buttons(args.buttons, t)) end
 				data[t] = widg
 
 				-- set optional tooltip (what about removing?)

@@ -40,7 +40,7 @@ local appswitcher = { clients_list = {}, index = 1, hotkeys = {}, svgsize = 256 
 
 local cache = { border_color = nil }
 local svgcache = {}
-local _empty_surface = redutil.placeholder({ txt = " " })
+local _empty_surface = redutil.base.placeholder({ txt = " " })
 
 -- key bindings
 appswitcher.keys = {
