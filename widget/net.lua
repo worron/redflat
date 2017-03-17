@@ -13,7 +13,7 @@ local color = require("gears.color")
 local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
-local doublebar = require("redflat.gauge.doublebar")
+local doublebar = require("redflat.gauge.graph.doublebar")
 local tooltip = require("redflat.float.tooltip")
 local system = require("redflat.system")
 

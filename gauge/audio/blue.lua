@@ -15,7 +15,7 @@ local color = require("gears.color")
 
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
-local reddash = require("redflat.gauge.dashcontrol")
+local reddash = require("redflat.gauge.graph.dash")
 
 
 -- Initialize tables for module

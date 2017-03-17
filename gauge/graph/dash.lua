@@ -1,8 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------------
---                                               RedFlat dotcount widget                                             --
+--                                            RedFlat dashcontrol widget                                             --
 -----------------------------------------------------------------------------------------------------------------------
--- Simple graphical counter
--- Displaying current value by dots number
+-- Horizontal progresspar with stairs form
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
@@ -17,32 +16,22 @@ local redutil = require("redflat.util")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local counter = { mt = {} }
+local dashcontrol = { mt = {} }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		column_num   = { 2, 5 },  -- {min, max}
-		row_num      = 3,
-		dot_size     = 5,
-		dot_gap_h    = 5,
-		color        = { main = "#b1222b", gray = "#575757" }
+		bar   = { width = 4, num = 10 },
+		color = { main = "#b1222b", gray = "#404040" }
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.dotcount") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.graph.dash") or {})
 end
 
--- Support functions
------------------------------------------------------------------------------------------------------------------------
-local function round(x)
-	return math.floor(x + 0.5)
-end
-
--- Create a new counter widget
+-- Create a new dashcontrol widget
 -- @param style Table containing colors and geometry parameters for all elemets
--- TODO: make auto calculation for column number
 -----------------------------------------------------------------------------------------------------------------------
-function counter.new(style)
+function dashcontrol.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
@@ -50,8 +39,7 @@ function counter.new(style)
 
 	-- updating values
 	local data = {
-		count_num = 0,
-		column_num = style.column_num[1]
+		value = 0
 	}
 
 	-- Create custom widget
@@ -60,38 +48,28 @@ function counter.new(style)
 
 	-- User functions
 	------------------------------------------------------------
-	function widg:set_num(num)
-		data.count_num = num
-		data.column_num = math.min(math.max(style.column_num[1], math.ceil(num / style.row_num)), style.column_num[2])
+	function widg:set_value(x)
+		data.value = x < 1 and x or 1
 		self:emit_signal("widget::updated")
 	end
 
 	-- Fit
 	------------------------------------------------------------
 	function widg:fit(context, width, height)
-		local width = (style.dot_size + style.dot_gap_h) * data.column_num - style.dot_gap_h
 		return width, height
 	end
 
 	-- Draw
 	------------------------------------------------------------
 	function widg:draw(context, cr, width, height)
-		local maxnum = style.row_num * data.column_num
-		local gap_v = (height - style.row_num * style.dot_size) / (style.row_num - 1)
+		local wstep = (width - style.bar.width) / (style.bar.num - 1)
+		local hstep = height / style.bar.num
+		local point = math.ceil(data.value * style.bar.num)
 
-		cr:translate(0, height)
-		for i = 1, style.row_num do
-			for j = 1, data.column_num do
-
-				local cc = (j + (i - 1) * data.column_num) <= data.count_num and style.color.main or style.color.gray
-				cr:set_source(color(cc))
-
-				cr:rectangle(0, 0, style.dot_size, - style.dot_size)
-				cr:fill()
-
-				cr:translate(style.dot_size + style.dot_gap_h, 0)
-			end
-			cr:translate(- (style.dot_gap_h + width), - (style.dot_size + gap_v))
+		for i = 1, style.bar.num do
+			cr:set_source(color(i > point and style.color.gray or style.color.main))
+			cr:rectangle((i - 1) * wstep, height, style.bar.width, - i * hstep)
+			cr:fill()
 		end
 	end
 
@@ -99,10 +77,10 @@ function counter.new(style)
 	return widg
 end
 
--- Config metatable to call dotcount module as function
+-- Config metatable to call dashcontrol module as function
 -----------------------------------------------------------------------------------------------------------------------
-function counter.mt:__call(...)
-	return counter.new(...)
+function dashcontrol.mt:__call(...)
+	return dashcontrol.new(...)
 end
 
-return setmetatable(counter, counter.mt)
+return setmetatable(dashcontrol, dashcontrol.mt)

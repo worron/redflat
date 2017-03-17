@@ -16,7 +16,7 @@ local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
-local progressbar = require("redflat.gauge.progressbar")
+local progressbar = require("redflat.gauge.graph.bar")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------

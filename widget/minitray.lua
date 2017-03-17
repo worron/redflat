@@ -22,7 +22,7 @@ local beautiful = require("beautiful")
 local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
-local dotcount = require("redflat.gauge.dotcount")
+local dotcount = require("redflat.gauge.graph.dots")
 local tooltip = require("redflat.float.tooltip")
 
 
