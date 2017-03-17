@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------------
---                                             RedFlat monitor widget                                                --
+--                                            RedFlat dashcontrol widget                                             --
 -----------------------------------------------------------------------------------------------------------------------
--- Widget with circle indicator
+-- Horizontal progresspar with stairs form
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
@@ -16,37 +16,30 @@ local redutil = require("redflat.util")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local cirmon = { mt = {} }
-local TPI = math.pi * 2
+local dashcontrol = { mt = {} }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		width        = nil,
-		line_width   = 4,
-		radius       = 14,
-		iradius      = 6,
-		color    = { main = "#b1222b", gray = "#575757", icon = "#a0a0a0" }
+		bar   = { width = 4, num = 10 },
+		color = { main = "#b1222b", gray = "#404040" }
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.cirmon") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.graph.dash") or {})
 end
 
--- Create a new monitor widget
+-- Create a new dashcontrol widget
 -- @param style Table containing colors and geometry parameters for all elemets
 -----------------------------------------------------------------------------------------------------------------------
-function cirmon.new(style)
+function dashcontrol.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local style = redutil.table.merge(default_style(), style or {})
-	local cs = -TPI / 4
 
 	-- updating values
 	local data = {
-		value = 0,
-		width = style.width,
-		color = style.color.icon
+		value = 0
 	}
 
 	-- Create custom widget
@@ -60,43 +53,23 @@ function cirmon.new(style)
 		self:emit_signal("widget::updated")
 	end
 
-	function widg:set_width(width)
-		data.width = width
-		self:emit_signal("widget::updated")
-	end
-
-	function widg:set_alert(alert)
-		data.color = alert and style.color.main or style.color.icon
-		self:emit_signal("widget::updated")
-	end
-
 	-- Fit
 	------------------------------------------------------------
 	function widg:fit(context, width, height)
-		if data.width then
-			return data.width, height
-		else
-			local size = math.min(width, height)
-			return size, size
-		end
+		return width, height
 	end
 
 	-- Draw
 	------------------------------------------------------------
 	function widg:draw(context, cr, width, height)
+		local wstep = (width - style.bar.width) / (style.bar.num - 1)
+		local hstep = height / style.bar.num
+		local point = math.ceil(data.value * style.bar.num)
 
-		-- center circle
-		cr:set_source(color(data.color))
-		cr:arc(width / 2, height / 2, style.iradius, 0, TPI)
-		cr:fill()
-
-		-- progress circle
-		cr:set_line_width(style.line_width)
-		local cd = { TPI, TPI * data.value }
-		for i = 1, 2 do
-			cr:set_source(color(i > 1 and style.color.main or style.color.gray))
-			cr:arc(width / 2, height / 2, style.radius, cs, cs + cd[i])
-			cr:stroke()
+		for i = 1, style.bar.num do
+			cr:set_source(color(i > point and style.color.gray or style.color.main))
+			cr:rectangle((i - 1) * wstep, height, style.bar.width, - i * hstep)
+			cr:fill()
 		end
 	end
 
@@ -104,10 +77,10 @@ function cirmon.new(style)
 	return widg
 end
 
--- Config metatable to call monitor module as function
+-- Config metatable to call dashcontrol module as function
 -----------------------------------------------------------------------------------------------------------------------
-function cirmon.mt:__call(...)
-	return cirmon.new(...)
+function dashcontrol.mt:__call(...)
+	return dashcontrol.new(...)
 end
 
-return setmetatable(cirmon, cirmon.mt)
+return setmetatable(dashcontrol, dashcontrol.mt)

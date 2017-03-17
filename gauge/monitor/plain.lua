@@ -1,8 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------------
---                                               RedFlat dotcount widget                                             --
+--                                             RedFlat monitor widget                                                --
 -----------------------------------------------------------------------------------------------------------------------
--- Simple graphical counter
--- Displaying current value by dots number
+-- Widget with label and progressbar
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
@@ -12,37 +11,32 @@ local math = math
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local color = require("gears.color")
+local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local counter = { mt = {} }
+local monitor = { mt = {} }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		column_num   = { 2, 5 },  -- {min, max}
-		row_num      = 3,
-		dot_size     = 5,
-		dot_gap_h    = 5,
-		color        = { main = "#b1222b", gray = "#575757" }
+		line     = { width = 4, v_gap = 30 },
+		font     = { font = "Sans", size = 16, face = 0, slant = 0 },
+		text_gap = 22,
+		label    = "MON",
+		width    = nil,
+		color    = { main = "#b1222b", gray = "#575757", icon = "#a0a0a0" }
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.dotcount") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.monitor.plain") or {})
 end
 
--- Support functions
------------------------------------------------------------------------------------------------------------------------
-local function round(x)
-	return math.floor(x + 0.5)
-end
-
--- Create a new counter widget
+-- Create a new monitor widget
 -- @param style Table containing colors and geometry parameters for all elemets
--- TODO: make auto calculation for column number
 -----------------------------------------------------------------------------------------------------------------------
-function counter.new(style)
+function monitor.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
@@ -50,8 +44,10 @@ function counter.new(style)
 
 	-- updating values
 	local data = {
-		count_num = 0,
-		column_num = style.column_num[1]
+		value = 0,
+		label = style.label,
+		width = style.width,
+		color = style.color.icon
 	}
 
 	-- Create custom widget
@@ -60,38 +56,52 @@ function counter.new(style)
 
 	-- User functions
 	------------------------------------------------------------
-	function widg:set_num(num)
-		data.count_num = num
-		data.column_num = math.min(math.max(style.column_num[1], math.ceil(num / style.row_num)), style.column_num[2])
+	function widg:set_value(x)
+		data.value = x < 1 and x or 1
+		self:emit_signal("widget::updated")
+	end
+
+	function widg:set_label(t)
+		data.label = t
+		self:emit_signal("widget::updated")
+	end
+
+	function widg:set_width(width)
+		data.width = width
+		self:emit_signal("widget::updated")
+	end
+
+	function widg:set_alert(alert)
+		data.color = alert and style.color.main or style.color.icon
 		self:emit_signal("widget::updated")
 	end
 
 	-- Fit
 	------------------------------------------------------------
 	function widg:fit(context, width, height)
-		local width = (style.dot_size + style.dot_gap_h) * data.column_num - style.dot_gap_h
-		return width, height
+		if data.width then
+			return data.width, height
+		else
+			local size = math.min(width, height)
+			return size, size
+		end
 	end
 
 	-- Draw
 	------------------------------------------------------------
 	function widg:draw(context, cr, width, height)
-		local maxnum = style.row_num * data.column_num
-		local gap_v = (height - style.row_num * style.dot_size) / (style.row_num - 1)
 
-		cr:translate(0, height)
-		for i = 1, style.row_num do
-			for j = 1, data.column_num do
+		-- label
+		cr:set_source(color(data.color))
+		redutil.cairo.set_font(cr, style.font)
+		redutil.cairo.textcentre.horizontal(cr, { width/2, style.text_gap }, data.label)
 
-				local cc = (j + (i - 1) * data.column_num) <= data.count_num and style.color.main or style.color.gray
-				cr:set_source(color(cc))
-
-				cr:rectangle(0, 0, style.dot_size, - style.dot_size)
-				cr:fill()
-
-				cr:translate(style.dot_size + style.dot_gap_h, 0)
-			end
-			cr:translate(- (style.dot_gap_h + width), - (style.dot_size + gap_v))
+		-- progressbar
+		local wd = { width, width * data.value }
+		for i = 1, 2 do
+			cr:set_source(color(i > 1 and style.color.main or style.color.gray))
+			cr:rectangle(0, style.line.v_gap, wd[i], style.line.width)
+			cr:fill()
 		end
 	end
 
@@ -99,10 +109,10 @@ function counter.new(style)
 	return widg
 end
 
--- Config metatable to call dotcount module as function
+-- Config metatable to call monitor module as function
 -----------------------------------------------------------------------------------------------------------------------
-function counter.mt:__call(...)
-	return counter.new(...)
+function monitor.mt:__call(...)
+	return monitor.new(...)
 end
 
-return setmetatable(counter, counter.mt)
+return setmetatable(monitor, monitor.mt)

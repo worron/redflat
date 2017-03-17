@@ -11,7 +11,7 @@ local wibox = require("wibox")
 local beautiful = require("beautiful")
 local timer = require("gears.timer")
 
-local monitor = require("redflat.gauge.monitor")
+local monitor = require("redflat.gauge.monitor.plain")
 local tooltip = require("redflat.float.tooltip")
 local system = require("redflat.system")
 local redutil = require("redflat.util")

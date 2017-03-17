@@ -1,42 +1,35 @@
 -----------------------------------------------------------------------------------------------------------------------
---                                             RedFlat monitor widget                                                --
+--                                            RedFlat progressbar widget                                             --
 -----------------------------------------------------------------------------------------------------------------------
--- Widget with label and progressbar
+-- Horizontal progresspar
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
-local math = math
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local color = require("gears.color")
-local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local monitor = { mt = {} }
+local progressbar = { mt = {} }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		line     = { width = 4, v_gap = 30 },
-		font     = { font = "Sans", size = 16, face = 0, slant = 0 },
-		text_gap = 22,
-		label    = "MON",
-		width    = nil,
-		color    = { main = "#b1222b", gray = "#575757", icon = "#a0a0a0" }
+		color = { main = "#b1222b", gray = "#404040" }
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.monitor") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.graph.bar") or {})
 end
 
--- Create a new monitor widget
+-- Create a new progressbar widget
 -- @param style Table containing colors and geometry parameters for all elemets
 -----------------------------------------------------------------------------------------------------------------------
-function monitor.new(style)
+function progressbar.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
@@ -44,10 +37,7 @@ function monitor.new(style)
 
 	-- updating values
 	local data = {
-		value = 0,
-		label = style.label,
-		width = style.width,
-		color = style.color.icon
+		value = 0
 	}
 
 	-- Create custom widget
@@ -61,58 +51,31 @@ function monitor.new(style)
 		self:emit_signal("widget::updated")
 	end
 
-	function widg:set_label(t)
-		data.label = t
-		self:emit_signal("widget::updated")
-	end
-
-	function widg:set_width(width)
-		data.width = width
-		self:emit_signal("widget::updated")
-	end
-
-	function widg:set_alert(alert)
-		data.color = alert and style.color.main or style.color.icon
-		self:emit_signal("widget::updated")
-	end
-
 	-- Fit
 	------------------------------------------------------------
 	function widg:fit(context, width, height)
-		if data.width then
-			return data.width, height
-		else
-			local size = math.min(width, height)
-			return size, size
-		end
+		return width, height
 	end
 
 	-- Draw
 	------------------------------------------------------------
 	function widg:draw(context, cr, width, height)
-
-		-- label
-		cr:set_source(color(data.color))
-		redutil.cairo.set_font(cr, style.font)
-		redutil.cairo.textcentre.horizontal(cr, { width/2, style.text_gap }, data.label)
-
-		-- progressbar
-		local wd = { width, width * data.value }
-		for i = 1, 2 do
-			cr:set_source(color(i > 1 and style.color.main or style.color.gray))
-			cr:rectangle(0, style.line.v_gap, wd[i], style.line.width)
-			cr:fill()
-		end
+		cr:set_source(color(style.color.gray))
+		cr:rectangle(0, 0, width, height)
+		cr:fill()
+		cr:set_source(color(style.color.main))
+		cr:rectangle(0, 0, data.value * width, height)
+		cr:fill()
 	end
 
 	--------------------------------------------------------------------------------
 	return widg
 end
 
--- Config metatable to call monitor module as function
+-- Config metatable to call progressbar module as function
 -----------------------------------------------------------------------------------------------------------------------
-function monitor.mt:__call(...)
-	return monitor.new(...)
+function progressbar.mt:__call(...)
+	return progressbar.new(...)
 end
 
-return setmetatable(monitor, monitor.mt)
+return setmetatable(progressbar, progressbar.mt)

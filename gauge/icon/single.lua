@@ -1,86 +1,88 @@
 -----------------------------------------------------------------------------------------------------------------------
---                                            RedFlat dashcontrol widget                                             --
+--                                           RedFlat indicator widget                                                --
 -----------------------------------------------------------------------------------------------------------------------
--- Horizontal progresspar with stairs form
+-- Image indicator
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
 local math = math
+local string = string
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local color = require("gears.color")
 
 local redutil = require("redflat.util")
+local svgbox = require("redflat.gauge.svgbox")
+
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local dashcontrol = { mt = {} }
+local gicon = { mt = {} }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		bar   = { width = 4, num = 10 },
-		color = { main = "#b1222b", gray = "#404040" }
+		icon        = redutil.base.placeholder(),
+		is_vertical = false,
+		color       = { main = "#b1222b", icon = "#a0a0a0", urgent = "#32882d" }
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.dashcontrol") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.icon.single") or {})
 end
 
--- Create a new dashcontrol widget
+-- Support functions
+-----------------------------------------------------------------------------------------------------------------------
+local function pattern_string_v(height, value, c1, c2)
+	return string.format("linear:0,%s:0,0:0,%s:%s,%s:%s,%s:1,%s", height, c1, value, c1, value, c2, c2)
+end
+
+local function pattern_string_h(width, value, c1, c2)
+	return string.format("linear:0,0:%s,0:0,%s:%s,%s:%s,%s:1,%s", width, c1, value, c1, value, c2, c2)
+end
+
+-- Create a new gicon widget
 -- @param style Table containing colors and geometry parameters for all elemets
 -----------------------------------------------------------------------------------------------------------------------
-function dashcontrol.new(style)
+function gicon.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local style = redutil.table.merge(default_style(), style or {})
+	local pattern = style.is_vertical and pattern_string_v or pattern_string_h
 
-	-- updating values
 	local data = {
-		value = 0
+		color = style.color.main
 	}
 
-	-- Create custom widget
+	-- Create widget
 	--------------------------------------------------------------------------------
-	local widg = wibox.widget.base.make_widget()
+	local widg = svgbox(style.icon)
 
 	-- User functions
 	------------------------------------------------------------
 	function widg:set_value(x)
-		data.value = x < 1 and x or 1
-		self:emit_signal("widget::updated")
-	end
+		if x > 1 then x = 1 end
 
-	-- Fit
-	------------------------------------------------------------
-	function widg:fit(context, width, height)
-		return width, height
-	end
-
-	-- Draw
-	------------------------------------------------------------
-	function widg:draw(context, cr, width, height)
-		local wstep = (width - style.bar.width) / (style.bar.num - 1)
-		local hstep = height / style.bar.num
-		local point = math.ceil(data.value * style.bar.num)
-
-		for i = 1, style.bar.num do
-			cr:set_source(color(i > point and style.color.gray or style.color.main))
-			cr:rectangle((i - 1) * wstep, height, style.bar.width, - i * hstep)
-			cr:fill()
+		if self._image then
+			local d = style.is_vertical and self._image.height or self._image.width
+			widg:set_color(pattern(d, x, data.color, style.color.icon))
 		end
+	end
+
+	function widg:set_alert(alert)
+		data.color = alert and style.color.urgent or style.color.main
 	end
 
 	--------------------------------------------------------------------------------
 	return widg
 end
 
--- Config metatable to call dashcontrol module as function
+-- Config metatable to call gicon module as function
 -----------------------------------------------------------------------------------------------------------------------
-function dashcontrol.mt:__call(...)
-	return dashcontrol.new(...)
+function gicon.mt:__call(...)
+	return gicon.new(...)
 end
 
-return setmetatable(dashcontrol, dashcontrol.mt)
+return setmetatable(gicon, gicon.mt)
