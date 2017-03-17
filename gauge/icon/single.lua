@@ -1,12 +1,13 @@
 -----------------------------------------------------------------------------------------------------------------------
 --                                           RedFlat indicator widget                                                --
 -----------------------------------------------------------------------------------------------------------------------
--- Double mage indicator
+-- Image indicator
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
+local math = math
 local string = string
 local wibox = require("wibox")
 local beautiful = require("beautiful")
@@ -18,19 +19,17 @@ local svgbox = require("redflat.gauge.svgbox")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local dubgicon = { mt = {} }
+local gicon = { mt = {} }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		icon1       = redutil.base.placeholder(),
-		icon2       = redutil.base.placeholder(),
-		igap        = 8,
+		icon        = redutil.base.placeholder(),
 		is_vertical = false,
-		color       = { main = "#b1222b", icon = "#a0a0a0" }
+		color       = { main = "#b1222b", icon = "#a0a0a0", urgent = "#32882d" }
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.dubgicon") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.icon.single") or {})
 end
 
 -- Support functions
@@ -43,10 +42,10 @@ local function pattern_string_h(width, value, c1, c2)
 	return string.format("linear:0,0:%s,0:0,%s:%s,%s:%s,%s:1,%s", width, c1, value, c1, value, c2, c2)
 end
 
--- Create a new dubgicon widget
+-- Create a new gicon widget
 -- @param style Table containing colors and geometry parameters for all elemets
 -----------------------------------------------------------------------------------------------------------------------
-function dubgicon.new(style)
+function gicon.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
@@ -54,41 +53,36 @@ function dubgicon.new(style)
 	local pattern = style.is_vertical and pattern_string_v or pattern_string_h
 
 	local data = {
-		value = { 0, 0 },
+		color = style.color.main
 	}
 
 	-- Create widget
 	--------------------------------------------------------------------------------
-	local fixed = wibox.layout.fixed.horizontal()
-	local layout = wibox.container.constraint(fixed, "exact", style.width)
-	layout._icon1 = svgbox(style.icon1)
-	layout._icon2 = svgbox(style.icon2)
-
-	fixed:add(wibox.container.margin(layout._icon1, 0, style.igap, 0, 0))
-	fixed:add(layout._icon2)
+	local widg = svgbox(style.icon)
 
 	-- User functions
 	------------------------------------------------------------
-	function layout:set_value(value)
-		data.value[1] = value[1] < 1 and value[1] or 1
-		data.value[2] = value[2] < 1 and value[2] or 1
+	function widg:set_value(x)
+		if x > 1 then x = 1 end
 
-		for i, widg in ipairs({ self._icon1, self._icon2 }) do
-			if widg._image then
-				local d = style.is_vertical and widg._image.height or widg._image.width
-				widg:set_color(pattern(d, data.value[i], style.color.main, style.color.icon))
-			end
+		if self._image then
+			local d = style.is_vertical and self._image.height or self._image.width
+			widg:set_color(pattern(d, x, data.color, style.color.icon))
 		end
 	end
 
+	function widg:set_alert(alert)
+		data.color = alert and style.color.urgent or style.color.main
+	end
+
 	--------------------------------------------------------------------------------
-	return layout
+	return widg
 end
 
--- Config metatable to call dubgicon module as function
+-- Config metatable to call gicon module as function
 -----------------------------------------------------------------------------------------------------------------------
-function dubgicon.mt:__call(...)
-	return dubgicon.new(...)
+function gicon.mt:__call(...)
+	return gicon.new(...)
 end
 
-return setmetatable(dubgicon, dubgicon.mt)
+return setmetatable(gicon, gicon.mt)
