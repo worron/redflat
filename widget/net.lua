@@ -35,7 +35,7 @@ local function default_style()
 		timeout   = 5,
 		digit_num = 2
 	}
-	return redutil.table.merge(style, beautiful.widget.net or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.net") or {})
 end
 
 -- Create a new network widget

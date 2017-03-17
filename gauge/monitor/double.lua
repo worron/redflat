@@ -29,7 +29,7 @@ local function default_style()
 		width   = 100,
 		color   = { main = "#b1222b", gray = "#575757", icon = "#a0a0a0", urgent = "#32882d" }
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.doublemonitor") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.monitor.double") or {})
 end
 
 -- Create progressbar widget

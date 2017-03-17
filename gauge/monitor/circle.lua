@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------------
 --                                             RedFlat monitor widget                                                --
 -----------------------------------------------------------------------------------------------------------------------
--- Widget with label and progressbar
+-- Widget with circle indicator
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
@@ -11,41 +11,40 @@ local math = math
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local color = require("gears.color")
-local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local monitor = { mt = {} }
+local cirmon = { mt = {} }
+local TPI = math.pi * 2
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		line     = { width = 4, v_gap = 30 },
-		font     = { font = "Sans", size = 16, face = 0, slant = 0 },
-		text_gap = 22,
-		label    = "MON",
-		width    = nil,
+		width        = nil,
+		line_width   = 4,
+		radius       = 14,
+		iradius      = 6,
 		color    = { main = "#b1222b", gray = "#575757", icon = "#a0a0a0" }
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.monitor") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.monitor.circle") or {})
 end
 
 -- Create a new monitor widget
 -- @param style Table containing colors and geometry parameters for all elemets
 -----------------------------------------------------------------------------------------------------------------------
-function monitor.new(style)
+function cirmon.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local style = redutil.table.merge(default_style(), style or {})
+	local cs = -TPI / 4
 
 	-- updating values
 	local data = {
 		value = 0,
-		label = style.label,
 		width = style.width,
 		color = style.color.icon
 	}
@@ -58,11 +57,6 @@ function monitor.new(style)
 	------------------------------------------------------------
 	function widg:set_value(x)
 		data.value = x < 1 and x or 1
-		self:emit_signal("widget::updated")
-	end
-
-	function widg:set_label(t)
-		data.label = t
 		self:emit_signal("widget::updated")
 	end
 
@@ -91,17 +85,18 @@ function monitor.new(style)
 	------------------------------------------------------------
 	function widg:draw(context, cr, width, height)
 
-		-- label
+		-- center circle
 		cr:set_source(color(data.color))
-		redutil.cairo.set_font(cr, style.font)
-		redutil.cairo.textcentre.horizontal(cr, { width/2, style.text_gap }, data.label)
+		cr:arc(width / 2, height / 2, style.iradius, 0, TPI)
+		cr:fill()
 
-		-- progressbar
-		local wd = { width, width * data.value }
+		-- progress circle
+		cr:set_line_width(style.line_width)
+		local cd = { TPI, TPI * data.value }
 		for i = 1, 2 do
 			cr:set_source(color(i > 1 and style.color.main or style.color.gray))
-			cr:rectangle(0, style.line.v_gap, wd[i], style.line.width)
-			cr:fill()
+			cr:arc(width / 2, height / 2, style.radius, cs, cs + cd[i])
+			cr:stroke()
 		end
 	end
 
@@ -111,8 +106,8 @@ end
 
 -- Config metatable to call monitor module as function
 -----------------------------------------------------------------------------------------------------------------------
-function monitor.mt:__call(...)
-	return monitor.new(...)
+function cirmon.mt:__call(...)
+	return cirmon.new(...)
 end
 
-return setmetatable(monitor, monitor.mt)
+return setmetatable(cirmon, cirmon.mt)
