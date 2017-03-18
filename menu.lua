@@ -52,7 +52,7 @@ local function default_theme()
 	local style = {
 		border_width = 2,
 		screen_gap   = 0,
-		submenu_icon = nil,
+		submenu_icon = redutil.base.placeholder({ txt = "▶" }),
 		height       = 20,
 		width        = 200,
 		font         = "Sans 12",
@@ -485,12 +485,8 @@ function menu.entry(parent, args)
 	local right_iconbox = nil
 
 	if type(args.cmd) == "table" then
-		if args.theme.submenu_icon then
-			right_iconbox = svgbox(args.theme.submenu_icon, nil, args.theme.color.submenu_icon)
-			right_iconbox:set_vector_resize(args.theme.svg_scale[2])
-		else
-			right_iconbox = wibox.widget.textbox("▶ ")
-		end
+		right_iconbox = svgbox(args.theme.submenu_icon, nil, args.theme.color.submenu_icon)
+		right_iconbox:set_vector_resize(args.theme.svg_scale[2])
 	elseif args.right_icon then
 		right_iconbox = svgbox(args.right_icon, nil, args.theme.color.right_icon)
 		right_iconbox:set_vector_resize(args.theme.svg_scale[2])
