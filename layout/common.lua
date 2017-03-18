@@ -20,7 +20,7 @@ local redtip = require("redflat.float.hotkeys")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local common = { handler = {}, last = {}, tips = {}, keys = {} }
+local common = { handler = {}, last = {}, tips = {}, keys = {}, mouse = {} }
 
 common.wfactstep = 0.05
 
@@ -239,6 +239,33 @@ common.handler[layout.suit.tile.bottom] = tile_handler
 
 -- tip dirty setup
 common:set_keys("base")
+
+
+-- Slightly changed awful mouse move handler
+-----------------------------------------------------------------------------------------------------------------------
+function common.mouse.move(c, context, hints)
+	-- Quit if it isn't a mouse.move on a tiled layout, that's handled elsewhere (WHERE?)
+	if c.floating then return end
+	if context ~= "mouse.move" then return end
+
+	-- move to screen with mouse
+	if mouse.screen ~= c.screen then c.screen = mouse.screen end
+
+	-- check if cutstom layout hadler availible
+	local l = c.screen.selected_tag and c.screen.selected_tag.layout or nil
+	if l == awful.layout.suit.floating then return end
+
+	if l and l.move_handler then
+		l.move_handler(c, context, hints)
+		return
+	end
+
+	-- general handler for tile layouts
+	local c_u_m = mouse.current_client
+	if c_u_m and not c_u_m.floating then
+		if c_u_m ~= c then c:swap(c_u_m) end
+	end
+end
 
 -- End
 -----------------------------------------------------------------------------------------------------------------------

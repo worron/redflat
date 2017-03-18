@@ -201,9 +201,11 @@ function navigator:run()
 	-- check handler
 	local l = awful.layout.get(client.focus.screen)
 	local handler = l.key_handler or redflat.layout.common.handler[l]
-	local tip = l.tip or redflat.layout.common.tips[l]
-
 	if not handler then return end
+
+	-- layout setup if needed
+	if l.startup then l.startup() end
+	local tip = l.tip or redflat.layout.common.tips[l]
 
 	-- activate navition widgets
 	for i, c in ipairs(self.cls) do
@@ -235,8 +237,12 @@ function navigator:close()
 	for i, c in ipairs(self.cls) do
 		self.data[i]:clear()
 	end
+
 	awful.keygrabber.stop(self.grabber_settled)
 	if self.tip_settled then redtip:remove_pack() end
+
+	local l = client.focus and awful.layout.get(client.focus.screen)
+	if l and l.cleanup then l.cleanup() end
 end
 
 function navigator:restart()
