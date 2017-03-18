@@ -487,7 +487,7 @@ function redtasklist.winmenu:init(style)
 			menusep,
 			{ "Move to tag", { items = movemenu_items, theme = style.tagmenu} },
 			{ "Add to tag",  { items = addmenu_items,  theme = style.tagmenu} },
-			{ "Maximize",    maximize, nil, style.icon.maximized },
+			-- { "Maximize",    maximize, nil, style.icon.maximized },
 			{ "Minimize",    minimize, nil, style.icon.minimize  },
 			{ "Close",       close,    nil, style.icon.close     },
 			menusep,
