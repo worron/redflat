@@ -345,8 +345,6 @@ end
 
 -- Keygrabber
 -----------------------------------------------------------------------------------------------------------------------
-local naughty = require("naughty")
-
 grid.maingrabber = function(mod, key, event)
 	for _, k in ipairs(grid.keys.all) do
 		if redutil.key.match_grabber(k, mod, key) then k[3](); return true end
