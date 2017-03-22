@@ -36,14 +36,14 @@ local redtitle = require("redflat.titlebar")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
-local appswitcher = { clients_list = {}, index = 1, hotkeys = {}, svgsize = 256 }
+local appswitcher = { clients_list = {}, index = 1, hotkeys = {}, svgsize = 256, keys = {} }
 
 local cache = { border_color = nil }
 local svgcache = {}
 local _empty_surface = redutil.base.placeholder({ txt = " " })
 
 -- key bindings
-appswitcher.keys = {
+appswitcher.keys.move = {
 	{
 		{}, "Right", function() appswitcher:switch() end,
 		{ description = "Select next app", group = "Navigation" }
@@ -52,15 +52,20 @@ appswitcher.keys = {
 		{}, "Left", function() appswitcher:switch({ reverse = true }) end,
 		{ description = "Select previous app", group = "Navigation" }
 	},
+}
+
+appswitcher.keys.action = {
 	{
-		{}, "Escape", function() appswitcher:hide() end,
-		{ description = "Exit", group = "Action" }
+		{}, "Return", function() appswitcher:hide() end,
+		{ description = "Activate and exit", group = "Action" }
 	},
 	{
 		{ "Mod4" }, "F1", function() redtip:show() end,
-		{ description = "Show hotkeys helper", group = "Help" }
+		{ description = "Show hotkeys helper", group = "Action" }
 	},
 }
+
+appswitcher.keys.all = awful.util.table.join(appswitcher.keys.move, appswitcher.keys.action)
 
 appswitcher._fake_keys = {
 	{
@@ -194,7 +199,7 @@ function appswitcher:init()
 	self.keygrabber = function(mod, key, event)
 		if event == "press" then return false end
 
-		for _, k in ipairs(self.keys) do
+		for _, k in ipairs(self.keys.all) do
 			if redutil.key.match_grabber(k, mod, key) then k[3](); return false end
 		end
 
@@ -452,9 +457,14 @@ end
 
 -- Set user hotkeys
 -----------------------------------------------------------------------------------------------------------------------
-function appswitcher:set_keys(keys)
-	if keys then self.keys = keys end
-	self.tip = awful.util.table.join(self.keys, self._fake_keys)
+function appswitcher:set_keys(keys, layout)
+	local layout = layout or "all"
+	if keys then
+		self.keys[layout] = keys
+		if layout ~= "all" then self.keys.all = awful.util.table.join(self.keys.move, self.keys.action) end
+	end
+
+	self.tip = awful.util.table.join(self.keys.all, self._fake_keys)
 end
 
 -- End

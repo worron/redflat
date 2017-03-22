@@ -22,10 +22,10 @@ local redtip = require("redflat.float.hotkeys")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local top = {}
+local top = { keys = {} }
 
 -- key bindings
-top.keys = {
+top.keys.action = {
 	{
 		{}, "c", function() top:set_sort("cpu") end,
 		{ description = "Sort by CPU usage", group = "Action" }
@@ -44,9 +44,11 @@ top.keys = {
 	},
 	{
 		{ "Mod4" }, "F1", function() redtip:show() end,
-		{ description = "Show hotkeys helper", group = "Help" }
+		{ description = "Show hotkeys helper", group = "Action" }
 	},
 }
+
+top.keys.all = awful.util.table.join({}, top.keys.action)
 
 top._fake_keys = {
 	{
@@ -229,7 +231,7 @@ function top:init()
 	--------------------------------------------------------------------------------
 	self.keygrabber = function(mod, key, event)
 		if     event ~= "press" then return end
-		for _, k in ipairs(self.keys) do
+		for _, k in ipairs(self.keys.all) do
 			if redutil.key.match_grabber(k, mod, key) then k[3](); return end
 		end
 		if string.match("123456789", key) then select_item(tonumber(key)) end
@@ -358,9 +360,14 @@ end
 
 -- Set user hotkeys
 -----------------------------------------------------------------------------------------------------------------------
-function top:set_keys(keys)
-	if keys then self.keys = keys end
-	self.tip = awful.util.table.join(self.keys, self._fake_keys)
+function top:set_keys(keys, layout)
+	local layout = layout or "all"
+	if keys then
+		self.keys[layout] = keys
+		if layout ~= "all" then self.keys.all = awful.util.table.join({}, self.keys.action) end
+	end
+
+	self.tip = awful.util.table.join(self.keys.all, self._fake_keys)
 end
 
 -- End

@@ -347,11 +347,11 @@ end
 
 -- Redflat navigator support functions
 -----------------------------------------------------------------------------------------------------------------------
-function map:set_keys(layout, keys)
+function map:set_keys(keys, layout)
 	local layout = layout or "all"
 	if keys then
 		self.keys[layout] = keys
-		if layout ~= "all" then map.keys.all = awful.util.table.join(map.keys.layout, map.keys.resize) end
+		if layout ~= "all" then self.keys.all = awful.util.table.join(self.keys.layout, map.keys.resize) end
 	end
 
 	self.tip = awful.util.table.join(self.keys.all, common.keys.base)

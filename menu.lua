@@ -42,7 +42,7 @@ local redtip = require("redflat.float.hotkeys")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local menu = { mt = {}, action = {} }
+local menu = { mt = {}, action = {}, keys = {} }
 
 local _fake_context = { dpi = beautiful.xresources.get_dpi() } -- fix this
 
@@ -180,7 +180,7 @@ end
 
 -- Menu keys
 --------------------------------------------------------------------------------
-menu.keys = {
+menu.keys.move = {
 	{
 		{}, "Down", menu.action.down,
 		{ description = "Select next item", group = "Navigation" }
@@ -197,6 +197,9 @@ menu.keys = {
 		{}, "Right", menu.action.enter,
 		{ description = "Open submenu", group = "Navigation" }
 	},
+}
+
+menu.keys.action = {
 	{
 		{}, "Escape", menu.action.close,
 		{ description = "Close menu", group = "Action" }
@@ -207,9 +210,11 @@ menu.keys = {
 	},
 	{
 		{ "Mod4" }, "F1", function() redtip:show() end,
-		{ description = "Show hotkeys helper", group = "Help" }
+		{ description = "Show hotkeys helper", group = "Action" }
 	},
 }
+
+menu.keys.all = awful.util.table.join(menu.keys.move, menu.keys.action)
 
 -- this one only displayed in hotkeys helper
 menu._fake_keys = {
@@ -225,7 +230,7 @@ local grabber = function(_menu, mod, key, event)
 	if event ~= "press" then return end
 	local sel = _menu.sel or 0
 
-	for _, k in ipairs(menu.keys) do
+	for _, k in ipairs(menu.keys.all) do
 		if redutil.key.match_grabber(k, mod, key) then k[3](_menu, sel); return false end
 	end
 
@@ -307,7 +312,7 @@ function menu:show(args)
 	if self.theme.auto_hotkey then
 		local fk = awful.util.table.clone(menu._fake_keys)
 		fk[1][4].keyset = self.keys
-		tip = awful.util.table.join(menu.keys, fk)
+		tip = awful.util.table.join(menu.keys.all, fk)
 	else
 		tip = menu.keys
 	end
@@ -345,8 +350,12 @@ end
 
 -- Set user hotkeys
 --------------------------------------------------------------------------------
-function menu:set_keys(keys)
-	self.keys = keys
+function menu:set_keys(keys, layout)
+	local layout = layout or "all"
+	if keys then
+		self.keys[layout] = keys
+		if layout ~= "all" then self.keys.all = awful.util.table.join(self.keys.move, self.keys.action) end
+	end
 end
 
 -- Add a new menu entry.

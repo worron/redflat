@@ -24,7 +24,7 @@ local redtip = require("redflat.float.hotkeys")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
-local qlaunch = { history = {}, store = {} }
+local qlaunch = { history = {}, store = {}, keys = {} }
 
 local sw = redflat.float.appswitcher
 local TPI = math.pi * 2
@@ -34,7 +34,7 @@ for i = 1, 9 do switcher_keys[tostring(i)] = { app = "", run = "" } end
 
 -- key bindings
 qlaunch.forcemod = { "Control" }
-qlaunch.keys = {
+qlaunch.keys.action = {
 	{
 		{}, "Escape", function() qlaunch:hide(true) end,
 		{ description = "Close widget", group = "Action" }
@@ -53,9 +53,11 @@ qlaunch.keys = {
 	},
 	{
 		{ "Mod4" }, "F1", function() redtip:show() end,
-		{ description = "Show hotkeys helper", group = "Help" }
+		{ description = "Show hotkeys helper", group = "Action" }
 	},
 }
+
+qlaunch.keys.all = awful.util.table.join({}, qlaunch.keys.action)
 
 qlaunch._fake_keys = {
 	{
@@ -352,7 +354,7 @@ function qlaunch:init(args, style)
 	------------------------------------------------------------
 	self.keygrabber = function(mod, key, event)
 		if event == "press" then return false end
-		for _, k in ipairs(self.keys) do
+		for _, k in ipairs(self.keys.all) do
 			if redutil.key.match_grabber(k, mod, key) then k[3](); return end
 		end
 		self.switcher:check_key(self.store, key, mod)
@@ -483,10 +485,15 @@ end
 
 -- Set user hotkeys
 -----------------------------------------------------------------------------------------------------------------------
-function qlaunch:set_keys(keys)
-	if keys then self.keys = keys end
+function qlaunch:set_keys(keys, layout)
+	local layout = layout or "all"
+	if keys then
+		self.keys[layout] = keys
+		if layout ~= "all" then self.keys.all = awful.util.table.join({}, self.keys.action) end
+	end
+
 	self._fake_keys[2][1] = self.forcemod
-	self.tip = awful.util.table.join(self.keys, self._fake_keys)
+	self.tip = awful.util.table.join(self.keys.all, self._fake_keys)
 end
 
 -- End

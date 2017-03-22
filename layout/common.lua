@@ -162,7 +162,7 @@ end
 
 -- Keys setup function
 --------------------------------------------------------------------------------
-function common:set_keys(layout, keys)
+function common:set_keys(keys, layout)
 	if keys then common.keys[layout] = keys end             -- update keys
 	if self.updates[layout] then self.updates[layout]() end -- update tips
 end
@@ -238,7 +238,7 @@ common.handler[layout.suit.tile.top]    = tile_handler
 common.handler[layout.suit.tile.bottom] = tile_handler
 
 -- tip dirty setup
-common:set_keys("base")
+common:set_keys(nil, "base")
 
 
 -- Slightly changed awful mouse move handler

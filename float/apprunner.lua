@@ -26,13 +26,13 @@ local redtip = require("redflat.float.hotkeys")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
-local apprunner = { applist = {}, command = "" }
+local apprunner = { applist = {}, command = "", keys = {} }
 
 local programs = {}
 local lastquery = nil
 
 -- key bindings
-apprunner.keys = {
+apprunner.keys.move = {
 	{
 		{}, "Down", function() apprunner:down() end,
 		{ description = "Select next item", group = "Navigation" }
@@ -41,11 +41,17 @@ apprunner.keys = {
 		{}, "Up", function() apprunner:up() end,
 		{ description = "Select previous item", group = "Navigation" }
 	},
+}
+
+apprunner.keys.action = {
 	{
 		{ "Mod4" }, "F1", function() redtip:show() end,
-		{ description = "Show hotkeys helper", group = "Help" }
+		{ description = "Show hotkeys helper", group = "Action" }
 	},
 }
+
+apprunner.keys.all = awful.util.table.join(apprunner.keys.move, apprunner.keys.action)
+
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
@@ -238,7 +244,7 @@ end
 -- Keypress handler
 -----------------------------------------------------------------------------------------------------------------------
 local function keypressed_callback(mod, key, comm)
-	for _, k in ipairs(apprunner.keys) do
+	for _, k in ipairs(apprunner.keys.all) do
 		if redutil.key.match_prompt(k, mod, key) then k[3](); return true end
 	end
 	return false
@@ -317,7 +323,7 @@ function apprunner:show()
 
 	redutil.placement.centered(self.wibox, nil, mouse.screen.workarea)
 	self.wibox.visible = true
-	redtip:set_pack("Apprunner", self.keys, self.keytip.column, self.keytip.geometry)
+	redtip:set_pack("Apprunner", self.keys.all, self.keytip.column, self.keytip.geometry)
 
 	return awful.prompt.run({
 		prompt = "",
@@ -336,8 +342,14 @@ end
 
 -- Set user hotkeys
 -----------------------------------------------------------------------------------------------------------------------
-function apprunner:set_keys(keys)
-	self.keys = keys
+function apprunner:set_keys(keys, layout)
+	local layout = layout or "all"
+	if keys then
+		self.keys[layout] = keys
+		if layout ~= "all" then self.keys.all = awful.util.table.join(self.keys.move, self.keys.action) end
+	end
+
+	-- self.tip = awful.util.table.join(self.keys.all, self._fake_keys)
 end
 
 -- End

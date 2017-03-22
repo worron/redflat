@@ -455,7 +455,7 @@ end
 
 -- Redflat navigator support functions
 -----------------------------------------------------------------------------------------------------------------------
-function grid:set_keys(layout, keys)
+function grid:set_keys(keys, layout)
 	local layout = layout or "all"
 	if keys then
 		self.keys[layout] = keys
