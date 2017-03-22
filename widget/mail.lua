@@ -28,7 +28,7 @@ local mail = { objects = {}, mt = {} }
 local function default_style()
 	local style = {
 		icon        = redutil.base.placeholder(),
-		notify_icon = nil,
+		notify      = {},
 		need_notify = true,
 		firstrun    = false,
 		color       = { main = "#b1222b", icon = "#a0a0a0" }
@@ -91,7 +91,7 @@ function mail.new(args, style)
 		if c then
 			count = count + c
 			if style.need_notify and count > 0 then
-				rednotify:show({ text = count .. " new messages", icon = style.notify_icon })
+				rednotify:show(redutil.table.merge({ text = count .. " new messages" }, style.notify))
 			end
 		end
 

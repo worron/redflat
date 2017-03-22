@@ -29,7 +29,7 @@ local upgrades = { objects = {}, mt = {} }
 local function default_style()
 	local style = {
 		icon        = redutil.base.placeholder(),
-		notify_icon = nil,
+		notify      = {},
 		firstrun    = false,
 		need_notify = true,
 		color       = { main = "#b1222b", icon = "#a0a0a0" }
@@ -68,7 +68,7 @@ function upgrades.new(update_timeout, style)
 		object.widget:set_color(color)
 
 		if style.need_notify and (tonumber(c) > 0 or force_notify) then
-			rednotify:show({ text = c .. " updates available", icon = style.notify_icon })
+			rednotify:show(redutil.table.merge({ text = c .. " updates available" }, style.notify))
 		end
 	end
 

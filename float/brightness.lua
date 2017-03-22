@@ -31,7 +31,7 @@ local gsd_command = 'dbus-send --session --print-reply --dest="org.gnome.Setting
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		notify_icon = nil,
+		notify = {},
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.brightness") or {})
 end
@@ -82,11 +82,10 @@ function brightness.info_with_xbacklight()
 	if not brightness.style then brightness.style = default_style() end
 	local brightness_level = redutil.read.output("xbacklight -get")
 
-	rednotify:show({
-		value = brightness_level / 100,
-		text = string.format('%.0f', brightness_level) .. "%",
-		icon = brightness.style.notify_icon
-	})
+	rednotify:show(redutil.table.merge(
+		{ value = brightness_level / 100, text = string.format('%.0f', brightness_level) .. "%" },
+		brightness.style.notify
+	))
 end
 
 -- Update from dbus-send and gnome/unity settings daemon
@@ -98,11 +97,10 @@ function brightness.info_with_gsd(brightness_level)
 		local brightness_level = string.match(redutil.read.output(gsd_command .. gsd_get), "uint32%s(%d+)")
 	end
 
-	rednotify:show({
-		value = brightness_level / 100,
-		text = brightness_level .. "%",
-		icon = brightness.style.notify_icon
-	})
+	rednotify:show(redutil.table.merge(
+		{ value = brightness_level / 100, text = brightness_level .. "%" },
+		brightness.style.notify
+	))
 end
 
 -----------------------------------------------------------------------------------------------------------------------

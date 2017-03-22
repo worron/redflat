@@ -47,7 +47,7 @@ end
 function notify:init()
 
 	local style = default_style()
-	local icon = style.icon
+	-- local icon = style.icon
 
 	self.style = style
 
@@ -59,7 +59,7 @@ function notify:init()
 	local image = svgbox()
 	local text = wibox.widget.textbox("100%")
 	text:set_align("center")
-	text:set_font(style.font)
+	-- text:set_font(style.font)
 
 	local align_vertical = wibox.layout.align.vertical()
 	bar:set_forced_height(style.bar_width)
@@ -93,12 +93,13 @@ function notify:init()
 			align_vertical:set_middle(text)
 		end
 
-		if args.text then text:set_text(args.text) end
-
-		if args.icon then
-			image:set_image(args.icon)
-			image:set_color(style.color.icon)
+		if args.text then
+			text:set_text(args.text)
+			text:set_font(args.font ~= nil and args.font or style.font)
 		end
+
+		image:set_image(args.icon ~= nil and args.icon or style.icon)
+		image:set_color(style.color.icon)
 	end
 
 	-- Set autohide timer

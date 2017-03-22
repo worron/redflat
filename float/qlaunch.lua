@@ -80,7 +80,7 @@ local function default_style()
 		no_icon         = redutil.base.placeholder(),
 		parser          = {},
 		recoloring      = false,
-		notify_icon     = nil,
+		notify          = {},
 		geometry        = { width = 1680, height = 180 },
 		border_margin   = { 20, 20, 10, 10 },
 		appline         = { iwidth = 160, im = { 10, 10, 5, 5 }, igap = { 0, 0, 10, 10 }, lheight = 30 },
@@ -434,16 +434,12 @@ function qlaunch:set_new_app(key, c)
 	if c then
 		local run_command = redutil.read.output(string.format("tr '\\0' ' ' < /proc/%s/cmdline", c.pid))
 		self.store[key] = { app = c.class:lower(), run = run_command }
-		redflat.float.notify:show({
-			text = string.format("%s binded with '%s'", c.class, key),
-			icon = self.style.notify_icon,
-		})
+		local note = redutil.table.merge({text = string.format("%s binded with '%s'", c.class, key)}, self.style.notify)
+		redflat.float.notify:show(note)
 	else
 		self.store[key] = { app = "", run = "" }
-		redflat.float.notify:show({
-			text = string.format("'%s' key unbinded", key),
-			icon = self.style.notify_icon,
-		})
+		local note = redutil.table.merge({text = string.format("'%s' key unbinded", key)}, self.style.notify)
+		redflat.float.notify:show(note)
 	end
 
 	self.switcher:update(self.store, self.icon_db)

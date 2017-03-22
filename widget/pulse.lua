@@ -40,7 +40,7 @@ pulse.startup_time = 4
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		notify_icon = nil,
+		notify      = {},
 		widget      = audio.new,
 		audio       = {}
 	}
@@ -77,7 +77,9 @@ function pulse:change_volume(args)
 	-- show notify if need
 	if args.show_notify then
 		local vol = new_volume / 65536
-		rednotify:show({ value = vol, text = string.format('%.0f', vol*100) .. "%", icon = pulse.notify_icon })
+		rednotify:show(
+			redutil.table.merge({ value = vol, text = string.format('%.0f', vol*100) .. "%" }, pulse.notify)
+		)
 	end
 
 	-- set new volume
@@ -141,7 +143,7 @@ function pulse.new(args, style)
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local style = redutil.table.merge(default_style(), style or {})
-	pulse.notify_icon = style.notify_icon
+	pulse.notify = style.notify
 
 	local args = args or {}
 	local timeout = args.timeout or 5
