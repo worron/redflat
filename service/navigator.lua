@@ -12,6 +12,7 @@ local awful = require("awful")
 local wibox = require("wibox")
 local color = require("gears.color")
 local beautiful = require("beautiful")
+local timer = require("gears.timer")
 
 local redflat = require("redflat")
 local redutil = require("redflat.util")
@@ -33,18 +34,26 @@ local function default_style()
 		marksize     = { width = 200, height = 100, r = 20 },
 		gradstep     = 100,
 		linegap      = 35,
+		timeout      = 1,
 		keytip       = { base = { geometry = { width = 600, height = 600 }, exit = true } },
 		titlefont    = { font = "Sans", size = 28, face = 1, slant = 0 },
 		num          = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "F1", "F3", "F4", "F5" },
 		font         = { font = "Sans", size = 22, face = 1, slant = 0 },
 		color        = { border = "#575757", wibox = "#00000000", bg1 = "#57575740", bg2 = "#57575720",
-		                 fbg1 = "#b1222b40", fbg2 = "#b1222b20", mark = "#575757", text = "#202020" }
+		                 fbg1 = "#b1222b40", fbg2 = "#b1222b20", mark = "#575757", text = "#202020",
+		                 hbg1 = "#32882d40", hbg2 = "#32882d20" }
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "service.navigator") or {})
 end
 
 -- Support functions
 -----------------------------------------------------------------------------------------------------------------------
+
+-- Check geometry intersection
+--------------------------------------------------------------------------------
+local function is_intersect(a, b)
+	return (b.x < a.x + a.width and b.x + b.width > a.x and b.y < a.y + a.height and b.y + b.height > a.y)
+end
 
 -- Window painting
 --------------------------------------------------------------------------------
@@ -57,12 +66,18 @@ function navigator.make_paint(c)
 
 	local data = {
 		client = c,
+		alert = false,
 	}
 
 	-- User functions
 	------------------------------------------------------------
 	function widg:set_client(c)
 		data.client = c
+		self:emit_signal("widget::updated")
+	end
+
+	function widg:set_alert(value)
+		data.alert = value
 		self:emit_signal("widget::updated")
 	end
 
@@ -79,10 +94,16 @@ function navigator.make_paint(c)
 		if not data.client then return end
 
 		-- background
+		local bg1, bg2
 		local num = math.ceil((width + height) / style.gradstep)
-		local is_focused = data.client == client.focus
-		local bg1 = is_focused and style.color.fbg1 or style.color.bg1
-		local bg2 = is_focused and style.color.fbg2 or style.color.bg2
+
+		if data.alert then
+			bg1, bg2 = style.color.hbg1, style.color.hbg2
+		else
+			local is_focused = data.client == client.focus
+			bg1 = is_focused and style.color.fbg1 or style.color.bg1
+			bg2 = is_focused and style.color.fbg2 or style.color.bg2
+		end
 
 		for i = 1, num do
 			local cc = i % 2 == 1 and bg1 or bg2
@@ -140,7 +161,7 @@ function navigator.make_decor(c)
 		ontop        = true,
 		bg           = style.color.wibox,
 		border_width = style.border_width,
-		border_color = style.color.border
+		border_color = style.color.borderk
 	})
 
 	object.client = c
@@ -183,8 +204,35 @@ end
 
 -- Main functions
 -----------------------------------------------------------------------------------------------------------------------
+function navigator:init()
+
+	-- Style
+	------------------------------------------------------------
+	self.style = default_style()
+
+	-- Hilight area
+	------------------------------------------------------------
+	self.hilight = {}
+
+	-- timer
+	self.hilight.hidetimer = timer({ timeout = self.style.timeout })
+	self.hilight.hidetimer:connect_signal("timeout", function() self.hilight.hide() end)
+
+	-- show/hide
+	function self.hilight.show(g)
+		for i, c in ipairs(self.cls) do
+			self.data[i].widget:set_alert(is_intersect(g, c:geometry()))
+		end
+		self.hilight.hidetimer:again()
+	end
+
+	function self.hilight.hide()
+		for i, c in ipairs(self.cls) do self.data[i].widget:set_alert(false) end
+	end
+end
+
 function navigator:run()
-	if not self.style then self.style = default_style() end
+	if not self.style then self:init() end
 
 	-- check clients
 	local s = mouse.screen
@@ -243,6 +291,7 @@ function navigator:close()
 
 	local l = client.focus and awful.layout.get(client.focus.screen)
 	if l and l.cleanup then l.cleanup() end
+	self.cls = {}
 end
 
 function navigator:restart()
