@@ -70,7 +70,7 @@ local function build_fake_keys(keys)
 	for _, keygroup in ipairs({
 		{ description = "Undo last key",       group = "Action", keyname = "stepback" },
 		{ description = "Undo sequence",       group = "Action", keyname = "close" },
-		{ description = "Show hotkeys helper", group = "Help",   keyname = "help" },
+		{ description = "Show hotkeys helper", group = "Action", keyname = "help" },
 	})
 	do
 		for _, k in ipairs(keys[keygroup.keyname]) do
