@@ -26,6 +26,7 @@ local hasitem = awful.util.table.hasitem
 local map = { data = {}, keys = {} }
 map.name = "usermap"
 map.notification = true
+map.notification_style = {}
 
 -- default keys
 map.keys.layout = {
@@ -131,7 +132,7 @@ map.keys.all = awful.util.table.join(map.keys.layout, map.keys.resize)
 -- Layout action notifications
 --------------------------------------------------------------------------------
 local function notify(txt)
-	if map.notification then rednotify:show({ text = txt }) end
+	if map.notification then rednotify:show(redutil.table.merge({ text = txt }, map.notification_style)) end
 end
 
 -- Calculate geometry for single client or group
