@@ -38,7 +38,7 @@ map.keys.layout = {
 		{ description = "Create new vertical group", group = "Layout" }
 	},
 	{
-		{ "Mod4" }, "h", function() map.new_group(false) end,
+		{ "Mod4" }, "b", function() map.new_group(false) end,
 		{ description = "Create new horizontal group", group = "Layout" }
 	},
 	{
@@ -46,7 +46,7 @@ map.keys.layout = {
 		{ description = "Insert new vertical group before active", group = "Layout" }
 	},
 	{
-		{ "Mod4", "Control" }, "h", function() map.insert_group(false) end,
+		{ "Mod4", "Control" }, "b", function() map.insert_group(false) end,
 		{ description = "Insert new horizontal group before active", group = "Layout" }
 	},
 	{
@@ -55,7 +55,7 @@ map.keys.layout = {
 	},
 	{
 		{ "Mod4", "Control" }, "d", function() map.clean_groups() end,
-		{ description = "Destroy group", group = "Layout" }
+		{ description = "Destroy group all empty groups", group = "Layout" }
 	},
 	{
 		{ "Mod4" }, "a", function() map.set_active() end,
@@ -63,18 +63,18 @@ map.keys.layout = {
 	},
 	{
 		{ "Mod4" }, "f", function() map.move_to_active() end,
-		{ description = "Move focused client to active", group = "Layout" }
+		{ description = "Move focused client to active group", group = "Layout" }
 	},
 	{
 		{ "Mod4", "Control" }, "a", function() map.hilight_active() end,
 		{ description = "Hilight active group", group = "Layout" }
 	},
 	{
-		{ "Mod4" }, "r", function() map.switch_active(1) end,
+		{ "Mod4" }, ".", function() map.switch_active(1) end,
 		{ description = "Activate next group", group = "Layout" }
 	},
 	{
-		{ "Mod4" }, "e", function() map.switch_active(-1) end,
+		{ "Mod4" }, ",", function() map.switch_active(-1) end,
 		{ description = "Activate previous group", group = "Layout" }
 	},
 	{
@@ -83,13 +83,13 @@ map.keys.layout = {
 	},
 	{
 		{ "Mod4" }, "[", function() map.move_group(-1) end,
-		{ description = "Move active group to the end", group = "Layout" }
+		{ description = "Move active group to the bottom", group = "Layout" }
 	},
 }
 
 map.keys.resize = {
 	{
-		{ "Mod4" }, "j", function() map.incfactor(nil, 0.1, false) end,
+		{ "Mod4" }, "h", function() map.incfactor(nil, 0.1, false) end,
 		{ description = "Increase window horizontal size factor", group = "Resize" }
 	},
 	{
@@ -97,28 +97,28 @@ map.keys.resize = {
 		{ description = "Decrease window horizontal size factor", group = "Resize" }
 	},
 	{
-		{ "Mod4" }, "i", function() map.incfactor(nil, 0.1, true) end,
+		{ "Mod4" }, "k", function() map.incfactor(nil, 0.1, true) end,
 		{ description = "Increase window vertical size factor", group = "Resize" }
 	},
 	{
-		{ "Mod4" }, "k", function() map.incfactor(nil, -0.1, true) end,
+		{ "Mod4" }, "j", function() map.incfactor(nil, -0.1, true) end,
 		{ description = "Decrease window vertical size factor", group = "Resize" }
 	},
 	{
-		{ "Mod4", "Control" }, "j", function() map.incfactor(nil, 0.1, false, true) end,
-		{ description = "Increase window horizontal size factor", group = "Resize" }
+		{ "Mod4", "Control" }, "h", function() map.incfactor(nil, 0.1, false, true) end,
+		{ description = "Increase group horizontal size factor", group = "Resize" }
 	},
 	{
 		{ "Mod4", "Control" }, "l", function() map.incfactor(nil, -0.1, false, true) end,
-		{ description = "Decrease window horizontal size factor", group = "Resize" }
+		{ description = "Decrease group horizontal size factor", group = "Resize" }
 	},
 	{
-		{ "Mod4", "Control" }, "i", function() map.incfactor(nil, 0.1, true, true) end,
-		{ description = "Increase window vertical size factor", group = "Resize" }
+		{ "Mod4", "Control" }, "k", function() map.incfactor(nil, 0.1, true, true) end,
+		{ description = "Increase group vertical size factor", group = "Resize" }
 	},
 	{
-		{ "Mod4", "Control" }, "k", function() map.incfactor(nil, -0.1, true, true) end,
-		{ description = "Decrease window vertical size factor", group = "Resize" }
+		{ "Mod4", "Control" }, "j", function() map.incfactor(nil, -0.1, true, true) end,
+		{ description = "Decrease group vertical size factor", group = "Resize" }
 	},
 }
 
@@ -500,9 +500,9 @@ function map.switch_active(n)
 	if map.data[t].set[na] then
 		map.data[t].active = na
 		local pack = map.data[t].set[na]
-		redflat.service.navigator.hilight.show(pack.wa)
 		notify("Active group index: " .. tostring(na))
 	end
+	redflat.service.navigator.hilight.show(map.data[t].set[map.data[t].active].wa)
 end
 
 -- Move client to active container
@@ -607,7 +607,7 @@ function map:set_keys(keys, layout)
 		if layout ~= "all" then self.keys.all = awful.util.table.join(self.keys.layout, map.keys.resize) end
 	end
 
-	self.tip = awful.util.table.join(self.keys.all, common.keys.swap, common.keys.base)
+	self.tip = awful.util.table.join(self.keys.all, common.keys.swap, common.keys.base, common.keys._fake)
 end
 
 function map.startup()
