@@ -40,7 +40,7 @@ common.keys.base = {
 	},
 	{
 		{ "Mod4" }, "F1", function() redtip:show() end,
-		{ description = "Show hotkeys helper", group = "Help" }
+		{ description = "Show hotkeys helper", group = "Action" }
 	},
 }
 
