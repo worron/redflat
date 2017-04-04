@@ -20,7 +20,8 @@ local timestamp = {}
 
 timestamp.path = "/tmp/awesome-stamp"
 timestamp.timeout = 5
-timestamp.bin = "~/awesome4/bin/awesome-client" -- !!! fix this on after final migration !!!
+-- timestamp.bin = "~/awesome4/bin/awesome-client" -- !!! fix this on after final migration !!!
+timestamp.bin = "awesome-client"
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
