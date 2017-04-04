@@ -29,7 +29,7 @@ local function default_style()
 		font   = { font = "Sans", size = 20, face = 0, slant = 0 }
 	}
 
-	return redutil.table.merge(style, redutil.check(beautiful, "desktop.common.textbox") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.common.textbox") or {})
 end
 
 -- Text alignment functions
@@ -121,13 +121,13 @@ function textbox.new(txt, style)
 
 	-- Fit
 	------------------------------------------------------------
-	textwidg.fit = function(barwidg, width, height)
+	function textwidg:fit(context, width, height)
 		return data.width or width, style.height or height
 	end
 
 	-- Draw
 	------------------------------------------------------------
-	textwidg.draw = function(textwidg, wibox, cr, width, height)
+	function textwidg:draw(context, cr, width, height)
 		cr:set_source(color(data.color))
 		redutil.cairo.set_font(cr, style.font)
 

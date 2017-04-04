@@ -34,14 +34,15 @@ local function default_style()
 		border_width = 2,
 		color        = { border = "#575757", wibox = "#202020" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "float.prompt") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "float.prompt") or {})
 end
 
 -- Initialize prompt widget
 -- @param prompt Prompt to use
 -----------------------------------------------------------------------------------------------------------------------
-function floatprompt:init()
+function floatprompt:init(args)
 
+	local args = args or {}
 	local style = default_style()
 
 	-- Create prompt widget
@@ -49,8 +50,7 @@ function floatprompt:init()
 	self.widget = wibox.widget.textbox()
 	self.info = false
 	self.widget:set_ellipsize("start")
-	--self.prompt = prompt or " Run: "
-	self.prompt = " Run: "
+	self.prompt = args.prompt or " Run: "
 	self.decorated_widget = decoration.textfield(self.widget, style.field)
 
 	-- Create floating wibox for promt widget
@@ -62,7 +62,7 @@ function floatprompt:init()
 		border_color = style.color.border
 	})
 
-	self.wibox:set_widget(wibox.layout.margin(self.decorated_widget, unpack(style.margin)))
+	self.wibox:set_widget(wibox.container.margin(self.decorated_widget, unpack(style.margin)))
 	self.wibox:geometry(style.geometry)
 end
 
@@ -71,26 +71,25 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function floatprompt:run()
 	if not self.wibox then self:init() end
-	redutil.placement.centered(self.wibox, nil, screen[mouse.screen].workarea)
+	redutil.placement.centered(self.wibox, nil, mouse.screen.workarea)
 	self.wibox.visible = true
 	self.info = false
-	return awful.prompt.run(
-		{ prompt = self.prompt },
-		self.widget,
-		function (...)
-			local result = awful.util.spawn(...)
+
+	return awful.prompt.run({
+		prompt = self.prompt,
+		textbox = self.widget,
+		exe_callback = function(input)
+			local result = awful.spawn(input)
 			if type(result) == "string" then
 				self.widget:set_text(result)
 				self.info = true
 			end
 		end,
-		awful.completion.shell,
-		awful.util.getdir("cache") .. "/history",
-		30,
-		function ()
-			if not self.info then self.wibox.visible = false end
-		end
-	)
+		history_path = awful.util.getdir("cache") .. "/history",
+		history_max = 30,
+		completion_callback = awful.completion.shell,
+		done_callback = function () if not self.info then self.wibox.visible = false end end,
+	})
 end
 
 -- End

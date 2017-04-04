@@ -20,36 +20,13 @@ local redutil = require("redflat.util")
 -----------------------------------------------------------------------------------------------------------------------
 local redtag = { mt = {} }
 
--- Generate default theme vars
+-- Support functions
 -----------------------------------------------------------------------------------------------------------------------
-local function default_style()
-	local style = {
-		width        = 80,
-		font         = { font = "Sans", size = 16, face = 0, slant = 0 },
-		text_gap     = 22,
-		counter      = { size = 12, gap = 2, coord = { 40, 35 } },
-		show_counter = true,
-		color        = { main   = "#b1222b", gray = "#575757", icon = "#a0a0a0", urgent = "#32882d",
-		                 wibox = "#202020" }
-	}
-
-	-- geometry for state marks
-	style.geometry = {
-		active    = { height = 5, y = 45 },
-		focus     = { x = 5, y = 10, width = 10, height = 15 },
-		occupied  = { x = 65, y = 10, width = 10, height = 15 }
-	}
-
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.redtag") or {})
-end
 
 local function fill_geometry(width, height, geometry)
 	local zero_geometry = { x = 0, y = 0, width = width, height = height }
 	return redutil.table.merge(zero_geometry, geometry)
 end
-
--- Support functions
------------------------------------------------------------------------------------------------------------------------
 
 -- Cairo drawing functions
 --------------------------------------------------------------------------------
@@ -92,6 +69,32 @@ function cairo_draw.occupied(cr, width, height, geometry)
 end
 
 
+-- Generate default theme vars
+-----------------------------------------------------------------------------------------------------------------------
+local function default_style()
+	local style = {
+		width        = 80,
+		font         = { font = "Sans", size = 16, face = 0, slant = 0 },
+		text_gap     = 22,
+		counter      = { size = 12, gap = 2, coord = { 40, 35 } },
+		show_counter = true,
+		color        = { main   = "#b1222b", gray = "#575757", icon = "#a0a0a0", urgent = "#32882d",
+		                 wibox = "#202020" }
+	}
+
+	-- functions for state marks
+	style.marks = cairo_draw
+
+	-- geometry for state marks
+	style.geometry = {
+		active    = { height = 5, y = 45 },
+		focus     = { x = 5, y = 10, width = 10, height = 15 },
+		occupied  = { x = 65, y = 10, width = 10, height = 15 }
+	}
+
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.tag.red") or {})
+end
+
 -- Create a new tag widget
 -- @param style Table containing colors and geometry parameters for all elemets
 -----------------------------------------------------------------------------------------------------------------------
@@ -125,7 +128,7 @@ function redtag.new(style)
 
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height)
+	function widg:fit(context, width, height)
 		if data.width then
 			return math.min(width, data.width), height
 		else
@@ -135,27 +138,27 @@ function redtag.new(style)
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
+	function widg:draw(context, cr, width, height)
 
 		-- text
 		cr:set_source(color(style.color.icon))
 		redutil.cairo.set_font(cr, style.font)
-		redutil.cairo.tcenter_horizontal(cr, { width/2, style.text_gap }, data.state.text)
+		redutil.cairo.textcentre.horizontal(cr, { width/2, style.text_gap }, data.state.text)
 
 		-- active mark
 		cr:set_source(color(data.state.active and style.color.main or style.color.gray))
-		cairo_draw.active(cr, width, height, style.geometry.active)
+		style.marks.active(cr, width, height, style.geometry.active)
 
 		-- occupied mark
 		if data.state.occupied then
 			cr:set_source(color(data.state.urgent and style.color.urgent or style.color.main))
-			cairo_draw.occupied(cr, width, height, style.geometry.occupied)
+			style.marks.occupied(cr, width, height, style.geometry.occupied)
 		end
 
 		-- focus mark
 		if data.state.focus then
 			cr:set_source(color(style.color.main))
-			cairo_draw.focus(cr, width, height, style.geometry.focus)
+			style.marks.focus(cr, width, height, style.geometry.focus)
 		end
 
 		-- counter
@@ -172,7 +175,7 @@ function redtag.new(style)
 			cr:fill()
 
 			cr:set_source(color(style.color.icon))
-			redutil.cairo.tcenter(cr, style.counter.coord, tostring(#data.state.list))
+			redutil.cairo.textcentre.vertical(cr, style.counter.coord, tostring(#data.state.list))
 		end
 	end
 

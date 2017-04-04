@@ -22,19 +22,36 @@ local svgbox = require("redflat.gauge.svgbox")
 local dfparser = require("redflat.service.dfparser")
 local redutil = require("redflat.util")
 local decoration = require("redflat.float.decoration")
+local redtip = require("redflat.float.hotkeys")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
-local apprunner = { applist = {} }
+local apprunner = { applist = {}, command = "", keys = {} }
 
 local programs = {}
 local lastquery = nil
 
 -- key bindings
-apprunner.keys = {
-	up    = { "Up" },
-	down  = { "Down" }
+apprunner.keys.move = {
+	{
+		{}, "Down", function() apprunner:down() end,
+		{ description = "Select next item", group = "Navigation" }
+	},
+	{
+		{}, "Up", function() apprunner:up() end,
+		{ description = "Select previous item", group = "Navigation" }
+	},
 }
+
+apprunner.keys.action = {
+	{
+		{ "Mod4" }, "F1", function() redtip:show() end,
+		{ description = "Show hotkeys helper", group = "Action" }
+	},
+}
+
+apprunner.keys.all = awful.util.table.join(apprunner.keys.move, apprunner.keys.action)
+
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
@@ -47,16 +64,18 @@ local function default_style()
 		prompt_height    = 35,
 		title_icon       = nil,
 		icon_margin      = { 8, 12, 0, 0 },
-		icon_style       = {},
+		parser           = {},
 		list_text_vgap   = 4,
 		list_icon_margin = { 6, 12, 6, 6 },
 		name_font        = "Sans 12",
 		comment_font     = "Sans 12",
 		border_width     = 2,
+		keytip           = { geometry = { width = 400, height = 300 } },
+		dimage           = redutil.base.placeholder(),
 		color            = { border = "#575757", text = "#aaaaaa", highlight = "#eeeeee", main = "#b1222b",
 		                     bg = "#161616", bg_second = "#181818", wibox = "#202020", icon = "a0a0a0" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "float.apprunner") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "float.apprunner") or {})
 end
 
 -- Support functions
@@ -81,14 +100,14 @@ local function construct_item(style)
 	local text_vertical = wibox.layout.align.vertical()
 	local text_horizontal = wibox.layout.align.horizontal()
 	text_horizontal:set_left(text_vertical)
-	text_vertical:set_top(wibox.layout.margin(item.name, 0, 0, style.list_text_vgap))
+	text_vertical:set_top(wibox.container.margin(item.name, 0, 0, style.list_text_vgap))
 	text_vertical:set_middle(item.comment)
 
 	local item_horizontal  = wibox.layout.align.horizontal()
-	item_horizontal:set_left(wibox.layout.margin(item.icon, unpack(style.list_icon_margin)))
+	item_horizontal:set_left(wibox.container.margin(item.icon, unpack(style.list_icon_margin)))
 	item_horizontal:set_middle(text_horizontal)
 
-	item.layout = wibox.widget.background(item_horizontal, item.bg)
+	item.layout = wibox.container.background(item_horizontal, item.bg)
 
 	-- Item functions
 	------------------------------------------------------------
@@ -103,7 +122,9 @@ local function construct_item(style)
 		                     or ""
 		item.comment:set_text(comment_text)
 
-		item.icon:set_image(args.icon_path or nil)
+		item.icon:set_image(args.icon_path or style.dimage)
+		item.icon:set_visible((args.Name))
+
 		item.cmd = args.cmdline
 	end
 
@@ -123,7 +144,7 @@ local function construct_item(style)
 	end
 
 	function item:run()
-		awful.util.spawn(item.cmd)
+		awful.spawn(item.cmd)
 	end
 
 	------------------------------------------------------------
@@ -138,7 +159,7 @@ local function construct_list(num, progs, style)
 	-- Construct application list
 	------------------------------------------------------------
 	local list_layout = wibox.layout.flex.vertical()
-	list.layout = wibox.widget.background(list_layout, style.color.bg)
+	list.layout = wibox.container.background(list_layout, style.color.bg)
 
 	list.items = {}
 	for i = 1, num do
@@ -201,33 +222,32 @@ local function list_filtrate(query)
 end
 
 -- Functions to navigate through application list
---------------------------------------------------------------------------------
-local function switch_down()
-	if apprunner.applist.selected < math.min(apprunner.itemnum, #programs.current) then
-		apprunner.applist:set_select(apprunner.applist.selected + 1)
-	elseif apprunner.applist.selected + apprunner.applist.position - 1 < #programs.current then
-		apprunner.applist.position = apprunner.applist.position + 1
-		apprunner.applist:update(programs.current)
+-----------------------------------------------------------------------------------------------------------------------
+function apprunner:down()
+	if self.applist.selected < math.min(self.itemnum, #programs.current) then
+		self.applist:set_select(self.applist.selected + 1)
+	elseif self.applist.selected + self.applist.position - 1 < #programs.current then
+		self.applist.position = self.applist.position + 1
+		self.applist:update(programs.current)
 	end
 end
 
-local function switch_up()
-	if apprunner.applist.selected > 1 then
-		apprunner.applist:set_select(apprunner.applist.selected - 1)
-	elseif apprunner.applist.position > 1 then
-		apprunner.applist.position = apprunner.applist.position - 1
-		apprunner.applist:update(programs.current)
+function apprunner:up()
+	if self.applist.selected > 1 then
+		self.applist:set_select(self.applist.selected - 1)
+	elseif self.applist.position > 1 then
+		self.applist.position = self.applist.position - 1
+		self.applist:update(programs.current)
 	end
 end
 
 -- Keypress handler
 -----------------------------------------------------------------------------------------------------------------------
 local function keypressed_callback(mod, key, comm)
-	if     awful.util.table.hasitem(apprunner.keys.down, key) then switch_down()
-	elseif awful.util.table.hasitem(apprunner.keys.up,   key) then switch_up()
-	else
-		return false
+	for _, k in ipairs(apprunner.keys.all) do
+		if redutil.key.match_prompt(k, mod, key) then k[3](); return true end
 	end
+	return false
 end
 
 -- Initialize apprunner widget
@@ -238,9 +258,10 @@ function apprunner:init()
 	--------------------------------------------------------------------------------
 	local style = default_style()
 	self.itemnum = style.itemnum
+	self.keytip = style.keytip
 
 	-- get full application list
-	programs.all = dfparser.program_list(style.icon_style)
+	programs.all = dfparser.program_list(style.parser)
 	programs.current = awful.util.table.clone(programs.all)
 
 	-- Create quick search widget
@@ -257,23 +278,24 @@ function apprunner:init()
 	--------------------------------------------------------------------------------
 	local prompt_width = style.geometry.width - 2 * style.border_margin[1]
 	                     - style.title_height - style.icon_margin[1] - style.icon_margin[2]
-	local prompt_layout = wibox.layout.constraint(self.decorated_widget, "exact", prompt_width, style.prompt_height)
+	local prompt_layout = wibox.container.constraint(self.decorated_widget, "exact", prompt_width, style.prompt_height)
 
 	local prompt_vertical = wibox.layout.align.vertical()
+	prompt_vertical:set_expand("outside")
 	prompt_vertical:set_middle(prompt_layout)
 
 	local prompt_area_horizontal = wibox.layout.align.horizontal()
 	local title_image = svgbox(style.title_icon)
 	title_image:set_color(style.color.icon)
-	prompt_area_horizontal:set_left(wibox.layout.margin(title_image, unpack(style.icon_margin)))
+	prompt_area_horizontal:set_left(wibox.container.margin(title_image, unpack(style.icon_margin)))
 	prompt_area_horizontal:set_right(prompt_vertical)
 
-	local prompt_area_layout = wibox.layout.constraint(prompt_area_horizontal, "exact", nil, style.title_height)
+	local prompt_area_layout = wibox.container.constraint(prompt_area_horizontal, "exact", nil, style.title_height)
 
 	area_vertical = wibox.layout.align.vertical()
 	area_vertical:set_top(prompt_area_layout)
-	area_vertical:set_middle(wibox.layout.margin(self.applist.layout, 0, 0, style.border_margin[3]))
-	local area_layout = wibox.layout.margin(area_vertical, unpack(style.border_margin))
+	area_vertical:set_middle(wibox.container.margin(self.applist.layout, 0, 0, style.border_margin[3]))
+	local area_layout = wibox.container.margin(area_vertical, unpack(style.border_margin))
 
 	-- Create floating wibox for apprunner widget
 	--------------------------------------------------------------------------------
@@ -299,18 +321,35 @@ function apprunner:show()
 		self.applist:set_select(1)
 	end
 
-	redutil.placement.centered(self.wibox, nil, screen[mouse.screen].workarea)
+	redutil.placement.centered(self.wibox, nil, mouse.screen.workarea)
 	self.wibox.visible = true
-	return awful.prompt.run(
-		{ prompt = "" },
-		self.textbox,
-		function () self.applist.items[self.applist.selected]:run() end,
-		nil,
-		nil,
-		nil,
-		function () self.wibox.visible = false end,
-		function (...) list_filtrate(...) end,
-		function (...) keypressed_callback(...) end)
+	redtip:set_pack("Apprunner", self.keys.all, self.keytip.column, self.keytip.geometry)
+
+	return awful.prompt.run({
+		prompt = "",
+		textbox = self.textbox,
+		exe_callback = function () self.applist.items[self.applist.selected]:run() end,
+		done_callback = function () self:hide() end,
+		keypressed_callback = keypressed_callback,
+		changed_callback = list_filtrate,
+	})
+end
+
+function apprunner:hide()
+	self.wibox.visible = false
+	redtip:remove_pack()
+end
+
+-- Set user hotkeys
+-----------------------------------------------------------------------------------------------------------------------
+function apprunner:set_keys(keys, layout)
+	local layout = layout or "all"
+	if keys then
+		self.keys[layout] = keys
+		if layout ~= "all" then self.keys.all = awful.util.table.join(self.keys.move, self.keys.action) end
+	end
+
+	-- self.tip = awful.util.table.join(self.keys.all, self._fake_keys)
 end
 
 -- End

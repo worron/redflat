@@ -29,14 +29,13 @@ function barvalue.new(dashbar_style, label_style)
 	local widg = {}
 
 	-- construct layout with indicators
-	widg.layout = wibox.layout.fixed.vertical()
-	local align_vertical = wibox.layout.align.vertical()
-	widg.layout:add(align_vertical)
-
 	local progressbar = dcommon.dashbar(dashbar_style)
 	local label = dcommon.textbox(nil, label_style)
-	align_vertical:set_bottom(progressbar)
-	align_vertical:set_top(label)
+
+	widg.layout = wibox.widget({
+		label, nil, progressbar,
+		layout = wibox.layout.align.vertical,
+	})
 
 	-- setup functions
 	function widg:set_text(text)

@@ -31,7 +31,7 @@ local function default_style()
 		color       = { main = "#b1222b", gray = "#404040" }
 	}
 
-	return redutil.table.merge(style, redutil.check(beautiful, "desktop.common.dashbar") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.common.dashbar") or {})
 end
 
 -- Cairo drawing functions
@@ -80,13 +80,13 @@ function dashbar.new(style)
 		self:emit_signal("widget::updated")
 	end
 
-	widg.fit = function(widg, width, height)
+	function widg:fit(context, width, height)
 		return style.width or width, style.height or height
 	end
 
 	-- Draw function
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
+	function widg:draw(context, cr, width, height)
 
 		-- progressbar
 		local barnum = math.floor((width + style.bar.gap) / (style.bar.width + style.bar.gap))

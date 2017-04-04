@@ -19,23 +19,28 @@ local string = string
 local awful = require("awful")
 local wibox = require("wibox")
 local beautiful = require("beautiful")
+local layout = require("awful.layout")
+local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
-local redtag = require("redflat.gauge.redtag")
+local basetag = require("redflat.gauge.tag")
+local tooltip = require("redflat.float.tooltip")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
-local taglist = { filter = {}, mt = {} }
+local taglist = { filter = {}, mt = {} , queue = setmetatable({}, { __mode = 'k' }) }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
 		tag       = {},
-		widget    = redtag.new,
+		widget    = basetag.blue.new,
+		show_tip  = false,
+		timeout   = 0.05,
 		separator = nil
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "widget.taglist") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.taglist") or {})
 end
 
 -- Support functions
@@ -45,7 +50,6 @@ end
 --------------------------------------------------------------------------------
 local function get_state(t)
 	local state = { focus = false, urgent = false, list = {} }
-	local focused_client = client.focus
 	local client_list = t:clients()
 
 	for _, c in pairs(client_list) do
@@ -61,11 +65,17 @@ local function get_state(t)
 	return state
 end
 
+-- Generate tooltip string
+--------------------------------------------------------------------------------
+local function make_tip(t)
+	return string.format("%s (%d apps)", t.name, #(t:clients()))
+end
+
 -- Find all tag to be shown
 --------------------------------------------------------------------------------
 local function filtrate_tags(screen, filter)
 	local tags = {}
-	for _, t in ipairs(awful.tag.gettags(screen)) do
+	for _, t in ipairs(screen.tags) do
 		if not awful.tag.getproperty(t, "hide") and filter(t) then
 			table.insert(tags, t)
 		end
@@ -73,25 +83,31 @@ local function filtrate_tags(screen, filter)
 	return tags
 end
 
+
 -- Create a new taglist widget
--- @param screen The screen to draw taglist for
--- @param filter Filter function to define what tags will be listed
--- @param buttons A table with buttons binding to set
--- @param style
 -----------------------------------------------------------------------------------------------------------------------
-function taglist.new(screen, filter, buttons, style)
+function taglist.new(args, style)
+
+	if not taglist.queue then taglist:init() end
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(default_style(), style or {})
-
+	local cs = args.screen
 	local layout = wibox.layout.fixed.horizontal()
 	local data = setmetatable({}, { __mode = 'k' })
+	local filter = args.filter or taglist.filter.all
+	local hint = args.hint or make_tip
+
+	local style = redutil.table.merge(default_style(), style or {})
+
+	-- Set tooltip
+	--------------------------------------------------------------------------------
+	if not taglist.tp then taglist.tp = tooltip() end
 
 	-- Update function
 	--------------------------------------------------------------------------------
-	local update = function (s)
-		if s ~= screen then return end
+	local update = function(s)
+		if s ~= cs then return end
 		local tags = filtrate_tags(s, filter)
 
 		-- Construct taglist
@@ -105,27 +121,40 @@ function taglist.new(screen, filter, buttons, style)
 			if cache then
 				widg = cache
 			else
-				--widg = redtag(style.tag)
 				widg = style.widget(style.tag)
-				widg:buttons(redutil.create_buttons(buttons, t))
+				if args.buttons then  widg:buttons(redutil.base.buttons(args.buttons, t)) end
 				data[t] = widg
+
+				-- set optional tooltip (what about removing?)
+				if style.show_tip then
+					taglist.tp:add_to_object(widg)
+					widg:connect_signal("mouse::enter", function() taglist.tp:set_text(widg.tip) end)
+				end
 			end
 
 			-- set tag state info to widget
 			local state = get_state(t)
 			widg:set_state(state)
+			widg.tip = hint(t)
 
 			-- add widget and separator to base layout
 			layout:add(widg)
 			if style.separator and i < #tags then
 				layout:add(style.separator)
 			end
-	   end
+		end
 		------------------------------------------------------------
+
+		if taglist.queue[s] and taglist.queue[s].started then taglist.queue[s]:stop() end
 	end
 
-	local uc = function (c) return update(c.screen) end
-	local ut = function (t) return update(awful.tag.getscreen(t)) end
+	-- Create timer to prevent multiply call
+	--------------------------------------------------------------------------------
+	taglist.queue[cs] = timer({ timeout = style.timeout })
+	taglist.queue[cs]:connect_signal("timeout", function() update(cs) end)
+
+	local uc = function (c) if taglist.queue[c.screen] then taglist.queue[c.screen]:again() end end
+	local ut = function (t) if taglist.queue[t.screen] then taglist.queue[t.screen]:again() end end
 
 	-- Signals setup
 	--------------------------------------------------------------------------------
@@ -139,13 +168,13 @@ function taglist.new(screen, filter, buttons, style)
 		"tagged", "untagged", "unmanage"
 	}
 
-	for _, sg in ipairs(tag_signals) do awful.tag.attached_connect_signal(screen, sg, ut) end
+	for _, sg in ipairs(tag_signals) do awful.tag.attached_connect_signal(nil, sg, ut) end
 	for _, sg in ipairs(client_signals) do client.connect_signal(sg, uc) end
 
-	client.connect_signal("property::screen", function(c) update(screen) end)
+	client.connect_signal("property::screen", function(c) update(cs) end) -- dirty
 
 	--------------------------------------------------------------------------------
-	update(screen) -- create taglist widget
+	update(cs) -- create taglist widget
 	return layout  -- return taglist widget
 end
 

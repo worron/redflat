@@ -13,42 +13,133 @@ local pairs = pairs
 local math = math
 
 local awful = require("awful")
-local navigator = require("redflat.service.navigator")
+local common = require("redflat.layout.common")
 local redutil = require("redflat.util")
 
 local hasitem = awful.util.table.hasitem
 
+
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local grid = {}
+local grid = { data = {} }
 grid.name = "grid"
 
 -- default keys
-grid.keys = {
-	move_up    = { "Up" },
-	move_down  = { "Down" },
-	move_left  = { "Left" },
-	move_right = { "Right" },
-	resize_up    = { "k", "K" },
-	resize_down  = { "j", "J" },
-	resize_left  = { "h", "H" },
-	resize_right = { "l", "L" },
-	exit = { "Escape", "Super_L" },
-	mod  = { rail = "Control", reverse = "Shift" }
+grid.keys = {}
+grid.keys.move = {
+	{
+		{ "Mod4" }, "Up", function() grid.move_to("up") end,
+		{ description = "Move window up", group = "Movement" }
+	},
+	{
+		{ "Mod4" }, "Down", function() grid.move_to("down") end,
+		{ description = "Move window down", group = "Movement" }
+	},
+	{
+		{ "Mod4" }, "Left", function() grid.move_to("left") end,
+		{ description = "Move window left", group = "Movement" }
+	},
+	{
+		{ "Mod4" }, "Right", function() grid.move_to("right") end,
+		{ description = "Move window right", group = "Movement" }
+	},
+	{
+		{ "Mod4", "Control" }, "Up", function() grid.move_to("up", true) end,
+		{ description = "Move window up by bound", group = "Movement" }
+	},
+	{
+		{ "Mod4", "Control" }, "Down", function() grid.move_to("down", true) end,
+		{ description = "Move window down by bound", group = "Movement" }
+	},
+	{
+		{ "Mod4", "Control" }, "Left", function() grid.move_to("left", true) end,
+		{ description = "Move window left by bound", group = "Movement" }
+	},
+	{
+		{ "Mod4", "Control" }, "Right", function() grid.move_to("right", true) end,
+		{ description = "Move window right by bound", group = "Movement" }
+	},
 }
 
-local data = {}
+grid.keys.resize = {
+	{
+		{ "Mod4" }, "k", function() grid.resize_to("up") end,
+		{ description = "Inrease window size to the up", group = "Resize" }
+	},
+	{
+		{ "Mod4" }, "j", function() grid.resize_to("down") end,
+		{ description = "Inrease window size to the down", group = "Resize" }
+	},
+	{
+		{ "Mod4" }, "h", function() grid.resize_to("left") end,
+		{ description = "Inrease window size to the left", group = "Resize" }
+	},
+	{
+		{ "Mod4" }, "l", function() grid.resize_to("right") end,
+		{ description = "Inrease window size to the right", group = "Resize" }
+	},
+	{
+		{ "Mod4", "Shift" }, "k", function() grid.resize_to("up", nil, true) end,
+		{ description = "Decrease window size from the up", group = "Resize" }
+	},
+	{
+		{ "Mod4", "Shift" }, "j", function() grid.resize_to("down", nil, true) end,
+		{ description = "Decrease window size from the down", group = "Resize" }
+	},
+	{
+		{ "Mod4", "Shift" }, "h", function() grid.resize_to("left", nil, true) end,
+		{ description = "Decrease window size from the left", group = "Resize" }
+	},
+	{
+		{ "Mod4", "Shift" }, "l", function() grid.resize_to("right", nil, true) end,
+		{ description = "Decrease window size from the right", group = "Resize" }
+	},
+	{
+		{ "Mod4", "Control" }, "k", function() grid.resize_to("up", true) end,
+		{ description = "Increase window size to the up by bound", group = "Resize" }
+	},
+	{
+		{ "Mod4", "Control" }, "j", function() grid.resize_to("down", true) end,
+		{ description = "Increase window size to the down by bound", group = "Resize" }
+	},
+	{
+		{ "Mod4", "Control" }, "h", function() grid.resize_to("left", true) end,
+		{ description = "Increase window size to the left by bound", group = "Resize" }
+	},
+	{
+		{ "Mod4", "Control" }, "l", function() grid.resize_to("right", true) end,
+		{ description = "Increase window size to the right by bound", group = "Resize" }
+	},
+	{
+		{ "Mod4", "Control", "Shift" }, "k", function() grid.resize_to("up", true, true) end,
+		{ description = "Decrease window size from the up by bound ", group = "Resize" }
+	},
+	{
+		{ "Mod4", "Control", "Shift" }, "j", function() grid.resize_to("down", true, true) end,
+		{ description = "Decrease window size from the down by bound ", group = "Resize" }
+	},
+	{
+		{ "Mod4", "Control", "Shift" }, "h", function() grid.resize_to("left", true, true) end,
+		{ description = "Decrease window size from the left by bound ", group = "Resize" }
+	},
+	{
+		{ "Mod4", "Control", "Shift" }, "l", function() grid.resize_to("right", true, true) end,
+		{ description = "Decrease window size from the right by bound ", group = "Resize" }
+	},
+}
+
+grid.keys.all = awful.util.table.join(grid.keys.move, grid.keys.resize)
+
 
 -- Support functions
 -----------------------------------------------------------------------------------------------------------------------
-
 local function compare(a ,b) return a < b end
 
 -- Find all rails for given client
 ------------------------------------------------------------
 local function get_rail(c)
-    local wa = screen[c.screen].workarea
-    local cls = awful.client.visible(c.screen)
+	local wa = screen[c.screen].workarea
+	local cls = awful.client.visible(c.screen)
 
 	local rail = { x = { wa.x, wa.x + wa.width }, y = { wa.y, wa.y + wa.height } }
 	table.remove(cls, hasitem(cls, c))
@@ -70,7 +161,7 @@ local function get_rail(c)
 	return rail
 end
 
-local function update_rail(c) data.rail = get_rail(c) end
+local function update_rail(c) grid.data.rail = get_rail(c) end
 
 -- Calculate cell geometry
 ------------------------------------------------------------
@@ -115,30 +206,21 @@ local function is_diff(g1, g2, cell)
 	return false
 end
 
--- Place mouse pointer on window corner
-------------------------------------------------------------
-local function set_mouse_on_corner(g, corner)
-	local mc = {}
+-- Move client
+-----------------------------------------------------------------------------------------------------------------------
+function grid.move_to(dir, is_rail, k)
+	local ng = {}
+	local data = grid.data
+	local c = client.focus
 
-	if     corner == "bottom_right" then mc = { x = g.x + g.width, y = g.y + g.height }
-	elseif corner == "bottom_left"  then mc = { x = g.x          , y = g.y + g.height }
-	elseif corner == "top_right"    then mc = { x = g.x + g.width, y = g.y }
-	elseif corner == "top_left"     then mc = { x = g.x          , y = g.y }
+	if not c then return end
+	if data.last ~= c then
+		data.last = c
+		update_rail(c)
 	end
 
-	mouse.coords(mc)
-end
-
--- Move client
---------------------------------------------------------------------------------
-local function move_to(data, dir, mod)
-	local ng = {}
-	local c = client.focus
-	if not c then return end
-
 	local g = redutil.client.fullgeometry(c, g)
-	local is_rail = hasitem(mod, grid.keys.mod.rail) ~= nil
-	local k = hasitem(mod, grid.keys.mod.reverse) and 5 or 1
+	local k = k or 1
 
 	if dir == "left" then
 		if is_rail then
@@ -190,15 +272,19 @@ local function move_to(data, dir, mod)
 end
 
 -- Resize client
---------------------------------------------------------------------------------
-function resize_to(data, dir, mod)
+-----------------------------------------------------------------------------------------------------------------------
+grid.resize_to = function(dir, is_rail, is_reverse)
 	local ng = {}
 	local c = client.focus
+	local data = grid.data
+
 	if not c then return end
+	if data.last ~= c then
+		data.last = c
+		update_rail(c)
+	end
 
 	local g = redutil.client.fullgeometry(c)
-	local is_reverse = hasitem(mod, grid.keys.mod.reverse) ~= nil
-	local is_rail = hasitem(mod, grid.keys.mod.rail) ~= nil
 	local sign = is_reverse and -1 or 1
 
 	if dir == "up" then
@@ -259,83 +345,56 @@ end
 
 -- Keygrabber
 -----------------------------------------------------------------------------------------------------------------------
-data.keygrabber = function(mod, key, event)
-	if event == "press" then return false
-	elseif hasitem(grid.keys.exit, key) then
-		if data.on_close then data.on_close() end
-		client.disconnect_signal("focus", update_rail)
-		awful.keygrabber.stop(data.keygrabber)
-	elseif navigator.raw_keygrabber(mod, key, event) then
-	elseif hasitem(grid.keys.move_up, key) then move_to(data, "up", mod)
-	elseif hasitem(grid.keys.move_down, key) then move_to(data, "down", mod)
-	elseif hasitem(grid.keys.move_left, key) then move_to(data, "left", mod)
-	elseif hasitem(grid.keys.move_right, key) then move_to(data, "right", mod)
-	elseif hasitem(grid.keys.resize_up, key) then resize_to(data, "up", mod)
-	elseif hasitem(grid.keys.resize_down, key) then resize_to(data, "down", mod)
-	elseif hasitem(grid.keys.resize_left, key) then resize_to(data, "left", mod)
-	elseif hasitem(grid.keys.resize_right, key) then resize_to(data, "right", mod)
-	else return false
+grid.maingrabber = function(mod, key, event)
+	for _, k in ipairs(grid.keys.all) do
+		if redutil.key.match_grabber(k, mod, key) then k[3](); return true end
 	end
 end
+
+grid.key_handler = function (mod, key, event)
+	if event == "press" then return end
+	if grid.maingrabber(mod, key, event)     then return end
+	if common.grabbers.base(mod, key, event) then return end
+end
+
 
 -- Tile function
 -----------------------------------------------------------------------------------------------------------------------
 function grid.arrange(p)
 
-    -- theme vars
+	-- theme vars
 	local cellnum = beautiful.cellnum or { x = 100, y = 60 }
 
-    -- aliases
-    local wa = p.workarea
-    local cls = p.clients
+	-- aliases
+	local wa = p.workarea
+	local cls = p.clients
 
-    -- nothing to tile here
-    if #cls == 0 then return end
+	-- nothing to tile here
+	if #cls == 0 then return end
 
 	-- calculate cell
-	data.cell = cell(wa, cellnum)
+	grid.data.cell = cell(wa, cellnum)
 
 	-- tile
 	for i, c in ipairs(cls) do
 		local g = redutil.client.fullgeometry(c)
 
-		g = fit_cell(g, data.cell)
+		g = fit_cell(g, grid.data.cell)
 		redutil.client.fullgeometry(c, g)
 	end
 end
 
+
 -- Mouse moving function
 -----------------------------------------------------------------------------------------------------------------------
-function grid.mouse_move_handler(c)
-	local orig = c:geometry()
-	local m_c = mouse.coords()
-	local dist = {
-		x = m_c.x - orig.x,
-		y = m_c.y - orig.y
-	}
-
-	mousegrabber.run(
-		function (_mouse)
-			for k, v in ipairs(_mouse.buttons) do
-				if v then
-					local g = c:geometry()
-
-					for _, crd in ipairs({ "x", "y" }) do
-						local d = _mouse[crd] - g[crd] - dist[crd]
-						if math.abs(d) >= data.cell[crd] then
-							g[crd] = g[crd] + d
-						end
-					end
-
-					c:geometry(g)
-					return true
-				end
-			end
-			return false
-		end,
-		"fleur"
-	)
+function grid.move_handler(c, context, hints)
+	local g = redutil.client.fullgeometry(c)
+	local hg = { x = hints.x, y = hints.y, width = g.width, height = g.height }
+	if is_diff(hg, g, grid.data.cell) then
+		redutil.client.fullgeometry(c, fit_cell(hg, grid.data.cell))
+	end
 end
+
 
 -- Mouse resizing function
 -----------------------------------------------------------------------------------------------------------------------
@@ -343,7 +402,7 @@ function grid.mouse_resize_handler(c, corner, x, y)
 	local g = redutil.client.fullgeometry(c)
 	local cg = g
 
-	set_mouse_on_corner(g, corner)
+	-- set_mouse_on_corner(g, corner)
 
 	mousegrabber.run(
 		function (_mouse)
@@ -378,11 +437,11 @@ function grid.mouse_resize_handler(c, corner, x, y)
 
 					if ng.width  <= 0 then ng.width  = nil end
 					if ng.height <= 0 then ng.height = nil end
-					if c.maximized_horizontal then ng.width  = g.width  ng.x = g.x end
-					if c.maximized_vertical   then ng.height = g.height ng.y = g.y end
+					-- if c.maximized_horizontal then ng.width  = g.width  ng.x = g.x end
+					-- if c.maximized_vertical   then ng.height = g.height ng.y = g.y end
 
-					if is_diff(ng, cg, data.cell) then
-						cg = redutil.client.fullgeometry(c, ng)
+					if is_diff(ng, cg, grid.data.cell) then
+						cg = redutil.client.fullgeometry(c, fit_cell(ng, grid.data.cell))
 					end
 
 					return true
@@ -394,15 +453,24 @@ function grid.mouse_resize_handler(c, corner, x, y)
 	)
 end
 
--- Keyboard handler function
+-- Redflat navigator support functions
 -----------------------------------------------------------------------------------------------------------------------
-function grid.key_handler(c, on_close)
+function grid:set_keys(keys, layout)
+	local layout = layout or "all"
+	if keys then
+		self.keys[layout] = keys
+		if layout ~= "all" then grid.keys.all = awful.util.table.join(grid.keys.move, grid.keys.resize) end
+	end
 
-	data.rail = get_rail(c)
-	data.on_close = on_close
+	self.tip = awful.util.table.join(self.keys.all, common.keys.base)
+end
 
-	client.connect_signal("focus", update_rail)
-	awful.keygrabber.run(data.keygrabber)
+function grid.startup()
+	if not grid.tip then grid:set_keys() end
+end
+
+function grid.cleanup()
+	grid.data.last = nil
 end
 
 -- End

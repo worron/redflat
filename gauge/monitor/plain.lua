@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------------
---                                                RedFlat task widget                                                --
+--                                             RedFlat monitor widget                                                --
 -----------------------------------------------------------------------------------------------------------------------
--- Widget includes label and decorative line
+-- Widget with label and progressbar
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
@@ -11,32 +11,32 @@ local math = math
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local color = require("gears.color")
+local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local redtask = { mt = {} }
+local monitor = { mt = {} }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		width    = 40,
 		line     = { width = 4, v_gap = 30 },
 		font     = { font = "Sans", size = 16, face = 0, slant = 0 },
 		text_gap = 22,
-		counter  = { size = 12, gap = 2 },
-		color    = { main = "#b1222b", gray = "#575757", icon = "#a0a0a0",
-		            urgent = "#32882d", wibox = "#202020" }
+		label    = "MON",
+		width    = nil,
+		color    = { main = "#b1222b", gray = "#575757", icon = "#a0a0a0" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.task") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.monitor.plain") or {})
 end
 
--- Create a new redtask widget
+-- Create a new monitor widget
 -- @param style Table containing colors and geometry parameters for all elemets
 -----------------------------------------------------------------------------------------------------------------------
-function redtask.new(style)
+function monitor.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
@@ -44,7 +44,10 @@ function redtask.new(style)
 
 	-- updating values
 	local data = {
-		state = { text = "TXT" }
+		value = 0,
+		label = style.label,
+		width = style.width,
+		color = style.color.icon
 	}
 
 	-- Create custom widget
@@ -53,8 +56,13 @@ function redtask.new(style)
 
 	-- User functions
 	------------------------------------------------------------
-	function widg:set_state(state)
-		data.state = redutil.table.merge(data.state, state)
+	function widg:set_value(x)
+		data.value = x < 1 and x or 1
+		self:emit_signal("widget::updated")
+	end
+
+	function widg:set_label(t)
+		data.label = t
 		self:emit_signal("widget::updated")
 	end
 
@@ -63,47 +71,37 @@ function redtask.new(style)
 		self:emit_signal("widget::updated")
 	end
 
+	function widg:set_alert(alert)
+		data.color = alert and style.color.main or style.color.icon
+		self:emit_signal("widget::updated")
+	end
+
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height)
+	function widg:fit(context, width, height)
 		if data.width then
-			return math.min(width, data.width), height
+			return data.width, height
 		else
-			return width, height
+			local size = math.min(width, height)
+			return size, size
 		end
 	end
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
+	function widg:draw(context, cr, width, height)
 
 		-- label
-		cr:set_source(color(data.state.minimized and style.color.gray or style.color.icon))
+		cr:set_source(color(data.color))
 		redutil.cairo.set_font(cr, style.font)
-		redutil.cairo.tcenter_horizontal(cr, { width / 2, style.text_gap }, data.state.text)
+		redutil.cairo.textcentre.horizontal(cr, { width/2, style.text_gap }, data.label)
 
-		-- line
-		local line_color = data.state.focus and style.color.main
-		                   or data.state.urgent and style.color.urgent
-		                   or style.color.gray
-		cr:set_source(color(line_color))
-		cr:rectangle(0, style.line.v_gap, width, style.line.width)
-		cr:fill()
-
-		-- counter
-		if data.state.num > 1 then
-			cr:set_font_size(style.counter.size)
-			local ext = cr:text_extents(tostring(data.state.num))
-			cr:set_source(color(style.color.wibox))
-			cr:rectangle(
-				(width - ext.width) / 2 - style.counter.gap, style.line.v_gap,
-				ext.width + 2 * style.counter.gap, style.counter.size
-			)
+		-- progressbar
+		local wd = { width, width * data.value }
+		for i = 1, 2 do
+			cr:set_source(color(i > 1 and style.color.main or style.color.gray))
+			cr:rectangle(0, style.line.v_gap, wd[i], style.line.width)
 			cr:fill()
-
-			cr:set_source(color(style.color.icon))
-			local coord = { width / 2, style.line.v_gap + style.counter.size / 2 }
-			redutil.cairo.tcenter_horizontal(cr, coord, tostring(data.state.num))
 		end
 	end
 
@@ -111,10 +109,10 @@ function redtask.new(style)
 	return widg
 end
 
--- Config metatable to call redtask module as function
+-- Config metatable to call monitor module as function
 -----------------------------------------------------------------------------------------------------------------------
-function redtask.mt:__call(...)
-	return redtask.new(...)
+function monitor.mt:__call(...)
+	return monitor.new(...)
 end
 
-return setmetatable(redtask, redtask.mt)
+return setmetatable(monitor, monitor.mt)

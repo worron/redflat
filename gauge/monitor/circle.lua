@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------------
---                                            RedFlat dashcontrol widget                                             --
+--                                             RedFlat monitor widget                                                --
 -----------------------------------------------------------------------------------------------------------------------
--- Horizontal progresspar with stairs form
+-- Widget with circle indicator
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
@@ -16,30 +16,37 @@ local redutil = require("redflat.util")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local dashcontrol = { mt = {} }
+local cirmon = { mt = {} }
+local TPI = math.pi * 2
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		bar   = { width = 4, num = 10 },
-		color = { main = "#b1222b", gray = "#404040" }
+		width        = nil,
+		line_width   = 4,
+		radius       = 14,
+		iradius      = 6,
+		color    = { main = "#b1222b", gray = "#575757", icon = "#a0a0a0" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.dashcontrol") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.monitor.circle") or {})
 end
 
--- Create a new dashcontrol widget
+-- Create a new monitor widget
 -- @param style Table containing colors and geometry parameters for all elemets
 -----------------------------------------------------------------------------------------------------------------------
-function dashcontrol.new(style)
+function cirmon.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local style = redutil.table.merge(default_style(), style or {})
+	local cs = -TPI / 4
 
 	-- updating values
 	local data = {
-		value = 0
+		value = 0,
+		width = style.width,
+		color = style.color.icon
 	}
 
 	-- Create custom widget
@@ -53,21 +60,43 @@ function dashcontrol.new(style)
 		self:emit_signal("widget::updated")
 	end
 
+	function widg:set_width(width)
+		data.width = width
+		self:emit_signal("widget::updated")
+	end
+
+	function widg:set_alert(alert)
+		data.color = alert and style.color.main or style.color.icon
+		self:emit_signal("widget::updated")
+	end
+
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(ret, width, height) return width, height end
+	function widg:fit(context, width, height)
+		if data.width then
+			return data.width, height
+		else
+			local size = math.min(width, height)
+			return size, size
+		end
+	end
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
-		local wstep = (width - style.bar.width) / (style.bar.num - 1)
-		local hstep = height / style.bar.num
-		local point = math.ceil(data.value * style.bar.num)
+	function widg:draw(context, cr, width, height)
 
-		for i = 1, style.bar.num do
-			cr:set_source(color(i > point and style.color.gray or style.color.main))
-			cr:rectangle((i - 1) * wstep, height, style.bar.width, - i * hstep)
-			cr:fill()
+		-- center circle
+		cr:set_source(color(data.color))
+		cr:arc(width / 2, height / 2, style.iradius, 0, TPI)
+		cr:fill()
+
+		-- progress circle
+		cr:set_line_width(style.line_width)
+		local cd = { TPI, TPI * data.value }
+		for i = 1, 2 do
+			cr:set_source(color(i > 1 and style.color.main or style.color.gray))
+			cr:arc(width / 2, height / 2, style.radius, cs, cs + cd[i])
+			cr:stroke()
 		end
 	end
 
@@ -75,10 +104,10 @@ function dashcontrol.new(style)
 	return widg
 end
 
--- Config metatable to call dashcontrol module as function
+-- Config metatable to call monitor module as function
 -----------------------------------------------------------------------------------------------------------------------
-function dashcontrol.mt:__call(...)
-	return dashcontrol.new(...)
+function cirmon.mt:__call(...)
+	return cirmon.new(...)
 end
 
-return setmetatable(dashcontrol, dashcontrol.mt)
+return setmetatable(cirmon, cirmon.mt)

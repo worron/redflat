@@ -24,8 +24,9 @@ local beautiful = require("beautiful")
 local tag = require("awful.tag")
 local awful = require("awful")
 local wibox = require("wibox")
+local timer = require("gears.timer")
 
-local redtask = require("redflat.gauge.task")
+local basetask = require("redflat.gauge.tag.blue")
 local redutil = require("redflat.util")
 local separator = require("redflat.gauge.separator")
 local redmenu = require("redflat.menu")
@@ -34,7 +35,7 @@ local svgbox = require("redflat.gauge.svgbox")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
-local redtasklist = { filter = {}, winmenu = {}, tasktip = {}, action = {}, mt = {} }
+local redtasklist = { filter = {}, winmenu = {}, tasktip = {}, action = {}, mt = {}, }
 
 local last = {
 	client      = nil,
@@ -48,18 +49,20 @@ local last = {
 local function default_style()
 	local style = {
 		appnames    = {},
-		widget      = redtask.new,
+		widget      = basetask.new,
 		width       = 40,
 		char_digit  = 3,
 		need_group  = true,
+		timeout     = 0.05,
 		task_margin = { 5, 5, 0, 0 }
 	}
 	style.winmenu = {
 		icon           = {},
 		micon          = {},
 		layout_icon    = {},
-		titleline      = { font = "Sans 16 bold", height = 35},
-		state_iconsize = { 20, 20 },
+		titleline      = { font = "Sans 16 bold", height = 35 },
+		stateline      = { height = 35 },
+		state_iconsize = { width = 20, height = 20 },
 		sep_margin     = { 3, 3, 5, 5 },
 		tagmenu        = { icon_margin = { 10, 10, 10, 10 } },
 		color          = { main = "#b1222b", icon = "#a0a0a0", gray = "#404040" }
@@ -78,7 +81,7 @@ local function default_style()
 		nohide       = true
 	}
 
-	return redutil.table.merge(style, redutil.check(beautiful, "widget.tasklist") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.tasklist") or {})
 end
 
 -- Support functions
@@ -110,11 +113,11 @@ end
 --------------------------------------------------------------------------------
 local function tagmenu_items(action, style)
 	local items = {}
-	for _, t in ipairs(awful.tag.gettags(last.screen)) do
+	for _, t in ipairs(last.screen.tags) do
 		if not awful.tag.getproperty(t, "hide") then
 			table.insert(
 				items,
-				{ t.name, function() action(t, last.client) end, style.micon.blank, style.micon.blank }
+				{ t.name, function() action(t) end, style.micon.blank, style.micon.blank }
 			)
 		end
 	end
@@ -124,7 +127,7 @@ end
 -- Function to update tag submenu icons
 --------------------------------------------------------------------------------
 local function tagmenu_update(c, menu, submenu_index, style)
-	for k, t in ipairs(awful.tag.gettags(last.screen)) do
+	for k, t in ipairs(last.screen.tags) do
 		if not awful.tag.getproperty(t, "hide") then
 
 			-- set layout icon for every tag
@@ -161,15 +164,22 @@ local function state_line_construct(state_icons, setup_layout, style)
 	for i, v in ipairs(state_icons) do
 		-- create widget
 		stateboxes[i] = svgbox(v.icon)
-		stateboxes[i]:set_size({ width = style.state_iconsize[1], height = style.state_iconsize[2] })
+		stateboxes[i]:set_forced_width(style.state_iconsize.width)
+		stateboxes[i]:set_forced_height(style.state_iconsize.height)
 
 		-- set widget in line
 		local l = wibox.layout.align.horizontal()
-		l:set_middle(stateboxes[i])
+		l:set_expand("outside")
+		l:set_second(stateboxes[i])
 		setup_layout:add(l)
 
 		-- set mouse action
-		stateboxes[i]:buttons(awful.util.table.join(awful.button({}, 1, v.act)))
+		stateboxes[i]:buttons(awful.util.table.join(awful.button({}, 1,
+			function()
+				v.action()
+				stateboxes[i]:set_color(v.indicator(last.client) and style.color.main or style.color.gray)
+			end
+		)))
 	end
 
 	return stateboxes
@@ -199,7 +209,7 @@ local function new_task(c_group, style)
 	local task = {}
 	task.widg  = style.widget(style.task)
 	task.group = c_group
-	task.l     = wibox.layout.margin(task.widg, unpack(style.task_margin))
+	task.l     = wibox.container.margin(task.widg, unpack(style.task_margin))
 
 	task.widg:connect_signal("mouse::enter", function() redtasklist.tasktip:show(task.group) end)
 	task.widg:connect_signal("mouse::leave",
@@ -274,10 +284,10 @@ local function tasktip_line(style)
 
 	-- horizontal align wlayout
 	local horizontal = wibox.layout.fixed.horizontal()
-	horizontal:add(wibox.layout.margin(line.tb, unpack(style.margin)))
+	horizontal:add(wibox.container.margin(line.tb, unpack(style.margin)))
 
 	-- background for client state mark
-	line.field = wibox.widget.background(horizontal)
+	line.field = wibox.container.background(horizontal)
 
 	-- tasktip line metods
 	function line:set_text(text)
@@ -344,7 +354,7 @@ local function tasklist_construct(client_groups, layout, data, buttons, style)
 		-- set info and buttons to widget
 		local state = get_state(c_group, style.char_digit, style.appnames)
 		task.widg:set_state(state)
-		task.widg:buttons(redutil.create_buttons(buttons, { group = c_group }))
+		task.widg:buttons(redutil.base.buttons(buttons, { group = c_group }))
 
 		-- construct
 		layout:add(task.l)
@@ -370,7 +380,7 @@ local function construct_tasktip(c_group, layout, data, buttons, style)
 		end
 
 		line:set_text(awful.util.escape(c.name))
-		tb_w, tb_h = line.tb:fit(-1, -1)
+		tb_w, tb_h = line.tb:get_preferred_size()
 
 		-- set state highlight and buttons only for grouped tasks
 		if #c_group > 1 then
@@ -381,9 +391,9 @@ local function construct_tasktip(c_group, layout, data, buttons, style)
 			if state.urgent    then line:mark_urgent()    end
 
 			local gap = (i - 1) * (tb_h + style.margin[3] + style.margin[4])
-			line.field:buttons(redutil.create_buttons(buttons, { group = { c }, gap = gap }))
+			if buttons then line.field:buttons(redutil.base.buttons(buttons, { group = { c }, gap = gap })) end
 		else
-			line.field:buttons({})
+			if buttons then line.field:buttons({}) end
 		end
 
 		tip_width = math.max(tip_width, tb_w)
@@ -411,28 +421,20 @@ function redtasklist.winmenu:init(style)
 	-- Create array of state icons
 	-- associate every icon with action and state indicator
 	--------------------------------------------------------------------------------
-
 	local function icon_table_ganerator(property)
 		return {
-			icon = style.icon[property],
-			act  = function() last.client[property] = not last.client[property] end,
-			ind  = function(c) return c[property] end
+			icon      = style.icon[property],
+			action    = function() last.client[property] = not last.client[property] end,
+			indicator = function(c) return c[property] end
 		}
 	end
 
-	-- most of properties tables are similar, so they can be generated by general function
-	-- but "floating" icon is a bit different, so its table written by hand
 	local state_icons = {
-		{
-			icon = style.icon.floating,
-			act  = function() awful.client.floating.toggle(last.client) end,
-			ind  = awful.client.floating.get
-		},
+		icon_table_ganerator("floating"),
 		icon_table_ganerator("sticky"),
 		icon_table_ganerator("ontop"),
 		icon_table_ganerator("below"),
-		icon_table_ganerator("maximized_horizontal"),
-		icon_table_ganerator("maximized_vertical"),
+		icon_table_ganerator("maximized"),
 	}
 
 	-- Construct menu
@@ -444,7 +446,7 @@ function redtasklist.winmenu:init(style)
 	classbox:set_font(style.titleline.font)
 	classbox:set_align ("center")
 
-	local classline = wibox.layout.constraint(classbox, "exact", nil, style.titleline.height)
+	local classline = wibox.container.constraint(classbox, "exact", nil, style.titleline.height)
 
 	-- Window state line construction
 	------------------------------------------------------------
@@ -452,8 +454,9 @@ function redtasklist.winmenu:init(style)
 	-- layouts
 	local stateline_horizontal = wibox.layout.flex.horizontal()
 	local stateline_vertical = wibox.layout.align.vertical()
-	stateline_vertical:set_middle(stateline_horizontal)
-	local stateline = wibox.layout.constraint(stateline_vertical, "exact", nil, style.titleline.height)
+	stateline_vertical:set_second(stateline_horizontal)
+	stateline_vertical:set_expand("outside")
+	local stateline = wibox.container.constraint(stateline_vertical, "exact", nil, style.stateline.height)
 
 	-- set all state icons in line
 	local stateboxes = state_line_construct(state_icons, stateline_horizontal, style)
@@ -461,7 +464,7 @@ function redtasklist.winmenu:init(style)
 	-- update function for state icons
 	local function stateboxes_update(c, state_icons, stateboxes)
 		for i, v in ipairs(state_icons) do
-			stateboxes[i]:set_color(v.ind(c) and style.color.main or style.color.gray)
+			stateboxes[i]:set_color(v.indicator(c) and style.color.main or style.color.gray)
 		end
 	end
 
@@ -471,8 +474,8 @@ function redtasklist.winmenu:init(style)
 
 	-- Construct tag submenus ("move" and "add")
 	------------------------------------------------------------
-	local movemenu_items = tagmenu_items(awful.client.movetotag, style)
-	local addmenu_items  = tagmenu_items(awful.client.toggletag, style)
+	local movemenu_items = tagmenu_items(function(t) last.client:move_to_tag(t) end, style)
+	local addmenu_items  = tagmenu_items(function(t) last.client:toggle_tag(t)  end, style)
 
 	-- Create menu
 	------------------------------------------------------------
@@ -484,9 +487,9 @@ function redtasklist.winmenu:init(style)
 			menusep,
 			{ "Move to tag", { items = movemenu_items, theme = style.tagmenu} },
 			{ "Add to tag",  { items = addmenu_items,  theme = style.tagmenu} },
-			{ "Maximize",    maximize, nil, style.icon.maximize },
-			{ "Minimize",    minimize, nil, style.icon.minimize },
-			{ "Close",       close,    nil, style.icon.close    },
+			-- { "Maximize",    maximize, nil, style.icon.maximized },
+			{ "Minimize",    minimize, nil, style.icon.minimize  },
+			{ "Close",       close,    nil, style.icon.close     },
 			menusep,
 			{ widget = stateline }
 		}
@@ -507,8 +510,7 @@ function redtasklist.winmenu:init(style)
 	-- and does not connected to tasklist
 	--------------------------------------------------------------------------------
 	local client_signals = {
-		"property::ontop", "property::floating", "property::below",
-		"property::maximized_horizontal", "property::maximized_vertical"
+		"property::ontop", "property::floating", "property::below", "property::maximized",
 	}
 	for _, sg in ipairs(client_signals) do
 		client.connect_signal(sg, function() self:update(last.client) end)
@@ -575,7 +577,7 @@ function redtasklist.tasktip:init(buttons, style)
 	self.hidetimer:connect_signal("timeout",
 		function()
 			self.wibox.visible = false
-			self.hidetimer:stop()
+			if self.hidetimer.started then self.hidetimer:stop() end
 		end
 	)
 	self.hidetimer:emit_signal("timeout")
@@ -612,18 +614,18 @@ function redtasklist.tasktip:show(c_group)
 end
 
 -- Create a new tasklist widget
--- @param screen The screen to draw tasklist for
--- @param filter Filter function to define what clients will be listed
--- @param style Settings for redtask widget
 -----------------------------------------------------------------------------------------------------------------------
-function redtasklist.new(screen, filter, buttons, style)
+function redtasklist.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
+	local cs = args.screen
+	local filter = args.filter or redtasklist.filter.currenttags
+
 	local style = redutil.table.merge(default_style(), style or {})
 
 	redtasklist.winmenu:init(style.winmenu)
-	redtasklist.tasktip:init(buttons, style.tasktip)
+	redtasklist.tasktip:init(args.buttons, style.tasktip)
 
 	local tasklist = wibox.layout.flex.horizontal()
 	local data = {}
@@ -634,12 +636,12 @@ function redtasklist.new(screen, filter, buttons, style)
 	-- Tasklist update function
 	------------------------------------------------------------
 	local function tasklist_update()
-		local clients = visible_clients(filter, screen)
+		local clients = visible_clients(filter, cs)
 		local client_groups = group_task(clients, style.need_group)
 
 		last.sorted_list = sort_list(client_groups)
 
-		tasklist_construct(client_groups, tasklist, data, buttons, style)
+		tasklist_construct(client_groups, tasklist, data, args.buttons, style)
 	end
 
 	-- Full update including pop-up widgets
@@ -650,7 +652,13 @@ function redtasklist.new(screen, filter, buttons, style)
 		redtasklist.winmenu:update(last.client)
 	end
 
+	-- Create timer to prevent multiply call
+	--------------------------------------------------------------------------------
+	tasklist.queue = timer({ timeout = style.timeout })
+	tasklist.queue:connect_signal("timeout", function() update(cs); tasklist.queue:stop() end)
+
 	-- Signals setup
+	-- TODO: split signals for screens
 	--------------------------------------------------------------------------------
 	local client_signals = {
 		"property::urgent", "property::sticky", "property::minimized",
@@ -661,8 +669,10 @@ function redtasklist.new(screen, filter, buttons, style)
 
 	local tag_signals = { "property::selected", "property::activated" }
 
-	for _, sg in ipairs(client_signals) do client.connect_signal(sg, update) end
-	for _, sg in ipairs(tag_signals)    do tag.attached_connect_signal(screen, sg, update) end
+	-- for _, sg in ipairs(client_signals) do client.connect_signal(sg, update) end
+	-- for _, sg in ipairs(tag_signals)    do tag.attached_connect_signal(cs, sg, update) end
+	for _, sg in ipairs(client_signals) do client.connect_signal(sg, function() tasklist.queue:again() end) end
+	for _, sg in ipairs(tag_signals) do tag.attached_connect_signal(cs, sg, function() tasklist.queue:again() end) end
 
 	-- force hide pop-up widgets if any client was closed
 	-- because last vars may be no actual anymore
@@ -749,7 +759,7 @@ function redtasklist.filter.currenttags(c, screen)
 	if c.screen ~= screen then return false end
 	if c.sticky then return true end
 
-	local tags = tag.gettags(screen)
+	local tags = screen.tags
 
 	for k, t in ipairs(tags) do
 		if t.selected then
@@ -771,7 +781,7 @@ function redtasklist.filter.minimizedcurrenttags(c, screen)
 	if not c.minimized then return false end
 	if c.sticky then return true end
 
-	local tags = tag.gettags(screen)
+	local tags = screen.tags
 
 	for k, t in ipairs(tags) do
 		if t.selected then

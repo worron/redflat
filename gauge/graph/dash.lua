@@ -1,12 +1,13 @@
 -----------------------------------------------------------------------------------------------------------------------
---                                            RedFlat doublebar widget                                               --
+--                                            RedFlat dashcontrol widget                                             --
 -----------------------------------------------------------------------------------------------------------------------
--- Gauge wigget with two vertical progressbar
+-- Horizontal progresspar with stairs form
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
+local math = math
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local color = require("gears.color")
@@ -15,23 +16,22 @@ local redutil = require("redflat.util")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local doublebar = { mt = {} }
+local dashcontrol = { mt = {} }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		line  = { width = 4, gap = 5 },
-		v_gap = 8,
-		color = { main = "#b1222b", gray = "#575757" }
+		bar   = { width = 4, num = 10 },
+		color = { main = "#b1222b", gray = "#404040" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.doublebar") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.graph.dash") or {})
 end
 
--- Create a new doublebar widget
+-- Create a new dashcontrol widget
 -- @param style Table containing colors and geometry parameters for all elemets
 -----------------------------------------------------------------------------------------------------------------------
-function doublebar.new(style)
+function dashcontrol.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
@@ -39,7 +39,7 @@ function doublebar.new(style)
 
 	-- updating values
 	local data = {
-		value = {0, 0}
+		value = 0
 	}
 
 	-- Create custom widget
@@ -48,43 +48,39 @@ function doublebar.new(style)
 
 	-- User functions
 	------------------------------------------------------------
-	function widg:set_value(value)
-		data.value = { value[1] < 1 and value[1] or 1, value[2] < 1 and value[2] or 1 }
+	function widg:set_value(x)
+		data.value = x < 1 and x or 1
 		self:emit_signal("widget::updated")
-		return self
 	end
 
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height)
-		local width = 2 * style.line.width + style.line.gap
+	function widg:fit(context, width, height)
 		return width, height
 	end
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
-		local bar_height = height - 2*style.v_gap
+	function widg:draw(context, cr, width, height)
+		local wstep = (width - style.bar.width) / (style.bar.num - 1)
+		local hstep = height / style.bar.num
+		local point = math.ceil(data.value * style.bar.num)
 
-		cr:set_source(color(style.color.gray))
-		cr:rectangle(0, style.v_gap, style.line.width, bar_height)
-		cr:rectangle(width - style.line.width, style.v_gap, style.line.width, bar_height)
-		cr:fill()
-
-		cr:set_source(color(style.color.main))
-		cr:rectangle(0, height - style.v_gap, style.line.width, - bar_height * data.value[1])
-		cr:rectangle(width - style.line.width, height - style.v_gap, style.line.width, - bar_height * data.value[2])
-		cr:fill()
+		for i = 1, style.bar.num do
+			cr:set_source(color(i > point and style.color.gray or style.color.main))
+			cr:rectangle((i - 1) * wstep, height, style.bar.width, - i * hstep)
+			cr:fill()
+		end
 	end
 
 	--------------------------------------------------------------------------------
 	return widg
 end
 
--- Config metatable to call doublebar module as function
+-- Config metatable to call dashcontrol module as function
 -----------------------------------------------------------------------------------------------------------------------
-function doublebar.mt:__call(...)
-	return doublebar.new(...)
+function dashcontrol.mt:__call(...)
+	return dashcontrol.new(...)
 end
 
-return setmetatable(doublebar, doublebar.mt)
+return setmetatable(dashcontrol, dashcontrol.mt)

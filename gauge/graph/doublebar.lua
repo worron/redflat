@@ -1,14 +1,12 @@
 -----------------------------------------------------------------------------------------------------------------------
---                                               RedFlat dotcount widget                                             --
+--                                            RedFlat doublebar widget                                               --
 -----------------------------------------------------------------------------------------------------------------------
--- Simple graphical counter
--- Displaying current value by dots number
+-- Gauge wigget with two vertical progressbar
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
-local math = math
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local color = require("gears.color")
@@ -17,32 +15,22 @@ local redutil = require("redflat.util")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local counter = { mt = {} }
+local doublebar = { mt = {} }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		column_num   = { 2, 5 },  -- {min, max}
-		row_num      = 3,
-		dot_size     = 5,
-		dot_gap_h    = 5,
-		color        = { main = "#b1222b", gray = "#575757" }
+		line  = { width = 4, gap = 5 },
+		color = { main = "#b1222b", gray = "#575757" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.dotcount") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.doublebar") or {})
 end
 
--- Support functions
------------------------------------------------------------------------------------------------------------------------
-local function round(x)
-	return math.floor(x + 0.5)
-end
-
--- Create a new counter widget
+-- Create a new doublebar widget
 -- @param style Table containing colors and geometry parameters for all elemets
--- TODO: make auto calculation for column number
 -----------------------------------------------------------------------------------------------------------------------
-function counter.new(style)
+function doublebar.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
@@ -50,8 +38,7 @@ function counter.new(style)
 
 	-- updating values
 	local data = {
-		count_num = 0,
-		column_num = style.column_num[1]
+		value = {0, 0}
 	}
 
 	-- Create custom widget
@@ -60,49 +47,41 @@ function counter.new(style)
 
 	-- User functions
 	------------------------------------------------------------
-	function widg:set_num(num)
-		data.count_num = num
-		data.column_num = math.min(math.max(style.column_num[1], math.ceil(num / style.row_num)), style.column_num[2])
+	function widg:set_value(value)
+		data.value = { value[1] < 1 and value[1] or 1, value[2] < 1 and value[2] or 1 }
 		self:emit_signal("widget::updated")
+		return self
 	end
 
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height)
-		local width = (style.dot_size + style.dot_gap_h) * data.column_num - style.dot_gap_h
+	function widg:fit(context, width, height)
+		local width = 2 * style.line.width + style.line.gap
 		return width, height
 	end
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(mcountwidg, wibox, cr, width, height)
-		local maxnum = style.row_num * data.column_num
-		local gap_v = (height - style.row_num * style.dot_size) / (style.row_num - 1)
+	function widg:draw(context, cr, width, height)
+		cr:set_source(color(style.color.gray))
+		cr:rectangle(0, 0, style.line.width, height)
+		cr:rectangle(width - style.line.width, 0, style.line.width, height)
+		cr:fill()
 
-		cr:translate(0, height)
-		for i = 1, style.row_num do
-			for j = 1, data.column_num do
-
-				local cc = (j + (i - 1) * data.column_num) <= data.count_num and style.color.main or style.color.gray
-				cr:set_source(color(cc))
-
-				cr:rectangle(0, 0, style.dot_size, - style.dot_size)
-				cr:fill()
-
-				cr:translate(style.dot_size + style.dot_gap_h, 0)
-			end
-			cr:translate(- (style.dot_gap_h + width), - (style.dot_size + gap_v))
-		end
+		cr:set_source(color(style.color.main))
+		cr:rectangle(0, height, style.line.width, - height * data.value[1])
+		cr:rectangle(width - style.line.width, height, style.line.width, - height * data.value[2])
+		cr:fill()
 	end
 
 	--------------------------------------------------------------------------------
 	return widg
 end
 
--- Config metatable to call dotcount module as function
+-- Config metatable to call doublebar module as function
 -----------------------------------------------------------------------------------------------------------------------
-function counter.mt:__call(...)
-	return counter.new(...)
+function doublebar.mt:__call(...)
+	return doublebar.new(...)
 end
 
-return setmetatable(counter, counter.mt)
+return setmetatable(doublebar, doublebar.mt)

@@ -10,9 +10,10 @@ local setmetatable = setmetatable
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local color = require("gears.color")
+local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
-local doublebar = require("redflat.gauge.doublebar")
+local doublebar = require("redflat.gauge.graph.doublebar")
 local tooltip = require("redflat.float.tooltip")
 local system = require("redflat.system")
 
@@ -34,7 +35,7 @@ local function default_style()
 		timeout   = 5,
 		digit_num = 2
 	}
-	return redutil.table.merge(style, beautiful.widget.net or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.net") or {})
 end
 
 -- Create a new network widget
@@ -60,7 +61,7 @@ function net.new(args, style)
 
 	-- Set tooltip
 	--------------------------------------------------------------------------------
-	local tp = tooltip({ widg }, style.tooltip)
+	local tp = tooltip({ objects = { widg } }, style.tooltip)
 
 	-- Set update timer
 	--------------------------------------------------------------------------------
@@ -68,6 +69,7 @@ function net.new(args, style)
 	t:connect_signal("timeout",
 		function()
 			local state = system.net_speed(args.interface, storage)
+			widg:set_value({1,1})
 
 			if args.autoscale then
 				if state[1] > args.speed.up then args.speed.up = state[1] end

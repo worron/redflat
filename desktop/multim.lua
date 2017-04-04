@@ -13,12 +13,12 @@ local string = string
 local awful = require("awful")
 local wibox = require("wibox")
 local beautiful = require("beautiful")
+local timer = require("gears.timer")
 
 local dcommon = require("redflat.desktop.common")
 local system = require("redflat.system")
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
-local asyncshell = require("redflat.asyncshell")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -37,7 +37,7 @@ local function default_style()
 		unit         = { { "MB", - 1 }, { "GB", 1024 } },
 		color        = { main = "#b1222b", wibox = "#161616", gray = "#404040" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "desktop.multim") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.multim") or {})
 end
 
 local default_geometry = { width = 200, height = 100, x = 100, y = 100 }
@@ -102,26 +102,27 @@ function multim.new(args, geometry, style)
 
 	-- Construct layouts
 	--------------------------------------------------------------------------------
-	local total_align = wibox.layout.align.vertical()
-
 	local lines = dcommon.barpack(#args.lines, barpack_style)
 	local corners = dcommon.cornerpack(args.corners.num, corner_style)
-
-	local corners_align = wibox.layout.align.horizontal()
-	corners_align:set_right(corners.layout)
+	lines.layout:set_forced_height(style.state_height)
 
 	if style.image then
 		icon = svgbox(style.image)
 		icon:set_color(style.color.gray)
-		corners_align:set_left(wibox.layout.margin(icon, 0, style.image_gap))
 	end
 
-	local lines_layout = wibox.layout.constraint(lines.layout, "exact", nil, style.state_height)
-	local corners_layout = wibox.layout.constraint(corners_align, "exact", nil, style.prog_height)
-
-	total_align:set_top(corners_layout)
-	total_align:set_bottom(lines_layout)
-	dwidget.wibox:set_widget(total_align)
+	dwidget.wibox:setup({
+		{
+			icon and wibox.container.margin(icon, 0, style.image_gap),
+			corners.layout,
+			nil,
+			forced_height = style.prog_height,
+			layout = wibox.layout.align.horizontal()
+		},
+		nil,
+		lines.layout,
+		layout = wibox.layout.align.vertical
+	})
 
 	-- Update info function
 	--------------------------------------------------------------------------------
@@ -134,11 +135,11 @@ function multim.new(args, geometry, style)
 		get_and_set(args.meter.args)
 	end
 
-	local function update_asyncshell()
-		asyncshell.request(args.asyncshell, get_and_set, args.timeout)
+	local function update_async()
+		awful.spawn.easy_async(args.async, get_and_set)
 	end
 
-	local update = args.asyncshell and update_asyncshell or update_plain
+	local update = args.async and update_async or update_plain
 
 	-- Set update timer
 	--------------------------------------------------------------------------------

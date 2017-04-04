@@ -18,29 +18,31 @@ local redutil = require("redflat.util")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local bluetag = { mt = {} }
+local orangetag = { mt = {} }
+local TPI = math.pi * 2
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		width    = 80,
-		font     = { font = "Sans", size = 16, face = 0, slant = 0 },
-		text_gap = 32,
-		point    = { height = 4, gap = 8, dx = 6, width = 40 },
-		show_min = false,
-		color    = { main   = "#b1222b", gray = "#575757", icon = "#a0a0a0", urgent = "#32882d",
-		             wibox = "#202020" }
+		width        = 50,
+		line_width   = 4,
+		radius       = 14,
+		iradius      = 6,
+		cgap         = TPI / 20,
+		hilight_min  = true,
+		min_sections = 1,
+		color        = { main   = "#b1222b", gray = "#575757", icon = "#a0a0a0", urgent = "#32882d",
+		                 wibox = "#202020", empty = "#575757"}
 	}
 
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.bluetag") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.tag.orange") or {})
 end
-
 
 -- Create a new tag widget
 -- @param style Table containing colors and geometry parameters for all elemets
 -----------------------------------------------------------------------------------------------------------------------
-function bluetag.new(style)
+function orangetag.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
@@ -48,7 +50,6 @@ function bluetag.new(style)
 
 	-- updating values
 	local data = {
-		state = { text = "TEXT" },
 		width = style.width or nil
 	}
 
@@ -70,7 +71,7 @@ function bluetag.new(style)
 
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height)
+	function widg:fit(context, width, height)
 		if data.width then
 			return math.min(width, data.width), height
 		else
@@ -80,37 +81,39 @@ function bluetag.new(style)
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
-		local n = #data.state.list
+	function widg:draw(context, cr, width, height)
 
-		-- text
-		cr:set_source(color(
-			data.state.active and style.color.main
-			or (n == 0 or data.state.minimized) and style.color.gray
-			or style.color.icon
-		))
-		redutil.cairo.set_font(cr, style.font)
-		redutil.cairo.tcenter_horizontal(cr, { width / 2, style.text_gap }, data.state.text)
+		local sections = math.max(#data.state.list, style.min_sections)
+		local step = (TPI - sections * style.cgap) / sections
+		local cl
+
+		-- active mark
+		cl = data.state.active and style.color.main or (data.state.occupied and  style.color.icon or style.color.gray)
+		cr:set_source(color(cl))
+
+		cr:arc(width / 2, height / 2, style.iradius, 0, TPI)
+		cr:fill()
 
 		-- occupied mark
-		local x = (width - style.point.width) / 2
+		cr:set_line_width(style.line_width)
+		for i = 1, sections do
+			local cs = -TPI / 4 + (i - 1) * (step + style.cgap) + style.cgap / 2
 
-		if n > 0 then
-			local l = (style.point.width - (n - 1) * style.point.dx) / n
-
-			for i = 1, n do
-				local cl = data.state.list[i].focus and style.color.main or
-				           data.state.list[i].urgent and style.color.urgent or
-				           data.state.list[i].minimized and style.show_min and style.color.gray or
-				           style.color.icon
-				cr:set_source(color(cl))
-				cr:rectangle(x + (i - 1) * (style.point.dx + l), style.point.gap, l, style.point.height)
-				cr:fill()
+			if data.state.list[i] then
+				cl = data.state.list[i].focus and style.color.main or
+				     data.state.list[i].urgent and style.color.urgent or
+ 				     data.state.list[i].minimized and style.hilight_min and style.color.gray or style.color.icon
+			else
+				cl = style.color.empty
 			end
-		else
-			cr:set_source(color(style.color.gray))
-			cr:rectangle((width - style.point.width) / 2, style.point.gap, style.point.width, style.point.height)
-			cr:fill()
+
+			cr:set_source(color(cl))
+			if sections == 1 then
+				cr:arc(width / 2, height / 2, style.radius, 0, TPI)
+			else
+				cr:arc(width / 2, height / 2, style.radius, cs, cs + step)
+			end
+			cr:stroke()
 		end
 	end
 
@@ -118,10 +121,10 @@ function bluetag.new(style)
 	return widg
 end
 
--- Config metatable to call bluetag module as function
+-- Config metatable to call orangetag module as function
 -----------------------------------------------------------------------------------------------------------------------
-function bluetag.mt:__call(...)
-	return bluetag.new(...)
+function orangetag.mt:__call(...)
+	return orangetag.new(...)
 end
 
-return setmetatable(bluetag, bluetag.mt)
+return setmetatable(orangetag, orangetag.mt)

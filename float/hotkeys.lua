@@ -13,21 +13,20 @@ local math = math
 local awful = require("awful")
 local beautiful = require("beautiful")
 local wibox = require("wibox")
+local timer = require("gears.timer")
 
+local redflat = require("redflat")
 local redutil = require("redflat.util")
 local separator = require("redflat.gauge.separator")
 
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local hotkeys = { raw_keys = {} }
+local hotkeys = { keypack = {}, lastkey = nil, cache = {}, boxes = {} }
+local hasitem = awful.util.table.hasitem
 
 -- key bindings
-hotkeys.keys = {
-	close = { "Super_L" },
-}
-
-local fake_key = { mod = {}, key = "", comment = "" }
+hotkeys.keys = { close = { "Escape" }, close_all = { "Super_L" } }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
@@ -35,163 +34,145 @@ local function default_style()
 	local style = {
 		geometry      = { width = 800, height = 600 },
 		border_margin = { 10, 10, 10, 10 },
-		sep_margin    = { 20, 20, 10, 10 },
+		tspace        = 5,
+		delim         = "   ",
 		border_width  = 2,
-		keyf_width    = 200,
-		colnum        = 1,
 		ltimeout      = 0.05,
 		font          = "Sans 12",
-		keysfont      = "Sans bold 12",
+		keyfont       = "Sans bold 12",
 		titlefont     = "Sans bold 14",
+		is_align      = false,
+		separator     = {},
 		color         = { border = "#575757", text = "#aaaaaa", main = "#b1222b", wibox = "#202020",
 		                  gray = "#575757" }
 	}
 
-	return redutil.table.merge(style, redutil.check(beautiful, "float.hotkeys") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "float.hotkeys") or {})
 end
 
 -- Support functions
 -----------------------------------------------------------------------------------------------------------------------
 
--- Get system keycode table
+-- Calculate keytip length
 --------------------------------------------------------------------------------
-local function keycode_table()
-	local output = awful.util.pread("xmodmap -pk")
-	local codes = {}
-
-	for line in string.gmatch(output, "[^\n]+") do
-		local index = tonumber(string.match(line, "%d+"))
-
-		if index then
-			codes[index] = {}
-			for key in string.gmatch(line , "%x+%s%(([%a%d_]+)%)") do
-				table.insert(codes[index], key)
-			end
-		end
-	end
-
-	return codes
-end
-
--- Find keycode for symbol
---------------------------------------------------------------------------------
-local function keycode(key, codetable)
-	for code, symbols in pairs(codetable) do
-		if awful.util.table.hasitem(symbols, key) then return code end
-	end
-
-	return nil
-end
-
--- Highlight key tip
---------------------------------------------------------------------------------
-local function highlight(list, codetable, key, last, style)
-	local key = key == " " and "space" or key == "," and "comma" or key == "." and "period" or key -- !!! fix this !!!
-
-	if key == last.key then return end
-	local code = keycode(key, codetable)
-
-	for _, line in ipairs(list) do
-		if line.codes and awful.util.table.hasitem(line.codes, code) then
-			line.bg:set_fg(style.color.main)
-
-			last.key = key
-			table.insert(last.lines, line)
-		end
-	end
+local function check_key_len(k)
+	local res = k.key:len()
+	for _, v in pairs(k.mod) do res = res + v:len() + 1 end
+	return res
 end
 
 -- Parse raw key table
 --------------------------------------------------------------------------------
-local function parse_raw_keys(raw_keys)
-	local keys = {}
-	for _, v in ipairs(raw_keys) do
-		if v.comment then
-			local args = v.args or {}
-			table.insert(keys, { mod = args[1], key = args[2], comment = v.comment, codes = v.codes })
-		end
+local keysort = function(a, b)
+	if a.length ~= b.length then
+		return a.length < b.length
+	else
+		return a.key < b.key
 	end
+end
+
+local function parse(rawkeys, columns)
+	local keys = {}
+	local columns = columns or 1
+	local p = math.ceil(#rawkeys / columns)
+
+	local rk = {}
+	for _, k in ipairs(rawkeys) do if k[#k].description then table.insert(rk, k) end end
+
+	-- dirty trick for raw sorting
+	local sp = {}
+	for _, v in ipairs(rk) do
+		if not hasitem(sp, v[#v].group) then table.insert(sp, v[#v].group) end
+	end
+	table.sort(rk, function(a, b)
+		local ai, bi = hasitem(sp, a[#a].group), hasitem(sp, b[#b].group)
+		if ai ~= bi then
+			return ai < bi
+		else
+			return a[2] < b[2]
+		end
+	end)
+
+	-- split keys to columns
+	for i = 1, columns do
+		keys[i] = { groups = {}, length = nil, names = {} }
+		local chunk = { unpack(rk, 1, p) }
+		rk = { unpack(rk, p + 1) }
+
+		-- build key column
+		for _, v in ipairs(chunk) do
+			local data = v[#v]
+			local k = {
+				mod = v[1], key = v[2],
+				description = data.description,
+				group       = data.group,
+				keyset      = data.keyset or { v[2] },
+				length      = check_key_len({ mod = v[1], key = v[2] })
+			}
+
+			if not keys[i].groups[k.group] then
+				keys[i].groups[k.group] = {}
+				table.insert(keys[i].names, k.group) -- sorted names list to save group order
+			end
+			table.insert(keys[i].groups[k.group], k)
+
+			-- calculate max tip lenght
+			if not keys[i].length or keys[i].length < k.length then keys[i].length = k.length end
+		end
+
+		-- sort key by lenght inside group
+		for name, group in pairs(keys[i].groups) do table.sort(group, keysort) end
+	end
+
 	return keys
 end
 
--- Generate full key label
+-- Form hotkeys helper text
 --------------------------------------------------------------------------------
-local function form_key_text(key)
-	local text = key.key
+local function build_tip(pack, style, keypressed)
+	local text = {}
 
-	if #key.mod > 0 then
-		local mod_text = ""
+	for i, column in ipairs(pack) do
+		local coltxt = ""
 
-		for i, v in ipairs(key.mod) do
-			mod_text = i > 1 and mod_text .. " + " .. v or v
+		for _, name in pairs(column.names) do
+			local group = column.groups[name]
+
+			-- set group title
+			coltxt = coltxt ..  string.format(
+				'<span font="%s" color="%s">%s</span>\n', style.titlefont, style.color.gray, name
+			)
+
+			-- build key tip line
+			for _, key in ipairs(group) do
+
+				-- key with align
+				local line = string.format('<b>%s</b>', key.key)
+				if style.is_align then
+					line = line .. string.rep(" ", column.length - key.length)
+				end
+
+				-- key with mods
+				if #key.mod > 0 then
+					local fm = {}
+					for i, v in ipairs(key.mod) do fm[i] = string.format('<b>%s</b>', v) end
+					table.insert(fm, line)
+					line = table.concat(fm, string.format('<span color="%s">+</span>', style.color.gray))
+				end
+
+				-- key with description
+				local clr = keypressed and hasitem(key.keyset, keypressed) and style.color.main or style.color.text
+				line = string.format(
+					'<span color="%s"><span font="%s">%s</span>%s%s</span>',
+					clr, style.keyfont, line, style.delim, key.description
+				)
+				coltxt = coltxt .. line .. "\n"
+			end
 		end
-
-		text = mod_text .. " + " .. text
+		text[i] = coltxt
 	end
 
 	return text
-end
-
--- Construct single column with key tips
---------------------------------------------------------------------------------
-local function construct_column(keys, codetable, style)
-	local column = { line = {} }
-	column.layout = wibox.layout.flex.vertical()
-
-	for i, v in ipairs(keys) do
-		local line = {}
-
-		if v.key and v.mod then
-			line.layout = wibox.layout.fixed.horizontal()
-			line.keybox = wibox.widget.textbox(form_key_text(v))
-			line.commentbox = wibox.widget.textbox(v.comment)
-			line.keybox:set_font(style.keysfont)
-			line.commentbox:set_font(style.font)
-			--line.keybox:set_align("center")
-
-			line.layout:add(wibox.layout.constraint(line.keybox, "exact", style.keyf_width))
-			line.layout:add(line.commentbox)
-
-			line.bg = wibox.widget.background(line.layout)
-			line.bg:set_fg(style.color.text)
-
-			if v.codes then
-				line.codes = v.codes
-			else
-				line.codes = { keycode(v.key, codetable) }
-			end
-		else
-			line.layout = wibox.layout.flex.horizontal()
-			line.titletbox = wibox.widget.textbox()
-			line.titletbox:set_markup('<span color="' .. style.color.gray .. '">' .. v.comment .. '</span>')
-			line.titletbox:set_font(style.titlefont)
-			--line.titletbox:set_align("center")
-
-			line.layout:add(line.titletbox)
-		end
-
-		column.line[i] = line
-		column.layout:add(line.bg or line.layout)
-	end
-
-	return column
-end
-
--- Split solid key list to group (used for column view)
---------------------------------------------------------------------------------
-local function split_to_group(keys, n)
-	local rows = math.ceil(#keys / n)
-	local kgroup = {}
-
-	for i = 1, n do
-		kgroup[i] = {}
-		for j = 1, rows do
-			local index = (i - 1) * rows + j
-			table.insert(kgroup[i], keys[index] or fake_key)
-		end
-	end
-
-	return kgroup
 end
 
 -- Initialize widget
@@ -201,37 +182,9 @@ function hotkeys:init()
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local style = default_style()
-	local keys = parse_raw_keys(self.raw_keys)
-	local key_group = split_to_group(keys, style.colnum)
-	local codetable = keycode_table()
-	local fulllist = {}
-	local last = { lines = {} }
+	self.style = style
 
-	-- Construct widget layouts
-	-- !!! Bad code here. Need more clear conctruction !!!
-	--------------------------------------------------------------------------------
-
-	local sep = separator.vertical({ margin = style.sep_margin })
-	local fake_sep = wibox.layout.constraint(nil, "exact", style.sep_margin[1] + style.sep_margin[1] + 2)
-
-	local area = wibox.layout.fixed.horizontal()
-	local flex_area = wibox.layout.flex.horizontal()
-	area:add(fake_sep)
-
-	for i, keys in ipairs(key_group) do
-		local column = construct_column(keys, codetable, style)
-		local column_with_sep = wibox.layout.align.horizontal()
-
-		for _, v in ipairs(column.line) do table.insert(fulllist, v) end
-
-		column_with_sep:set_right(i == #key_group and fake_sep or sep)
-		column_with_sep:set_middle(column.layout)
-
-		flex_area:add(column_with_sep)
-	end
-
-	area:add(flex_area)
-	local wibox_layout = wibox.layout.margin(area, unpack(style.border_margin))
+	local bm = style.border_margin
 
 	-- Create floating wibox for top widget
 	--------------------------------------------------------------------------------
@@ -242,8 +195,35 @@ function hotkeys:init()
 		border_color = style.color.border
 	})
 
-	self.wibox:set_widget(wibox_layout)
 	self.wibox:geometry(style.geometry)
+
+	-- Widget layout setup
+	--------------------------------------------------------------------------------
+	self.layout = wibox.layout.flex.horizontal()
+
+	self.title = wibox.widget.textbox("Title")
+	self.title:set_align("center")
+	self.title:set_font(style.titlefont)
+
+	self.wibox:setup({
+		{
+			{
+				self.title,
+				{
+					text = "Press any key to highlight tip, Escape for exit",
+					align = "center",
+					widget = wibox.widget.textbox
+				},
+				redflat.gauge.separator.horizontal(style.separator),
+				spacing = style.tspace,
+				layout = wibox.layout.fixed.vertical,
+			},
+			self.layout,
+			layout = wibox.layout.align.vertical,
+		},
+		left = bm[1], right = bm[2], top = bm[3], bottom = bm[4],
+		layout = wibox.container.margin,
+	})
 
 	-- Highlight timer
 	--------------------------------------------------------------------------------
@@ -251,48 +231,98 @@ function hotkeys:init()
 	ltimer:connect_signal("timeout",
 		function()
 			ltimer:stop()
-			for _, l in ipairs(last.lines) do l.bg:set_fg(style.color.text) end
-
-			last.key = nil
-			last.lines = {}
+			self:highlight()
 		end
 	)
 
 	-- Keygrabber
 	--------------------------------------------------------------------------------
 	self.keygrabber = function(mod, key, event)
-		if event == "press" then
-			highlight(fulllist, codetable, key, last, style)
-		else
-			ltimer:again()
+		if event == "release" then
+			if hasitem(self.keys.close, key) then
+				self:hide(); return
+			end
+
+			if hasitem(self.keys.close_all, key) then
+				self:hide()
+				if self.keypack[#self.keypack].on_close then self.keypack[#self.keypack].on_close() end
+				return
+			end
 		end
 
-		if awful.util.table.hasitem(self.keys.close, key) then
-			self:hide()
-		else
-			return false
-		end
+		self.lastkey = event == "press" and key or nil
+		ltimer:again()
 	end
-
 end
 
--- Show hotkeys widget
+
+-- Keypack managment
 -----------------------------------------------------------------------------------------------------------------------
+
+-- Set new keypack
+--------------------------------------------------------------------------------
+function hotkeys:set_pack(name, pack, columns, geometry, on_close)
+	if not self.wibox then self:init() end
+
+	if not self.cache[name] then self.cache[name] = parse(pack, columns) end
+	table.insert(
+		self.keypack,
+		{ name = name, pack = self.cache[name], geometry = geometry or self.style.geometry, on_close = on_close }
+	)
+	self.wibox:geometry(self.keypack[#self.keypack].geometry)
+	self.title:set_text(name .. " hotkeys")
+	self:highlight()
+end
+
+-- Remove current keypack
+--------------------------------------------------------------------------------
+function hotkeys:remove_pack()
+	table.remove(self.keypack)
+	self.title:set_text(self.keypack[#self.keypack].name .. " hotkeys")
+	self.wibox:geometry(self.keypack[#self.keypack].geometry)
+	self:highlight()
+end
+
+-- Highlight key tip
+--------------------------------------------------------------------------------
+function hotkeys:highlight()
+	local tip = build_tip(self.keypack[#self.keypack].pack, self.style, self.lastkey)
+
+	self.layout:reset()
+	for i, column in ipairs(tip) do
+		if not self.boxes[i] then -- TODO: weak table?
+			self.boxes[i] = wibox.widget.textbox()
+			self.boxes[i]:set_valign("top")
+			self.boxes[i]:set_font(self.style.font)
+		end
+
+		self.boxes[i]:set_markup(column)
+		self.layout:add(self.boxes[i])
+	end
+end
+
+
+-- Show/hide widget
+-----------------------------------------------------------------------------------------------------------------------
+
+-- show
 function hotkeys:show()
 	if not self.wibox then self:init() end
+
 	if not self.wibox.visible then
-		redutil.placement.centered(self.wibox, nil, screen[mouse.screen].workarea)
+		redutil.placement.centered(self.wibox, nil, mouse.screen.workarea)
 		self.wibox.visible = true
 		awful.keygrabber.run(self.keygrabber)
-	else
-		self:hide()
+	-- else
+	-- 	self:hide()
 	end
 end
 
--- Hide hotkeys widget
------------------------------------------------------------------------------------------------------------------------
+-- hide
 function hotkeys:hide()
 	self.wibox.visible = false
+	self.lastkey = nil
+	self:highlight()
 	awful.keygrabber.stop(self.keygrabber)
 end
 

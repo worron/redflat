@@ -23,6 +23,8 @@
 local wibox = require("wibox")
 local awful = require("awful")
 local beautiful = require("beautiful")
+local timer = require("gears.timer")
+
 local setmetatable = setmetatable
 local tonumber = tonumber
 local string = string
@@ -36,11 +38,13 @@ local math = math
 
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
-
+local redtip = require("redflat.float.hotkeys")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local menu = { mt = {} }
+local menu = { mt = {}, action = {}, keys = {} }
+
+local _fake_context = { dpi = beautiful.xresources.get_dpi() } -- fix this
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
@@ -48,7 +52,7 @@ local function default_theme()
 	local style = {
 		border_width = 2,
 		screen_gap   = 0,
-		submenu_icon = nil,
+		submenu_icon = redutil.base.placeholder({ txt = "▶" }),
 		height       = 20,
 		width        = 200,
 		font         = "Sans 12",
@@ -58,6 +62,8 @@ local function default_theme()
 		auto_expand  = true,
 		auto_hotkey  = false,
 		svg_scale    = { false, false },
+		hide_timeout = 0,
+		keytip       = { geometry = { width = 400, height = 400 } },
 		color        = { border = "#575757", text = "#aaaaaa", highlight = "#eeeeee",
 		                 main = "#b1222b", wibox = "#202020",
 		                 submenu_icon = nil, right_icon = nil, left_icon = nil }
@@ -65,15 +71,6 @@ local function default_theme()
 	return redutil.table.merge(style, beautiful.menu or {})
 end
 
--- Key bindings for menu navigation.
-menu.menu_keys = {
-	up    = { "Up" },
-	down  = { "Down" },
-	back  = { "Left" },
-	exec  = { "Return" },
-	enter = { "Right" },
-	close = { "Escape" }
-}
 
 -- Support functions
 -----------------------------------------------------------------------------------------------------------------------
@@ -153,43 +150,91 @@ end
 -- A new instance for every submenu should be used
 -----------------------------------------------------------------------------------------------------------------------
 
-local grabber
+-- Menu functions
+--------------------------------------------------------------------------------
+function menu.action.up(_menu, sel)
+	local sel_new = sel - 1 < 1 and #_menu.items or sel - 1
+	_menu:item_enter(sel_new)
+end
 
--- localize small alias functions for keygrabber in logical block
-do
-	-- support functions
-	local function go_up(menu, sel)
-		local sel_new = sel - 1 < 1 and #menu.items or sel - 1
-		menu:item_enter(sel_new)
+function menu.action.down(_menu, sel)
+	local sel_new = sel + 1 > #_menu.items and 1 or sel + 1
+	_menu:item_enter(sel_new)
+end
+
+function menu.action.enter(_menu, sel)
+	if sel > 0 and _menu.items[sel].child then _menu.items[sel].child:show() end
+end
+
+function menu.action.exec(_menu, sel)
+	if sel > 0 then _menu:exec(sel, { exec = true }) end
+end
+
+function menu.action.back(_menu, sel)
+	_menu:hide()
+end
+
+function menu.action.close(_menu, sel)
+	menu.get_root(_menu):hide()
+end
+
+-- Menu keys
+--------------------------------------------------------------------------------
+menu.keys.move = {
+	{
+		{}, "Down", menu.action.down,
+		{ description = "Select next item", group = "Navigation" }
+	},
+	{
+		{}, "Up", menu.action.up,
+		{ description = "Select previous item", group = "Navigation" }
+	},
+	{
+		{}, "Left", menu.action.back,
+		{ description = "Go back", group = "Navigation" }
+	},
+	{
+		{}, "Right", menu.action.enter,
+		{ description = "Open submenu", group = "Navigation" }
+	},
+}
+
+menu.keys.action = {
+	{
+		{}, "Escape", menu.action.close,
+		{ description = "Close menu", group = "Action" }
+	},
+	{
+		{}, "Return", menu.action.exec,
+		{ description = "Activate item", group = "Action" }
+	},
+	{
+		{ "Mod4" }, "F1", function() redtip:show() end,
+		{ description = "Show hotkeys helper", group = "Action" }
+	},
+}
+
+menu.keys.all = awful.util.table.join(menu.keys.move, menu.keys.action)
+
+-- this one only displayed in hotkeys helper
+menu._fake_keys = {
+	{
+		{}, "_letter", nil,
+		{ description = "Activate item by key", group = "Action" }
+	},
+}
+
+-- Menu keygrabber
+--------------------------------------------------------------------------------
+local grabber = function(_menu, mod, key, event)
+	if event ~= "press" then return end
+	local sel = _menu.sel or 0
+
+	for _, k in ipairs(menu.keys.all) do
+		if redutil.key.match_grabber(k, mod, key) then k[3](_menu, sel); return false end
 	end
 
-	local function go_down(menu, sel)
-		local sel_new = sel + 1 > #menu.items and 1 or sel + 1
-		menu:item_enter(sel_new)
-	end
-
-	local function enter(menu, sel)
-		if menu.items[sel].child then menu.items[sel].child:show() end
-	end
-
-	local function exec(menu, sel)
-		menu:exec(sel, { exec = true })
-	end
-
-	-- keygrabber
-	grabber = function(_menu, mod, key, event)
-		if event ~= "press" then return end
-		local sel = _menu.sel or 0
-
-		if     awful.util.table.hasitem(menu.menu_keys.up,    key)             then go_up(_menu, sel)
-		elseif awful.util.table.hasitem(menu.menu_keys.down,  key)             then go_down(_menu, sel)
-		elseif awful.util.table.hasitem(menu.menu_keys.enter, key) and sel > 0 then enter(_menu, sel)
-		elseif awful.util.table.hasitem(menu.menu_keys.exec,  key) and sel > 0 then exec(_menu, sel)
-		elseif awful.util.table.hasitem(menu.menu_keys.back,  key)             then _menu:hide()
-		elseif awful.util.table.hasitem(menu.menu_keys.close, key)             then menu.get_root(_menu):hide()
-		else   check_access_key(_menu, key)
-		end
-	end
+	check_access_key(_menu, key)
 end
 
 -- Execute menu item
@@ -205,7 +250,7 @@ function menu:exec(num)
 		item.child:show()
 	elseif type(cmd) == "string" then
 		if not item.theme.nohide then menu.get_root(self):hide() end
-		awful.util.spawn(cmd)
+		awful.spawn(cmd)
 	elseif type(cmd) == "function" then
 		if not item.theme.nohide then menu.get_root(self):hide() end
 		cmd()
@@ -262,6 +307,17 @@ function menu:show(args)
 	awful.keygrabber.run(self._keygrabber)
 	self.wibox.visible = true
 	self:item_enter(1)
+
+	local tip
+	if self.theme.auto_hotkey then
+		local fk = awful.util.table.clone(menu._fake_keys)
+		fk[1][4].keyset = self.keys
+		tip = awful.util.table.join(menu.keys.all, fk)
+	else
+		tip = menu.keys
+	end
+
+	redtip:set_pack("Menu", tip, self.theme.keytip.column, self.theme.keytip.geometry)
 end
 
 -- Hide a menu popup.
@@ -279,6 +335,7 @@ function menu:hide()
 	if self.hidetimer and self.hidetimer.started then self.hidetimer:stop() end
 
 	self.wibox.visible = false
+	redtip:remove_pack()
 end
 
 -- Toggle menu visibility
@@ -288,6 +345,16 @@ function menu:toggle(args)
 		self:hide()
 	else
 		self:show(args)
+	end
+end
+
+-- Set user hotkeys
+--------------------------------------------------------------------------------
+function menu:set_keys(keys, layout)
+	local layout = layout or "all"
+	if keys then
+		self.keys[layout] = keys
+		if layout ~= "all" then self.keys.all = awful.util.table.join(self.keys.move, self.keys.action) end
 	end
 end
 
@@ -305,7 +372,7 @@ function menu:add(args)
 	------------------------------------------------------------
 	if type(args[1]) ~= "string" and args.widget then
 		local element = {}
-		element.width, element.height = args.widget:fit(-1, -1)
+		element.width, element.height = args.widget:fit(_fake_context, -1, -1)
 		self.add_size = self.add_size + element.height
 		self.layout:add(args.widget)
 		return
@@ -333,9 +400,7 @@ function menu:add(args)
 
 	item.parent = self
 	item.theme = item.theme or theme
-	--wibox.widget.base.check_widget(item.widget)
-	item._background = wibox.widget.background()
-	item._background:set_widget(item.widget)
+	item._background = wibox.container.background(item.widget)
 	item._background:set_fg(item.theme.color.text)
 	item._background:set_bg(item.theme.color.wibox)
 
@@ -415,8 +480,7 @@ function menu.entry(parent, args)
 	-- Set left icon if needed
 	------------------------------------------------------------
 	local iconbox = nil
-	local margin = wibox.layout.margin()
-	margin:set_widget(label)
+	local margin = wibox.container.margin(label)
 
 	if args.icon then
 		iconbox = svgbox(args.icon, nil, args.theme.color.left_icon)
@@ -430,12 +494,8 @@ function menu.entry(parent, args)
 	local right_iconbox = nil
 
 	if type(args.cmd) == "table" then
-		if args.theme.submenu_icon then
-			right_iconbox = svgbox(args.theme.submenu_icon, nil, args.theme.color.submenu_icon)
-			right_iconbox:set_vector_resize(args.theme.svg_scale[2])
-		else
-			right_iconbox = wibox.widget.textbox("▶ ")
-		end
+		right_iconbox = svgbox(args.theme.submenu_icon, nil, args.theme.color.submenu_icon)
+		right_iconbox:set_vector_resize(args.theme.svg_scale[2])
 	elseif args.right_icon then
 		right_iconbox = svgbox(args.right_icon, nil, args.theme.color.right_icon)
 		right_iconbox:set_vector_resize(args.theme.svg_scale[2])
@@ -446,7 +506,7 @@ function menu.entry(parent, args)
 	local left = wibox.layout.fixed.horizontal()
 
 	if iconbox ~= nil then
-		left:add(wibox.layout.margin(iconbox, unpack(args.theme.icon_margin)))
+		left:add(wibox.container.margin(iconbox, unpack(args.theme.icon_margin)))
 	end
 
 	left:add(margin)
@@ -455,10 +515,10 @@ function menu.entry(parent, args)
 	layout:set_left(left)
 
 	if right_iconbox ~= nil then
-		layout:set_right(wibox.layout.margin(right_iconbox, unpack(args.theme.ricon_margin)))
+		layout:set_right(wibox.container.margin(right_iconbox, unpack(args.theme.ricon_margin)))
 	end
 
-	local layout_const = wibox.layout.constraint(layout, "exact", args.theme.width, args.theme.height)
+	local layout_const = wibox.container.constraint(layout, "exact", args.theme.width, args.theme.height)
 
 	------------------------------------------------------------
 	return {
@@ -492,7 +552,6 @@ function menu.new(args, parent)
 		keys         = {},
 		parent       = parent,
 		layout       = wibox.layout.fixed.vertical(),
-		hide_timeout = parent and parent.hide_timeout or args.hide_timeout,
 		add_size     = 0,
 		theme        = redutil.table.merge(parent and parent.theme or default_theme(), args.theme or {})
 	}
@@ -529,13 +588,13 @@ function menu.new(args, parent)
 
 	-- Set menu autohide timer
 	------------------------------------------------------------
-	if _menu.hide_timeout then
+	if _menu.theme.hide_timeout > 0 then
 		local root = _menu:get_root()
 
 		-- timer only for root menu
 		-- all submenus will be hidden automatically
 		if root == _menu then
-			_menu.hidetimer = timer({ timeout = _menu.hide_timeout })
+			_menu.hidetimer = timer({ timeout = _menu.theme.hide_timeout })
 			_menu.hidetimer:connect_signal("timeout", function() _menu:hide() end)
 		end
 

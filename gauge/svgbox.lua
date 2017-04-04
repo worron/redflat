@@ -119,13 +119,6 @@ function svgbox.new(image, resize_allowed, newcolor)
 		return true
 	end
 
-	function widg:set_size(args)
-		local args = args or {}
-		self.width = args.width or self.width
-		self.height = args.height or self.height
-		self:emit_signal("widget::updated")
-	end
-
 	function widg:set_color(new_color)
 		self.color = new_color
 		self:emit_signal("widget::updated")
@@ -143,9 +136,10 @@ function svgbox.new(image, resize_allowed, newcolor)
 
 	-- Fit
 	------------------------------------------------------------
-	function widg:fit(width, height)
-		if self.width or self.height then
-			return self.width or width, self.height or height
+	function widg:fit(context, width, height)
+		fw, fh = self:get_forced_width(), self:get_forced_height()
+		if fw or fh then
+			return fw or width, fh or height
 		else
 			if not self._image then return 0, 0 end
 
@@ -162,7 +156,7 @@ function svgbox.new(image, resize_allowed, newcolor)
 
 	-- Draw
 	------------------------------------------------------------
-	function widg:draw(wibox, cr, width, height)
+	function widg:draw(context, cr, width, height)
 		if width == 0 or height == 0 or not self._image then return end
 
 		local w, h = self._image.width, self._image.height

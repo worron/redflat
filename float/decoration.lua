@@ -27,14 +27,14 @@ local function button_style()
 		color = { shadow3 = "#1c1c1c", gray = "#575757",
 		          shadow4 = "#767676", text = "#cccccc", shadow_down = "404040" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "float.decoration1.button") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "float.decoration1.button") or {})
 end
 
 local function field_style()
 	local style = {
 		color = { bg = "#161616", shadow1 = "#141414", shadow2 = "#313131" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "float.decoration.field") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "float.decoration.field") or {})
 end
 
 -- Button element
@@ -46,11 +46,11 @@ function decor.button(textbox, action, style)
 	-- Widget and layouts
 	--------------------------------------------------------------------------------
 	textbox:set_align("center")
-	local button_widget = wibox.widget.background(textbox, style.color.gray)
+	local button_widget = wibox.container.background(textbox, style.color.gray)
 	button_widget:set_fg(style.color.text)
 
-	local bord1 = wibox.widget.background(wibox.layout.margin(button_widget, 1, 1, 1, 1), style.color.shadow4)
-	local bord2 = wibox.widget.background(wibox.layout.margin(bord1, 1, 1, 1, 1), style.color.shadow3)
+	local bord1 = wibox.container.background(wibox.container.margin(button_widget, 1, 1, 1, 1), style.color.shadow4)
+	local bord2 = wibox.container.background(wibox.container.margin(bord1, 1, 1, 1, 1), style.color.shadow3)
 
 	-- Button
 	--------------------------------------------------------------------------------
@@ -84,9 +84,9 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function decor.textfield(textbox, style)
 	local style = redutil.table.merge(field_style(), style or {})
-	local prompt_bg = wibox.widget.background(wibox.widget.base.make_widget(textbox), style.color.bg)
-	local bord1 = wibox.widget.background(wibox.layout.margin(prompt_bg, 1, 1, 1, 1), style.color.shadow1)
-	local bord2 = wibox.widget.background(wibox.layout.margin(bord1, 1, 1, 1, 1), style.color.shadow2)
+	local field = wibox.container.background(textbox, style.color.bg)
+	local bord1 = wibox.container.background(wibox.container.margin(field, 1, 1, 1, 1), style.color.shadow1)
+	local bord2 = wibox.container.background(wibox.container.margin(bord1, 1, 1, 1, 1), style.color.shadow2)
 	return bord2
 end
 

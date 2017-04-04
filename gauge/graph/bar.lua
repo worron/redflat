@@ -1,86 +1,81 @@
 -----------------------------------------------------------------------------------------------------------------------
---                                        RedFlat volume indicator widget                                            --
+--                                            RedFlat progressbar widget                                             --
 -----------------------------------------------------------------------------------------------------------------------
--- Indicator with audio icon
+-- Horizontal progresspar
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
-local math = math
-local string = string
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local color = require("gears.color")
 
 local redutil = require("redflat.util")
-local svgbox = require("redflat.gauge.svgbox")
-
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local audio = { mt = {} }
+local progressbar = { mt = {} }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		icon  = {},
-		color = { main = "#b1222b", icon = "#a0a0a0", mute = "#404040" }
+		color = { main = "#b1222b", gray = "#404040" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.redaudio") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.graph.bar") or {})
 end
 
--- Support functions
------------------------------------------------------------------------------------------------------------------------
-local function pattern_string(height, value, c1, c2)
-	return string.format("linear:0,%s:0,0:0,%s:%s,%s:%s,%s:1,%s", height, c1, value, c1, value, c2, c2)
-end
-
--- Create a new audio widget
+-- Create a new progressbar widget
 -- @param style Table containing colors and geometry parameters for all elemets
 -----------------------------------------------------------------------------------------------------------------------
-function audio.new(style)
+function progressbar.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local style = redutil.table.merge(default_style(), style or {})
 
-	-- Icon widgets
-	------------------------------------------------------------
-	local icon = {}
-	icon.ready = svgbox(style.icon.ready)
-	icon.ready:set_color(style.color.icon)
-	icon.mute = svgbox(style.icon.mute)
-	icon.mute:set_color(style.color.mute)
+	-- updating values
+	local data = {
+		value = 0
+	}
 
-	-- Create widget
+	-- Create custom widget
 	--------------------------------------------------------------------------------
-	local widg = wibox.widget.background(icon.ready)
+	local widg = wibox.widget.base.make_widget()
 
 	-- User functions
 	------------------------------------------------------------
 	function widg:set_value(x)
-		if x > 1 then x = 1 end
-
-		if self.widget._image then
-			local h = self.widget._image.height
-			icon.ready:set_color(pattern_string(h, x, style.color.main, style.color.icon))
-		end
+		data.value = x < 1 and x or 1
+		self:emit_signal("widget::updated")
 	end
 
-	function widg:set_mute(mute)
-		widg:set_widget(mute and icon.mute or icon.ready)
+	-- Fit
+	------------------------------------------------------------
+	function widg:fit(context, width, height)
+		return width, height
+	end
+
+	-- Draw
+	------------------------------------------------------------
+	function widg:draw(context, cr, width, height)
+		cr:set_source(color(style.color.gray))
+		cr:rectangle(0, 0, width, height)
+		cr:fill()
+		cr:set_source(color(style.color.main))
+		cr:rectangle(0, 0, data.value * width, height)
+		cr:fill()
 	end
 
 	--------------------------------------------------------------------------------
 	return widg
 end
 
--- Config metatable to call audio module as function
+-- Config metatable to call progressbar module as function
 -----------------------------------------------------------------------------------------------------------------------
-function audio.mt:__call(...)
-	return audio.new(...)
+function progressbar.mt:__call(...)
+	return progressbar.new(...)
 end
 
-return setmetatable(audio, audio.mt)
+return setmetatable(progressbar, progressbar.mt)

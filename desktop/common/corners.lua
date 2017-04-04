@@ -82,13 +82,13 @@ function corners.new(style)
 		self:emit_signal("widget::updated")
 	end
 
-	cornwidg.fit = function(cornwidg, width, height)
+	function cornwidg:fit(context, width, height)
 		return style.width  or width, style.height or height
 	end
 
 	-- Draw function
 	------------------------------------------------------------
-	cornwidg.draw = function(cornwidg, wibox, cr, width, height)
+	function cornwidg:draw(context, cr, width, height)
 		local corner_gap = (height - (style.corner.num - 1) * style.corner.line
 		                   - style.corner.height) / (style.corner.num - 1)
 		local point = math.ceil(style.corner.num * data.value)

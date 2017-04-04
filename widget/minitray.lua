@@ -19,9 +19,10 @@ local ipairs = ipairs
 local wibox = require("wibox")
 local awful = require("awful")
 local beautiful = require("beautiful")
+local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
-local dotcount = require("redflat.gauge.dotcount")
+local dotcount = require("redflat.gauge.graph.dots")
 local tooltip = require("redflat.float.tooltip")
 
 
@@ -35,12 +36,12 @@ local function default_style()
 	local style = {
 		dotcount     = {},
 		geometry     = { height = 40 },
-		screen_pos   = {},
+		set_position = nil,
 		screen_gap   = 0,
 		border_width = 2,
 		color        = { wibox = "#202020", border = "#575757" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "widget.minitray") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.minitray") or {})
 end
 
 -- Initialize minitray floating window
@@ -60,7 +61,7 @@ function minitray:init(style)
 
 	self.geometry = style.geometry
 	self.screen_gap = style.screen_gap
-	self.screen_pos = style.screen_pos
+	self.set_position = style.set_position
 
 	-- Create tooltip
 	--------------------------------------------------------------------------------
@@ -92,8 +93,12 @@ function minitray:show()
 	if items == 0 then items = 1 end
 
 	self.wibox:geometry({ width = self.geometry.width or self.geometry.height * items })
-	if self.screen_pos[mouse.screen] then self.wibox:geometry(self.screen_pos[mouse.screen]) end
-	redutil.placement.no_offscreen(self.wibox, self.screen_gap, screen[mouse.screen].workarea)
+	if self.set_position then
+		self.wibox:geometry(self.set_position())
+	else
+		awful.placement.under_mouse(self.wibox)
+	end
+	redutil.placement.no_offscreen(self.wibox, self.screen_gap, mouse.screen.workarea)
 
 	-- Show
 	------------------------------------------------------------
@@ -133,9 +138,6 @@ function minitray.new(args, style)
 	--------------------------------------------------------------------------------
 	if not minitray.wibox then
 		minitray:init(style)
-		-- !!! This line is a workaround !!!
-		-- I don't know why but awesome.systray() working right only after first toggle
-		minitray:show(); minitray:hide()
 	end
 
 	-- Create tray widget

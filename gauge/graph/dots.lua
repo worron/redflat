@@ -1,7 +1,8 @@
 -----------------------------------------------------------------------------------------------------------------------
---                                             RedFlat monitor widget                                                --
+--                                               RedFlat dotcount widget                                             --
 -----------------------------------------------------------------------------------------------------------------------
--- Widget with circle indicator
+-- Simple graphical counter
+-- Displaying current value by dots number
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
@@ -16,37 +17,41 @@ local redutil = require("redflat.util")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local cirmon = { mt = {} }
-local TPI = math.pi * 2
+local counter = { mt = {} }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		width        = nil,
-		line_width   = 4,
-		radius       = 14,
-		iradius      = 6,
-		color    = { main = "#b1222b", gray = "#575757", icon = "#a0a0a0" }
+		column_num   = { 2, 5 },  -- {min, max}
+		row_num      = 3,
+		dot_size     = 5,
+		dot_gap_h    = 5,
+		color        = { main = "#b1222b", gray = "#575757" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.cirmon") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.graph.dots") or {})
 end
 
--- Create a new monitor widget
--- @param style Table containing colors and geometry parameters for all elemets
+-- Support functions
 -----------------------------------------------------------------------------------------------------------------------
-function cirmon.new(style)
+local function round(x)
+	return math.floor(x + 0.5)
+end
+
+-- Create a new counter widget
+-- @param style Table containing colors and geometry parameters for all elemets
+-- TODO: make auto calculation for column number
+-----------------------------------------------------------------------------------------------------------------------
+function counter.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local style = redutil.table.merge(default_style(), style or {})
-	local cs = -TPI / 4
 
 	-- updating values
 	local data = {
-		value = 0,
-		width = style.width,
-		color = style.color.icon
+		count_num = 0,
+		column_num = style.column_num[1]
 	}
 
 	-- Create custom widget
@@ -55,48 +60,38 @@ function cirmon.new(style)
 
 	-- User functions
 	------------------------------------------------------------
-	function widg:set_value(x)
-		data.value = x < 1 and x or 1
-		self:emit_signal("widget::updated")
-	end
-
-	function widg:set_width(width)
-		data.width = width
-		self:emit_signal("widget::updated")
-	end
-
-	function widg:set_alert(alert)
-		data.color = alert and style.color.main or style.color.icon
+	function widg:set_num(num)
+		data.count_num = num
+		data.column_num = math.min(math.max(style.column_num[1], math.ceil(num / style.row_num)), style.column_num[2])
 		self:emit_signal("widget::updated")
 	end
 
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height)
-		if data.width then
-			return data.width, height
-		else
-			local size = math.min(width, height)
-			return size, size
-		end
+	function widg:fit(context, width, height)
+		local width = (style.dot_size + style.dot_gap_h) * data.column_num - style.dot_gap_h
+		return width, height
 	end
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
+	function widg:draw(context, cr, width, height)
+		local maxnum = style.row_num * data.column_num
+		local gap_v = (height - style.row_num * style.dot_size) / (style.row_num - 1)
 
-		-- center circle
-		cr:set_source(color(data.color))
-		cr:arc(width / 2, height / 2, style.iradius, 0, TPI)
-		cr:fill()
+		cr:translate(0, height)
+		for i = 1, style.row_num do
+			for j = 1, data.column_num do
 
-		-- progress circle
-		cr:set_line_width(style.line_width)
-		local cd = { TPI, TPI * data.value }
-		for i = 1, 2 do
-			cr:set_source(color(i > 1 and style.color.main or style.color.gray))
-			cr:arc(width / 2, height / 2, style.radius, cs, cs + cd[i])
-			cr:stroke()
+				local cc = (j + (i - 1) * data.column_num) <= data.count_num and style.color.main or style.color.gray
+				cr:set_source(color(cc))
+
+				cr:rectangle(0, 0, style.dot_size, - style.dot_size)
+				cr:fill()
+
+				cr:translate(style.dot_size + style.dot_gap_h, 0)
+			end
+			cr:translate(- (style.dot_gap_h + width), - (style.dot_size + gap_v))
 		end
 	end
 
@@ -104,10 +99,10 @@ function cirmon.new(style)
 	return widg
 end
 
--- Config metatable to call monitor module as function
+-- Config metatable to call dotcount module as function
 -----------------------------------------------------------------------------------------------------------------------
-function cirmon.mt:__call(...)
-	return cirmon.new(...)
+function counter.mt:__call(...)
+	return counter.new(...)
 end
 
-return setmetatable(cirmon, cirmon.mt)
+return setmetatable(counter, counter.mt)

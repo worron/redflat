@@ -23,6 +23,7 @@ local redutil = require("redflat.util")
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
 local dfparser = {}
+local cache = {}
 
 dfparser.terminal = 'uxterm'
 
@@ -34,16 +35,27 @@ local all_icon_sizes   = { '128x128' , '96x96', '72x72', '64x64', '48x48',
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		icons             = { custom_only = false, scalable_only = false },
+		icons             = { custom_only = false, scalable_only = false, df_icon = nil, theme = nil },
 		desktop_file_dirs = { "/usr/share/applications/" },
 		wm_name           = nil,
 	}
 
-	return redutil.table.merge(style, redutil.check(beautiful, "float.dfparser") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "service.dfparser") or {})
 end
 
 -- Support functions
 -----------------------------------------------------------------------------------------------------------------------
+
+-- Cache functions
+--------------------------------------------------------------------------------
+local function check_cached(req)
+	for k, v in pairs(cache) do
+		local eq = #req == #k
+		for ck, cv in pairs(k) do eq = eq and cv == req[ck] end
+		if eq then return v end
+	end
+	return nil
+end
 
 -- Check whether the icon format is supported
 --------------------------------------------------------------------------------
@@ -242,12 +254,21 @@ end
 -- @return A table with all .desktop entries
 --------------------------------------------------------------------------------
 local function parse_dir(dir, style)
+	local req = awful.util.table.join({ path = dir }, style.icons)
 	local programs = {}
-	local files = awful.util.pread('find '.. dir ..' -maxdepth 1 -name "*.desktop" 2>/dev/null')
+	local cached = check_cached(req)
 
-	for file in string.gmatch(files, "[^\n]+") do
-		local program = parse(file, style)
-		if program then table.insert(programs, program) end
+	if not cached then
+		local files = redutil.read.output('find '.. dir ..' -maxdepth 1 -name "*.desktop" 2>/dev/null')
+
+		for file in string.gmatch(files, "[^\n]+") do
+			local program = parse(file, style)
+			if program then table.insert(programs, program) end
+		end
+
+		cache[req] = programs
+	else
+		programs = cached
 	end
 
 	return programs

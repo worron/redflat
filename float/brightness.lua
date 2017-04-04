@@ -14,11 +14,10 @@ local beautiful = require("beautiful")
 
 local rednotify = require("redflat.float.notify")
 local redutil = require("redflat.util")
-local asyncshell = require("redflat.asyncshell")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
-local brightness = { dbus_correction = 1}
+local brightness = { dbus_correction = 1 }
 
 local defaults = { down = false, step = 2 }
 
@@ -28,18 +27,27 @@ local gsd_command = 'dbus-send --session --print-reply --dest="org.gnome.Setting
                     .. '/org/gnome/SettingsDaemon/Power '
                     .. 'org.gnome.SettingsDaemon.Power.Screen.'
 
+-- Generate default theme vars
+-----------------------------------------------------------------------------------------------------------------------
+local function default_style()
+	local style = {
+		notify = {},
+	}
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.brightness") or {})
+end
+
 -- Change brightness level
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Change with xbacklight
 ------------------------------------------------------------
-function brightness:change(args)
+function brightness:change_with_xbacklight(args)
 	local args = redutil.table.merge(defaults, args or {})
 
 	if args.down then
-		asyncshell.request("xbacklight -dec " .. args.step, self.info_with_xbacklight)
+		awful.spawn.easy_async("xbacklight -dec " .. args.step, self.info_with_xbacklight)
 	else
-		asyncshell.request("xbacklight -inc " .. args.step, self.info_with_xbacklight)
+		awful.spawn.easy_async("xbacklight -inc " .. args.step, self.info_with_xbacklight)
 	end
 end
 
@@ -49,7 +57,7 @@ function brightness:change_with_gsd(args)
 	local args = redutil.table.merge(defaults, args or {})
 
 	-- correction because of strange dbus output rounding
-	local dbus_output = awful.util.pread(gsd_command .. gsd_get)
+	local dbus_output = redutil.read.output(gsd_command .. gsd_get)
 	local brightness_level = string.match(dbus_output, "uint32%s(%d+)") + self.dbus_correction
 
 	-- increase/decrease
@@ -61,7 +69,7 @@ function brightness:change_with_gsd(args)
 	end
 
 	-- set and show
-	awful.util.spawn_with_shell(gsd_command .. string.format(gsd_set, brightness_level))
+	awful.spawn.with_shell(gsd_command .. string.format(gsd_set, brightness_level))
 	self.info_with_gsd(brightness_level)
 end
 
@@ -71,27 +79,28 @@ end
 -- Update from xbacklight
 ------------------------------------------------------------
 function brightness.info_with_xbacklight()
-	local brightness_level = awful.util.pread("xbacklight -get")
+	if not brightness.style then brightness.style = default_style() end
+	local brightness_level = redutil.read.output("xbacklight -get")
 
-	rednotify:show({
-		value = brightness_level / 100,
-		text = string.format('%.0f', brightness_level) .. "%",
-		icon = beautiful.float.brightness.notify_icon
-	})
+	rednotify:show(redutil.table.merge(
+		{ value = brightness_level / 100, text = string.format('%.0f', brightness_level) .. "%" },
+		brightness.style.notify
+	))
 end
 
 -- Update from dbus-send and gnome/unity settings daemon
 ------------------------------------------------------------
 function brightness.info_with_gsd(brightness_level)
+	if not brightness.style then brightness.style = default_style() end
+
 	if not brightness_level then
-		local brightness_level = string.match(awful.util.pread(gsd_command .. gsd_get), "uint32%s(%d+)")
+		local brightness_level = string.match(redutil.read.output(gsd_command .. gsd_get), "uint32%s(%d+)")
 	end
 
-	rednotify:show({
-		value = brightness_level / 100,
-		text = brightness_level .. "%",
-		icon = beautiful.float.brightness.notify_icon
-	})
+	rednotify:show(redutil.table.merge(
+		{ value = brightness_level / 100, text = brightness_level .. "%" },
+		brightness.style.notify
+	))
 end
 
 -----------------------------------------------------------------------------------------------------------------------

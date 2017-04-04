@@ -1,8 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------------
 --                                            RedFlat focus switch util                                              --
 -----------------------------------------------------------------------------------------------------------------------
--- Visual swap and focus switch helper
--- Group window with redfalt titlebar
+-- Visual clinet managment helper
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
@@ -13,25 +12,18 @@ local awful = require("awful")
 local wibox = require("wibox")
 local color = require("gears.color")
 local beautiful = require("beautiful")
+local timer = require("gears.timer")
 
+local redflat = require("redflat")
 local redutil = require("redflat.util")
-local redbar = require("redflat.titlebar")
+local redtip = require("redflat.float.hotkeys")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
-local navigator = {}
+local navigator = { action = {}, data = {} }
 
-local data = { group = false, gruop_list = {} }
+navigator.ignored = { "dock", "splash", "desktop" }
 
--- default keys
-navigator.keys = {
-	num = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "F1", "F3", "F4", "F5" },
-	kill = { "c", "C" },
-	group_make = { "g", "G" },
-	group_destroy = { "d", "D" },
-	mod  = { total = "Shift" },
-	close = { "Escape", "Super_L" },
-}
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
@@ -42,16 +34,26 @@ local function default_style()
 		marksize     = { width = 200, height = 100, r = 20 },
 		gradstep     = 100,
 		linegap      = 35,
+		timeout      = 1,
+		keytip       = { base = { geometry = { width = 600, height = 600 }, exit = true } },
 		titlefont    = { font = "Sans", size = 28, face = 1, slant = 0 },
+		num          = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "F1", "F3", "F4", "F5" },
 		font         = { font = "Sans", size = 22, face = 1, slant = 0 },
 		color        = { border = "#575757", wibox = "#00000000", bg1 = "#57575740", bg2 = "#57575720",
-		                 fbg1 = "#b1222b40", fbg2 = "#b1222b20", mark = "#575757", text = "#202020" }
+		                 fbg1 = "#b1222b40", fbg2 = "#b1222b20", mark = "#575757", text = "#202020",
+		                 hbg1 = "#32882d40", hbg2 = "#32882d20" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "service.navigator") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "service.navigator") or {})
 end
 
 -- Support functions
 -----------------------------------------------------------------------------------------------------------------------
+
+-- Check geometry intersection
+--------------------------------------------------------------------------------
+local function is_intersect(a, b)
+	return (b.x < a.x + a.width and b.x + b.width > a.x and b.y < a.y + a.height and b.y + b.height > a.y)
+end
 
 -- Window painting
 --------------------------------------------------------------------------------
@@ -64,6 +66,7 @@ function navigator.make_paint(c)
 
 	local data = {
 		client = c,
+		alert = false,
 	}
 
 	-- User functions
@@ -73,21 +76,34 @@ function navigator.make_paint(c)
 		self:emit_signal("widget::updated")
 	end
 
+	function widg:set_alert(value)
+		data.alert = value
+		self:emit_signal("widget::updated")
+	end
+
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height) return width, height end
+	function widg:fit(context, width, height)
+		return width, height
+	end
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
+	function widg:draw(context, cr, width, height)
 
 		if not data.client then return end
 
 		-- background
+		local bg1, bg2
 		local num = math.ceil((width + height) / style.gradstep)
-		local is_focused = data.client == client.focus
-		local bg1 = is_focused and style.color.fbg1 or style.color.bg1
-		local bg2 = is_focused and style.color.fbg2 or style.color.bg2
+
+		if data.alert then
+			bg1, bg2 = style.color.hbg1, style.color.hbg2
+		else
+			local is_focused = data.client == client.focus
+			bg1 = is_focused and style.color.fbg1 or style.color.bg1
+			bg2 = is_focused and style.color.fbg2 or style.color.bg2
+		end
 
 		for i = 1, num do
 			local cc = i % 2 == 1 and bg1 or bg2
@@ -119,14 +135,14 @@ function navigator.make_paint(c)
 		cr:fill()
 
 		-- label
-		local index = navigator.keys.num[awful.util.table.hasitem(navigator.cls, data.client)]
+		local index = navigator.style.num[awful.util.table.hasitem(navigator.cls, data.client)]
 		local g = redutil.client.fullgeometry(data.client)
 
 		cr:set_source(color(style.color.text))
 		redutil.cairo.set_font(cr, style.titlefont)
-		redutil.cairo.tcenter(cr, { width/2, height/2 - style.linegap / 2 }, index)
+		redutil.cairo.textcentre.vertical(cr, { width/2, height/2 - style.linegap / 2 }, index)
 		redutil.cairo.set_font(cr, style.font)
-		redutil.cairo.tcenter(cr, { width/2, height/2 + style.linegap / 2 }, g.width .. " x " .. g.height)
+		redutil.cairo.textcentre.vertical(cr, { width/2, height/2 + style.linegap / 2 }, g.width .. " x " .. g.height)
 	end
 
 	------------------------------------------------------------
@@ -145,7 +161,7 @@ function navigator.make_decor(c)
 		ontop        = true,
 		bg           = style.color.wibox,
 		border_width = style.border_width,
-		border_color = style.color.border
+		border_color = style.color.borderk
 	})
 
 	object.client = c
@@ -185,116 +201,114 @@ function navigator.make_decor(c)
 	return object
 end
 
--- keygrabber
------------------------------------------------------------------------------------------------------------------------
-navigator.raw_keygrabber = function(mod, key, event)
-	local index = awful.util.table.hasitem(navigator.keys.num, key)
-
-	if awful.util.table.hasitem(navigator.keys.group_make, key) then
-		if navigator.group then
-			redbar.set_group(navigator.group_list)
-			navigator:restart()
-		else
-			navigator.group = true
-			navigator.group_list = {}
-		end
-	elseif awful.util.table.hasitem(navigator.keys.group_destroy, key) then
-		if awful.util.table.hasitem(mod, navigator.keys.mod.total) then
-			redbar.destroy_group(client.focus)
-		else
-			redbar.ungroup(client.focus)
-		end
-		navigator:restart()
-	elseif awful.util.table.hasitem(navigator.keys.kill, key) then
-		client.focus:kill()
-		navigator:restart()
-	elseif index then
-		local index = awful.util.table.hasitem(navigator.keys.num, key)
-
-		if data[index] and awful.util.table.hasitem(navigator.cls, data[index].client) then
-			if navigator.group then
-				table.insert(navigator.group_list, data[index].client)
-			elseif navigator.last then
-				if navigator.last == index then
-					client.focus = data[index].client
-					client.focus:raise()
-				else
-					redutil.client.swap(data[navigator.last].client, data[index].client)
-				end
-				navigator.last = nil
-			else
-				navigator.last = index
-			end
-		end
-
-		return true
-	end
-
-	return false
-end
-
-navigator.keygrabber = function(mod, key, event)
-	if event == "press" then return false
-	elseif awful.util.table.hasitem(navigator.keys.close, key) then navigator:close()
-	elseif navigator.raw_keygrabber(mod, key, event) then return true
-	else return false
-	end
-end
 
 -- Main functions
 -----------------------------------------------------------------------------------------------------------------------
-function navigator:run(is_soft)
-	if not self.style then self.style = default_style() end
+function navigator:init()
 
+	-- Style
+	------------------------------------------------------------
+	self.style = default_style()
+
+	-- Hilight area
+	------------------------------------------------------------
+	self.hilight = {}
+
+	-- timer
+	self.hilight.hidetimer = timer({ timeout = self.style.timeout })
+	self.hilight.hidetimer:connect_signal("timeout", function() self.hilight.hide() end)
+
+	-- show/hide
+	function self.hilight.show(g)
+		for i, c in ipairs(self.cls) do
+			self.data[i].widget:set_alert(is_intersect(g, c:geometry()))
+		end
+		self.hilight.hidetimer:again()
+	end
+
+	function self.hilight.hide()
+		for i, c in ipairs(self.cls) do self.data[i].widget:set_alert(false) end
+	end
+end
+
+function navigator:run()
+	if not self.style then self:init() end
+
+	-- check clients
 	local s = mouse.screen
 	self.cls = awful.client.tiled(s)
 
-	if #self.cls == 0 then return end
+	if #self.cls == 0 or
+	   not client.focus or
+	   client.focus.fullscreen or
+	   awful.util.table.hasitem(navigator.ignored, client.focus.type)
+	then
+		return
+	end
 
+	-- check handler
+	local l = awful.layout.get(client.focus.screen)
+	local handler = l.key_handler or redflat.layout.common.handler[l]
+	if not handler then return end
+
+	-- layout setup if needed
+	if l.startup then l.startup() end
+	local tip = l.tip or redflat.layout.common.tips[l]
+
+	-- activate navition widgets
 	for i, c in ipairs(self.cls) do
-		if not data[i] then
-			data[i] = self.make_decor(c)
+		if not self.data[i] then
+			self.data[i] = self.make_decor(c)
 		else
-			data[i]:set_client(c)
+			self.data[i]:set_client(c)
 		end
 
-		data[i].wibox.visible = true
+		self.data[i].wibox.visible = true
 	end
 
-	if not is_soft then awful.keygrabber.run(self.keygrabber) end
+	-- run key handler
+	self.grabber_settled = handler
+	awful.keygrabber.run(self.grabber_settled)
+
+	-- set keys tip
+	self.tip_settled = tip
+	if tip then
+		local tip_style = self.style.keytip[awful.layout.getname(l)] or self.style.keytip.base
+		redtip:set_pack(
+			"Layout " .. l.name, tip, tip_style.column, tip_style.geometry,
+			self.style.keytip.base.exit and function() redflat.layout.common.action.exit() end -- fix this?
+		)
+	end
 end
 
-function navigator:close(is_soft)
+function navigator:close()
 	for i, c in ipairs(self.cls) do
-		data[i]:clear()
+		self.data[i]:clear()
 	end
 
-	if not is_soft then awful.keygrabber.stop(navigator.keygrabber) end
-	navigator.last = nil
-	navigator.group = false
-	navigator.group_list = {}
+	awful.keygrabber.stop(self.grabber_settled)
+	if self.tip_settled then redtip:remove_pack() end
+
+	local l = client.focus and awful.layout.get(client.focus.screen)
+	if l and l.cleanup then l.cleanup() end
+	self.cls = {}
 end
 
 function navigator:restart()
-	--clear navigator info
-	navigator.last = nil
-	navigator.group = false
-	navigator.group_list = {}
-
 	-- update decoration
-	for i, c in ipairs(self.cls) do data[i]:clear(true) end
+	for i, c in ipairs(self.cls) do self.data[i]:clear(true) end
 	local newcls = awful.client.tiled(mouse.screen)
 	for i = 1, math.max(#self.cls, #newcls) do
 		if newcls[i] then
-			if not data[i] then
-				data[i] = self.make_decor(newcls[i])
+			if not self.data[i] then
+				self.data[i] = self.make_decor(newcls[i])
 			else
-				data[i]:set_client(newcls[i])
+				self.data[i]:set_client(newcls[i])
 			end
 
-			data[i].wibox.visible = true
+			self.data[i].wibox.visible = true
 		else
-			data[i].wibox.visible = false
+			self.data[i].wibox.visible = false
 		end
 	end
 

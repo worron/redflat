@@ -9,9 +9,9 @@
 local setmetatable = setmetatable
 local wibox = require("wibox")
 local beautiful = require("beautiful")
-local util = require("awful.util")
+local timer = require("gears.timer")
 
-local monitor = require("redflat.gauge.monitor")
+local monitor = require("redflat.gauge.monitor.plain")
 local tooltip = require("redflat.float.tooltip")
 local system = require("redflat.system")
 local redutil = require("redflat.util")
@@ -28,7 +28,7 @@ local function default_style()
 		width   = nil,
 		widget = monitor.new
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "widget.sysmon") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.sysmon") or {})
 end
 
 -- Create a new cpu monitor widget
@@ -46,7 +46,7 @@ function sysmon.new(args, style)
 
 	-- Set tooltip
 	--------------------------------------------------------------------------------
-	local tp = tooltip({ widg }, style.tooltip)
+	local tp = tooltip({ objects = { widg } }, style.tooltip)
 
 	-- Set update timer
 	--------------------------------------------------------------------------------

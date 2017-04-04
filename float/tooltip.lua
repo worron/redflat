@@ -18,6 +18,7 @@ local unpack = unpack
 local wibox = require("wibox")
 local awful = require("awful")
 local beautiful = require("beautiful")
+local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
 
@@ -31,20 +32,21 @@ local function default_style()
 	local style = {
 		margin       = { 5, 5, 3, 3 },
 		timeout      = 1,
+		font  = "Sans 12",
 		border_width = 2,
 		color        = { border = "#404040", text = "#aaaaaa", wibox = "#202020" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "float.tooltip") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "float.tooltip") or {})
 end
 
 -- Create a new tooltip
--- @param objects Table containing objects to which tooltip will be attached
--- @param style.margin Table with horizontal and vertical text margin
 -----------------------------------------------------------------------------------------------------------------------
-function tooltip.new(objects, style)
+function tooltip.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
+	local args = args or {}
+	local objects = args.objects or {}
 	local style = redutil.table.merge(default_style(), style or {})
 
 	-- Construct tooltip window with wibox and textbox
@@ -52,7 +54,8 @@ function tooltip.new(objects, style)
 	local ttp = { wibox = wibox({ type = "tooltip" }) }
 	local tb = wibox.widget.textbox()
 	ttp.widget = tb
-	ttp.wibox:set_widget(wibox.layout.margin(tb, unpack(style.margin)))
+	ttp.wibox:set_widget(wibox.container.margin(tb, unpack(style.margin)))
+	tb:set_font(style.font)
 
 	-- configure wibox properties
 	ttp.wibox.visible = false
@@ -66,7 +69,7 @@ function tooltip.new(objects, style)
 	--------------------------------------------------------------------------------
 	 function ttp:set_geometry()
 		local geom = self.wibox:geometry()
-		local n_w, n_h = self.widget:fit(-1, -1)
+		local n_w, n_h = self.widget:get_preferred_size()
 		if geom.width ~= n_w or geom.height ~= n_h then
 			self.wibox:geometry({
 				width = n_w + style.margin[1] + style.margin[2],

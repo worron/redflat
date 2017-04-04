@@ -32,11 +32,11 @@ local pre_command = "dbus-send --dest=ru.gentoo.KbddService /ru/gentoo/KbddServi
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		icon         = nil,
+		icon         = redutil.base.placeholder(),
 		micon        = {},
 		layout_color = {}
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "widget.keyboard") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.keyboard") or {})
 end
 
 -- Initialize layout menu
@@ -47,7 +47,7 @@ function keybd:init(layouts, style)
 	local menu_items = {}
 	for i = 1, #layouts do
 		local command = pre_command .. "ru.gentoo.kbdd.set_layout uint32:" .. tostring(i - 1)
-		table.insert(menu_items, {layouts[i], command, nil, style.micon.blank})
+		table.insert(menu_items, { layouts[i], command, nil, style.micon.blank })
 	end
 
 	-- initialize menu
@@ -65,7 +65,7 @@ function keybd:toggle_menu(t)
 	else
 		awful.placement.under_mouse(self.menu.wibox)
 		awful.placement.no_offscreen(self.menu.wibox)
-		self.menu:show({coords = {x = self.menu.wibox.x, y = self.menu.wibox.y}})
+		self.menu:show({ coords = { x = self.menu.wibox.x, y = self.menu.wibox.y } })
 	end
 end
 
@@ -73,9 +73,9 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function keybd:toggle(reverse)
 	if reverse then
-		awful.util.spawn_with_shell(pre_command .. "ru.gentoo.kbdd.prev_layout")
+		awful.spawn.with_shell(pre_command .. "ru.gentoo.kbdd.prev_layout")
 	else
-		awful.util.spawn_with_shell(pre_command .. "ru.gentoo.kbdd.next_layout")
+		awful.spawn.with_shell(pre_command .. "ru.gentoo.kbdd.next_layout")
 	end
 end
 
@@ -103,7 +103,7 @@ function keybd.new(args, style)
 
 	-- Set tooltip
 	--------------------------------------------------------------------------------
-	local tp = tooltip({ widg }, style.tooltip)
+	local tp = tooltip({ objects = { widg } }, style.tooltip)
 	tp:set_text(args.layouts[1])
 
 	-- Set dbus signal

@@ -19,43 +19,81 @@ local beautiful = require("beautiful")
 local color = require("gears.color")
 
 local redflat = require("redflat")
+local redutil = require("redflat.util")
+local redtip = require("redflat.float.hotkeys")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
-local qlaunch = { hotkeys = {}, history = {}, store = {} }
-
-local code_to_pressed, pressed_to_code = {}, {}
-for i = 1, 10 do
-	local pressed = tostring(i % 10)
-	local code = "#" .. tostring(i + 9)
-	code_to_pressed[code]    = pressed
-	pressed_to_code[pressed] = code
-end
+local qlaunch = { history = {}, store = {}, keys = {} }
 
 local sw = redflat.float.appswitcher
 local TPI = math.pi * 2
+
+local switcher_keys = {}
+for i = 1, 9 do switcher_keys[tostring(i)] = { app = "", run = "" } end
+
+-- key bindings
+qlaunch.forcemod = { "Control" }
+qlaunch.keys.action = {
+	{
+		{}, "Escape", function() qlaunch:hide(true) end,
+		{ description = "Close widget", group = "Action" }
+	},
+	{
+		{}, "Return", function() qlaunch:run_and_hide() end,
+		{ description = "Run or rise selected app", group = "Action" }
+	},
+	{
+		{}, "s", function() qlaunch:set_new_app(qlaunch.switcher.selected, client.focus) end,
+		{ description = "Bind focused app to selected key", group = "Action" }
+	},
+	{
+		{}, "d", function() qlaunch:set_new_app(qlaunch.switcher.selected) end,
+		{ description = "Clear selected key", group = "Action" }
+	},
+	{
+		{ "Mod4" }, "F1", function() redtip:show() end,
+		{ description = "Show hotkeys helper", group = "Action" }
+	},
+}
+
+qlaunch.keys.all = awful.util.table.join({}, qlaunch.keys.action)
+
+qlaunch._fake_keys = {
+	{
+		{}, "N", nil,
+		{ description = "Select app (run or rise if selected already) by key", group = "Action",
+		  keyset = { "1", "2", "3", "4", "5", "6", "7", "8", "9" } }
+	},
+	{
+		{}, "N", nil,
+		{ description = "Select app (launch if selected already) by key", group = "Action" }
+	},
+}
+
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		df_icon         = nil,
-		no_icon         = nil,
-		icons           = {},
-		notify_icon     = nil,
-		geometry        = { width = 1200, height = 180 },
+		df_icon         = redutil.base.placeholder({ txt = "X" }),
+		no_icon         = redutil.base.placeholder(),
+		parser          = {},
+		recoloring      = false,
+		notify          = {},
+		geometry        = { width = 1680, height = 180 },
 		border_margin   = { 20, 20, 10, 10 },
 		appline         = { iwidth = 160, im = { 10, 10, 5, 5 }, igap = { 0, 0, 10, 10 }, lheight = 30 },
 		state           = { gap = 4, radius = 3, size = 10, height = 20, width = 20 },
 		configfile      = os.getenv("HOME") .. "/.cache/awesome/applist",
-		label_font      = "Sans 12",
+		label_font      = "Sans 14",
 		border_width    = 2,
-		service_hotkeys = { close = { "Escape" }, switch = { "Return" }},
+		keytip          = { geometry = { width = 500, height = 400 }, exit = false },
 		color           = { border = "#575757", text = "#aaaaaa", main = "#b1222b", urgent = "#32882d",
 		                    wibox  = "#202020", icon = "#a0a0a0", bg   = "#161616", gray   = "#575757" }
 	}
 
-	return redflat.util.table.merge(style, redflat.util.check(beautiful, "float.qlaunch") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "float.qlaunch") or {})
 end
 
 
@@ -88,13 +126,6 @@ local function build_filter(app)
 	return function(c)
 		return c.class:lower() == app
 	end
-end
-
--- Translate pressed key to keycode for numeric keys
-------------------------------------------------------------
-local function format_key(key, reverse)
-	local kset = reverse and pressed_to_code or code_to_pressed
-	return kset[key] and kset[key] or key
 end
 
 -- Check if file exist
@@ -138,13 +169,13 @@ function build_state_indicator(style)
 
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height)
+	function widg:fit(context, width, height)
 		return data.width or width, data.height or height
 	end
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
+	function widg:draw(context, cr, width, height)
 		local n = #data.state
 		local x0 = (width - n * style.state.size - (n - 1) * style.state.gap) / 2
 		local y0 = (height - style.state.size) / 2
@@ -175,20 +206,26 @@ local function build_item(key, style)
 
 	-- Label
 	------------------------------------------------------------
-	local label = wibox.widget.textbox()
-	local label_constraint = wibox.layout.constraint(label, "exact", nil, style.appline.lheight)
-	label:set_markup(string.format('<span color="%s">%s</span>', style.color.text, format_key(key)))
-	label:set_align("center")
-	label:set_font(style.label_font)
+	local label = wibox.widget({
+		markup = string.format('<span color="%s">%s</span>', style.color.text, key),
+		align  = "center",
+		font = style.label_font,
+		forced_height = style.appline.lheight,
+		widget = wibox.widget.textbox,
+	})
 
-	widg.background = wibox.widget.background(label_constraint, style.color.bg)
+	widg.background = wibox.container.background(label, style.color.bg)
 
 	-- Icon
 	------------------------------------------------------------
 	widg.svgbox = redflat.gauge.svgbox()
-	local icon_align = wibox.layout.align.horizontal()
-	local icon_constraint = wibox.layout.constraint(icon_align, "exact", style.appline.iwidth, nil)
-	icon_align:set_middle(widg.svgbox)
+	local icon_align = wibox.widget({
+		nil,
+		widg.svgbox,
+		forced_width = style.appline.iwidth,
+		expand = "outside",
+		layout = wibox.layout.align.horizontal,
+	})
 
 	-- State
 	------------------------------------------------------------
@@ -198,7 +235,7 @@ local function build_item(key, style)
 	------------------------------------------------------------
 	widg.layout = wibox.layout.align.vertical()
 	widg.layout:set_top(widg.state)
-	widg.layout:set_middle(wibox.layout.margin(icon_constraint, unpack(style.appline.igap)))
+	widg.layout:set_middle(wibox.container.margin(icon_align, unpack(style.appline.igap)))
 	widg.layout:set_bottom(widg.background)
 
 	------------------------------------------------------------
@@ -214,8 +251,6 @@ local function build_switcher(keys, style)
 	local widg = { items = {}, selected = nil }
 	local middle_layout = wibox.layout.fixed.horizontal()
 
-	widg.layout = wibox.layout.align.horizontal()
-
 	-- Sorted keys
 	------------------------------------------------------------
 	local sk = {}
@@ -226,10 +261,15 @@ local function build_switcher(keys, style)
 	------------------------------------------------------------
 	for _, key in ipairs(sk) do
 		widg.items[key] = build_item(key, style)
-		middle_layout:add(wibox.layout.margin(widg.items[key].layout, unpack(style.appline.im)))
+		middle_layout:add(wibox.container.margin(widg.items[key].layout, unpack(style.appline.im)))
 	end
 
-	widg.layout:set_middle(wibox.layout.margin(middle_layout, unpack(style.border_margin)))
+	widg.layout = wibox.widget({
+		nil,
+		wibox.container.margin(middle_layout, unpack(style.border_margin)),
+		expand = "outside",
+		layout = wibox.layout.align.horizontal,
+	})
 
 	-- Winget functions
 	------------------------------------------------------------
@@ -238,7 +278,7 @@ local function build_switcher(keys, style)
 		for key, data in pairs(store) do
 			local icon = data.app == "" and style.no_icon or idb[data.app] or style.df_icon
 			self.items[key].svgbox:set_image(icon)
-			self.items[key].svgbox:set_color(style.color.icon)
+			if style.recoloring then self.items[key].svgbox:set_color(style.color.icon) end
 		end
 	end
 
@@ -250,16 +290,22 @@ local function build_switcher(keys, style)
 	end
 
 	function widg:reset()
-		if self.selected then self.items[self.selected].background:set_bg(style.color.bg) end
+		for _, item in pairs(self.items) do item.background:set_bg(style.color.bg) end
 		self.selected = nil
 	end
 
-	function widg:check_key(store, key)
-		local key = format_key(key, true)
+	function widg:check_key(store, key, mod)
 		if self.items[key] then
 			if self.selected then self.items[self.selected].background:set_bg(style.color.bg) end
 			self.items[key].background:set_bg(style.color.main)
-			self.selected = key
+
+			if self.selected == key then
+				local modcheck = #mod == #qlaunch.forcemod
+				for _, v in ipairs(mod) do modcheck = modcheck and awful.util.table.hasitem(qlaunch.forcemod, v) end
+				qlaunch:run_and_hide(modcheck)
+			else
+				self.selected = key
+			end
 		end
 	end
 
@@ -277,15 +323,11 @@ function qlaunch:init(args, style)
 	-- Init vars
 	------------------------------------------------------------
 	local args = args or {}
-	local keys = args.keys or {}
-	local switchmod = args.switchmod or { "Mod1" }
-	local setupmod = args.setupmod or { "Mod1", "Control" }
-	local runmod = args.runmod or { "Mod1", "Shift" }
+	local keys = args.keys or switcher_keys
 
-	local style = redflat.util.table.merge(default_style(), style or {})
-	self.configfile = style.configfile
-	self.icon_db = redflat.service.dfparser.icon_list(style.icons)
-	self.notify_icon = style.notify_icon
+	local style = redutil.table.merge(default_style(), style or {})
+	self.style = style
+	self.icon_db = redflat.service.dfparser.icon_list(style.parser)
 
 	self:load_config(keys)
 
@@ -298,7 +340,7 @@ function qlaunch:init(args, style)
 		border_color = style.color.border
 	})
 	self.wibox:geometry(style.geometry)
-	redflat.util.placement.centered(self.wibox, nil, screen[mouse.screen].workarea)
+	redutil.placement.centered(self.wibox, nil, screen[mouse.screen].workarea)
 
 	-- Switcher widget
 	------------------------------------------------------------
@@ -306,31 +348,16 @@ function qlaunch:init(args, style)
 	self.switcher:update(self.store, self.icon_db)
 
 	self.wibox:set_widget(self.switcher.layout)
+	self:set_keys()
 
 	-- Keygrabber
 	------------------------------------------------------------
 	self.keygrabber = function(mod, key, event)
-		if event == "press" then return false
-		elseif awful.util.table.hasitem(style.service_hotkeys.close,  key) then self:hide(true)
-		elseif awful.util.table.hasitem(style.service_hotkeys.switch, key) then self:hide()
-		else
-			self.switcher:check_key(self.store, key)
-			return false
+		if event == "press" then return false end
+		for _, k in ipairs(self.keys.all) do
+			if redutil.key.match_grabber(k, mod, key) then k[3](); return end
 		end
-	end
-
-	-- Build hotkeys
-	------------------------------------------------------------
-	if args.no_bind then
-		self.hotkeys = {}
-	else
-		local tk = {}
-		for key, data in pairs(self.store) do
-			table.insert(tk, awful.key(switchmod, key, nil, function() self:run_or_raise(key) end))
-			table.insert(tk, awful.key(setupmod, key, function() self:set_new_app(key) end))
-			table.insert(tk, awful.key(runmod, key, function() self:run_or_raise(key, true) end))
-		end
-		self.hotkeys = awful.util.table.join(unpack(tk))
+		self.switcher:check_key(self.store, key, mod)
 	end
 
 	-- Connect additional signals
@@ -342,20 +369,30 @@ end
 -- Widget show/hide
 --------------------------------------------------------------------------------
 function qlaunch:show()
+	if not self.wibox then self:init() end
+
 	self.switcher:set_state(self.store)
 	self.wibox.visible = true
 	awful.keygrabber.run(self.keygrabber)
+
+	redtip:set_pack(
+		"Quick launch", self.tip, self.style.keytip.column, self.style.keytip.geometry,
+		self.style.keytip.exit and function() self:hide() end
+	)
 end
 
-function qlaunch:hide(dryrun)
+function qlaunch:hide()
 	self.wibox.visible = false
 	awful.keygrabber.stop(self.keygrabber)
-
-	if self.switcher.selected and not dryrun then
-		self:run_or_raise(self.switcher.selected)
-	end
-
 	self.switcher:reset()
+	redtip:remove_pack()
+end
+
+function qlaunch:run_and_hide(forced_run)
+	if self.switcher.selected then
+		self:run_or_raise(self.switcher.selected, forced_run)
+	end
+	self:hide()
 end
 
 -- Switch to app
@@ -391,23 +428,22 @@ end
 
 -- Bind new application to given hotkey
 --------------------------------------------------------------------------------
-function qlaunch:set_new_app(key)
-	if client.focus then
-		local run_command = awful.util.pread(string.format("tr '\\0' ' ' < /proc/%s/cmdline", client.focus.pid))
-		self.store[key] = { app = client.focus.class:lower(), run = run_command }
-		redflat.float.notify:show({
-			text = string.format("%s binded with '%s'", client.focus.class, format_key(key)),
-			icon = self.notify_icon,
-		})
+function qlaunch:set_new_app(key, c)
+	if not key  then return end
+
+	if c then
+		local run_command = redutil.read.output(string.format("tr '\\0' ' ' < /proc/%s/cmdline", c.pid))
+		self.store[key] = { app = c.class:lower(), run = run_command }
+		local note = redutil.table.merge({text = string.format("%s binded with '%s'", c.class, key)}, self.style.notify)
+		redflat.float.notify:show(note)
 	else
 		self.store[key] = { app = "", run = "" }
-		redflat.float.notify:show({
-			text = string.format("'%s' key unbinded", format_key(key)),
-			icon = self.notify_icon,
-		})
+		local note = redutil.table.merge({text = string.format("'%s' key unbinded", key)}, self.style.notify)
+		redflat.float.notify:show(note)
 	end
 
 	self.switcher:update(self.store, self.icon_db)
+	self.switcher:reset()
 end
 
 -- Save information about last focused client in widget store
@@ -425,8 +461,8 @@ end
 -- Application list save/load
 --------------------------------------------------------------------------------
 function qlaunch:load_config(default_keys)
-	if is_file_exists(self.configfile) then
-		for line in io.lines(self.configfile) do
+	if is_file_exists(self.style.configfile) then
+		for line in io.lines(self.style.configfile) do
 			local key, app, run = string.match(line, "key=(.+);app=(.*);run=(.*);")
 			self.store[key] = { app = app, run = run }
 		end
@@ -436,11 +472,24 @@ function qlaunch:load_config(default_keys)
 end
 
 function qlaunch:save_config()
-	local file = io.open(self.configfile, "w+")
+	local file = io.open(self.style.configfile, "w+")
 	for key, data in pairs(self.store) do
 		file:write(string.format("key=%s;app=%s;run=%s;\n", key, data.app, data.run))
 	end
 	file:close()
+end
+
+-- Set user hotkeys
+-----------------------------------------------------------------------------------------------------------------------
+function qlaunch:set_keys(keys, layout)
+	local layout = layout or "all"
+	if keys then
+		self.keys[layout] = keys
+		if layout ~= "all" then self.keys.all = awful.util.table.join({}, self.keys.action) end
+	end
+
+	self._fake_keys[2][1] = self.forcemod
+	self.tip = awful.util.table.join(self.keys.all, self._fake_keys)
 end
 
 -- End

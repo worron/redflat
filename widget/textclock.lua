@@ -12,6 +12,7 @@ local setmetatable = setmetatable
 local os = os
 local textbox = require("wibox.widget.textbox")
 local beautiful = require("beautiful")
+local timer = require("gears.timer")
 
 local tooltip = require("redflat.float.tooltip")
 local redutil = require("redflat.util")
@@ -25,9 +26,10 @@ local textclock = { mt = {} }
 local function default_style()
 	local style = {
 		font  = "Sans 12",
+		tooltip = {},
 		color = { text = "#aaaaaa" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "widget.textclock") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.textclock") or {})
 end
 
 -- Create a textclock widget. It draws the time it is in a textbox.
@@ -52,7 +54,7 @@ function textclock.new(args, style)
 	-- Set tooltip if need
 	--------------------------------------------------------------------------------
 	local tp
-	if args.dateformat then tp = tooltip({ widg }, style.tooltip) end
+	if args.dateformat then tp = tooltip({ objects = { widg } }, style.tooltip) end
 
 	-- Set update timer
 	--------------------------------------------------------------------------------

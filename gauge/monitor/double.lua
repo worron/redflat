@@ -24,12 +24,12 @@ local doublemonitor = { mt = {} }
 local function default_style()
 	local style = {
 		line    = { width = 4, v_gap = 6, gap = 4, num = 5 },
-		icon    = nil,
+		icon    = redutil.base.placeholder(),
 		dmargin = { 10, 0, 0, 0 },
 		width   = 100,
 		color   = { main = "#b1222b", gray = "#575757", icon = "#a0a0a0", urgent = "#32882d" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.doublemonitor") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.monitor.double") or {})
 end
 
 -- Create progressbar widget
@@ -55,13 +55,13 @@ function pbar(style)
 
 	-- Fit
 	------------------------------------------------------------
-	widg.fit = function(widg, width, height)
+	function widg:fit(context, width, height)
 		return width, height
 	end
 
 	-- Draw
 	------------------------------------------------------------
-	widg.draw = function(widg, wibox, cr, width, height)
+	function widg:draw(context, cr, width, height)
 
 		local wd = (width + style.line.gap) / style.line.num - style.line.gap
 		local dy = (height - (2 * style.line.width + style.line.v_gap)) / 2
@@ -91,31 +91,31 @@ function doublemonitor.new(style)
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local style = redutil.table.merge(default_style(), style or {})
-	
+
 	-- Construct layout
 	--------------------------------------------------------------------------------
 	local fixed = wibox.layout.fixed.horizontal()
-	local layout = wibox.layout.constraint(fixed, "exact", style.width)
+	fixed:set_forced_width(style.width)
 	local widg = pbar(style)
 	local icon = svgbox(style.icon)
 
 	icon:set_color(style.color.icon)
-	
+
 	fixed:add(icon)
-	fixed:add(wibox.layout.margin(widg, unpack(style.dmargin)))
+	fixed:add(wibox.container.margin(widg, unpack(style.dmargin)))
 
 	-- User functions
 	--------------------------------------------------------------------------------
-	function layout:set_value(value)
+	function fixed:set_value(value)
 		widg:set_value(value)
 	end
 
-	function layout:set_alert(alert)
+	function fixed:set_alert(alert)
 		icon:set_color(alert and style.color.urgent or style.color.icon)
 	end
 
 	--------------------------------------------------------------------------------
-	return layout
+	return fixed
 end
 
 -- Config metatable to call doublemonitor module as function

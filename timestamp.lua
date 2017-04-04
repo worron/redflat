@@ -8,6 +8,10 @@
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
+local tonumber = tonumber
+local io = io
+local os = os
+
 local awful = require("awful")
 
 -- Initialize tables for module
@@ -15,6 +19,8 @@ local awful = require("awful")
 local timestamp = {}
 
 timestamp.path = "/tmp/awesome-stamp"
+timestamp.timeout = 5
+timestamp.bin = "~/awesome4/bin/awesome-client" -- !!! fix this on after final migration !!!
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
@@ -33,7 +39,14 @@ end
 
 -- get time stamp
 function timestamp.get()
-	return redutil.read_ffile(timestamp.path)
+	res = redutil.read.file(timestamp.path)
+	if res then return tonumber(res) end
+end
+
+-- check if it is first start
+function timestamp.is_startup()
+	local stamp = timestamp.get()
+	return not stamp or (os.time() - stamp) > timestamp.timeout
 end
 
 -- Connect exit signal on module initialization
@@ -41,10 +54,9 @@ end
 awesome.connect_signal("exit",
 	function()
 		timestamp.make()
-		awful.util.spawn_with_shell(
-			"sleep 2 && echo"
-			.. " 'if timestamp == nil then timestamp = require(\"redflat.timestamp\") end'"
-			.. " | awesome-client &"
+		awful.spawn.with_shell(
+			string.format("sleep 2 && %s ", timestamp.bin)
+			.. [["if timestamp == nil then naughty = require('redflat.timestamp') end"]]
 		)
 	end
 )

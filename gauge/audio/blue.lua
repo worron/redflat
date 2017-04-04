@@ -15,7 +15,7 @@ local color = require("gears.color")
 
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
-local reddash = require("redflat.gauge.dashcontrol")
+local reddash = require("redflat.gauge.graph.dash")
 
 
 -- Initialize tables for module
@@ -27,12 +27,12 @@ local audio = { mt = {} }
 local function default_style()
 	local style = {
 		width   = 100,
-		icon    = nil,
+		icon    = redutil.base.placeholder(),
 		dash    = {},
 		dmargin = { 10, 0, 0, 0 },
 		color   = { icon = "#a0a0a0", mute = "#404040" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.blueaudio") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.audio.blue") or {})
 end
 
 -- Create a new audio widget
@@ -51,9 +51,9 @@ function audio.new(style)
 
 	local layout = wibox.layout.fixed.horizontal()
 	layout:add(icon)
-	layout:add(wibox.layout.margin(dash, unpack(style.dmargin)))
+	layout:add(wibox.container.margin(dash, unpack(style.dmargin)))
 
-	local widg = wibox.layout.constraint(layout, "exact", style.width)
+	local widg = wibox.container.constraint(layout, "exact", style.width)
 
 	-- User functions
 	------------------------------------------------------------

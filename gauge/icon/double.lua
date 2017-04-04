@@ -24,13 +24,13 @@ local dubgicon = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		icon1       = nil,
-		icon2       = nil,
+		icon1       = redutil.base.placeholder(),
+		icon2       = redutil.base.placeholder(),
 		igap        = 8,
 		is_vertical = false,
 		color       = { main = "#b1222b", icon = "#a0a0a0" }
 	}
-	return redutil.table.merge(style, redutil.check(beautiful, "gauge.dubgicon") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.icon.double") or {})
 end
 
 -- Support functions
@@ -60,11 +60,11 @@ function dubgicon.new(style)
 	-- Create widget
 	--------------------------------------------------------------------------------
 	local fixed = wibox.layout.fixed.horizontal()
-	local layout = wibox.layout.constraint(fixed, "exact", style.width)
+	local layout = wibox.container.constraint(fixed, "exact", style.width)
 	layout._icon1 = svgbox(style.icon1)
 	layout._icon2 = svgbox(style.icon2)
 
-	fixed:add(wibox.layout.margin(layout._icon1, 0, style.igap, 0, 0))
+	fixed:add(wibox.container.margin(layout._icon1, 0, style.igap, 0, 0))
 	fixed:add(layout._icon2)
 
 	-- User functions
