@@ -17,6 +17,7 @@ local timer = require("gears.timer")
 local redflat = require("redflat")
 local redutil = require("redflat.util")
 local redtip = require("redflat.float.hotkeys")
+local rednotify = require("redflat.float.notify")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -35,6 +36,7 @@ local function default_style()
 		gradstep     = 100,
 		linegap      = 35,
 		timeout      = 1,
+		notify       = {},
 		keytip       = { base = { geometry = { width = 600, height = 600 }, exit = true } },
 		titlefont    = { font = "Sans", size = 28, face = 1, slant = 0 },
 		num          = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "F1", "F3", "F4", "F5" },
@@ -249,7 +251,10 @@ function navigator:run()
 	-- check handler
 	local l = awful.layout.get(client.focus.screen)
 	local handler = l.key_handler or redflat.layout.common.handler[l]
-	if not handler then return end
+	if not handler then
+		rednotify:show(redutil.table.merge({ text = "Layoout doesn't supported" }, self.style.notify))
+		return
+	end
 
 	-- layout setup if needed
 	if l.startup then l.startup() end
