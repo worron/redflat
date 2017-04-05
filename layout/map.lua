@@ -13,6 +13,7 @@ local math = math
 local beautiful = require("beautiful")
 local awful = require("awful")
 local naughty = require("naughty")
+local timer = require("gears.timer")
 
 local redflat = require("redflat")
 local redutil = require("redflat.util")
@@ -27,6 +28,10 @@ local map = { data = {}, keys = {} }
 map.name = "usermap"
 map.notification = true
 map.notification_style = {}
+
+local hitimer
+map.hilight_timeout = 0.2
+
 
 -- default keys
 map.keys.layout = {
@@ -434,6 +439,18 @@ function map.new_group(is_vertical)
 
 	local t = c.screen.selected_tag
 	map.data[t]:create_group(c, is_vertical)
+
+	if hitimer then return end
+
+	hitimer = timer({ timeout = map.hilight_timeout })
+	hitimer:connect_signal("timeout",
+		function()
+			redflat.service.navigator.hilight.show(map.data[t].set[map.data[t].active].wa)
+			hitimer:stop()
+			hitimer = nil
+		end
+	)
+	hitimer:start() -- autostart option doesn't work?
 end
 
 -- Destroy active container
@@ -563,6 +580,7 @@ function map.insert_group(is_vertical)
 	map.data[t]:insert_group(is_vertical)
 	t:emit_signal("property::layout")
 end
+
 
 -- Tile function
 -----------------------------------------------------------------------------------------------------------------------
