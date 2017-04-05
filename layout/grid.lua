@@ -373,7 +373,8 @@ function grid.arrange(p)
 	if #cls == 0 then return end
 
 	-- calculate cell
-	grid.data.cell = cell(wa, cellnum)
+	-- fix useless gap correction?
+	grid.data.cell = cell({ width = wa.width + 2 * p.useless_gap, height = wa.height + 2 * p.useless_gap }, cellnum)
 
 	-- tile
 	for i, c in ipairs(cls) do

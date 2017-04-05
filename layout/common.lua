@@ -35,6 +35,10 @@ common.keys.base = {
 		{ description = "Exit navigation mode", group = "Action" }
 	},
 	{
+		{ "Mod4" }, "Escape", function() common.action.exit() end,
+		{} -- hidden key
+	},
+	{
 		{ "Mod4" }, "Super_L", function() common.action.exit() end,
 		{ description = "Exit navigation mode", group = "Action" }
 	},
