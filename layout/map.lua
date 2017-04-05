@@ -24,7 +24,7 @@ local hasitem = awful.util.table.hasitem
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local map = { data = {}, keys = {} }
+local map = { data = setmetatable({}, { __mode = "k" }), scheme = setmetatable({}, { __mode = "k" }), keys = {} }
 map.name = "usermap"
 map.notification = true
 map.notification_style = {}
@@ -91,6 +91,10 @@ map.keys.layout = {
 		{ "Mod4" }, "[", function() map.move_group(-1) end,
 		{ description = "Move active group to the bottom", group = "Layout" }
 	},
+	{
+		{ "Mod4" }, "r", function() map.reset_tree() end,
+		{ description = "Reset layout structure", group = "Layout" }
+	},
 }
 
 map.keys.resize = {
@@ -156,7 +160,7 @@ end
 
 -- Build container for single client or group
 --------------------------------------------------------------------------------
-local function construct_itempack(cls, wa, is_vertical, parent)
+function map.construct_itempack(cls, wa, is_vertical, parent)
 	local pack = { items = {}, wa = wa, cls = { unpack(cls) }, is_vertical = is_vertical, parent = parent }
 
 	-- Create pack of items with base properties
@@ -279,12 +283,11 @@ end
 
 -- Build layout tree
 --------------------------------------------------------------------------------
-local function construct_tree(cls, wa)
+local function construct_tree(cls, wa, t)
 
 	-- Initial structure on creation
 	------------------------------------------------------------
-	local tree = { set = {}, active = 1 }
-	tree.set[1] = construct_itempack({}, wa, false)
+	local tree = map.scheme[t] and map.scheme[t].construct(wa) or map.base_construct(wa)
 
 	-- Find pack contaner for client
 	------------------------------------------------------------
@@ -300,7 +303,7 @@ local function construct_tree(cls, wa)
 	------------------------------------------------------------
 	function tree:create_group(c, is_vertical)
 		local parent, index = self:get_pack(c)
-		local new_pack = construct_itempack({}, {}, is_vertical, parent)
+		local new_pack = map.construct_itempack({}, {}, is_vertical, parent)
 
 		self.set[#self.set + 1] = new_pack
 		parent.items[index] = { child = new_pack, factor = 1 }
@@ -314,7 +317,7 @@ local function construct_tree(cls, wa)
 	------------------------------------------------------------
 	function tree:insert_group(is_vertical)
 		local pack = self.set[self.active]
-		local new_pack = construct_itempack({}, pack.wa, is_vertical, pack.parent)
+		local new_pack = map.construct_itempack({}, pack.wa, is_vertical, pack.parent)
 
 		if pack.parent then
 			for i, item in ipairs(pack.parent.items) do
@@ -400,8 +403,13 @@ local function construct_tree(cls, wa)
 
 		-- distributing clients among existing contaners
 		if #current > 0 then
-			local refill = awful.util.table.join(self.set[self.active]:get_cls(), current)
-			self.set[self.active]:set_cls(refill)
+			for _, c in ipairs(current) do
+				if self.autoaim then self.active = self:aim() end
+				local refill = awful.util.table.join(self.set[self.active]:get_cls(), { c })
+				self.set[self.active]:set_cls(refill)
+			end
+			-- local refill = awful.util.table.join(self.set[self.active]:get_cls(), current)
+			-- self.set[self.active]:set_cls(refill)
 		end
 
 		-- recalculate geomery for every container in tree
@@ -438,6 +446,7 @@ function map.new_group(is_vertical)
 	if not c then return end
 
 	local t = c.screen.selected_tag
+	map.data[t].autoaim = false
 	map.data[t]:create_group(c, is_vertical)
 
 	if hitimer then return end
@@ -457,6 +466,7 @@ end
 --------------------------------------------------------------------------------
 function map.delete_group()
 	local t = mouse.screen.selected_tag
+	map.data[t].autoaim = false
 	map.data[t]:delete_group()
 	t:emit_signal("property::layout")
 end
@@ -483,6 +493,7 @@ end
 --------------------------------------------------------------------------------
 function map.clean_groups()
 	local t = mouse.screen.selected_tag
+	map.data[t].autoaim = false
 	map.data[t]:cleanup()
 	t:emit_signal("property::layout")
 end
@@ -496,6 +507,7 @@ function map.set_active(c)
 	local t = c.screen.selected_tag
 	local pack = map.data[t]:get_pack(c)
 	if pack then
+		map.data[t].autoaim = false
 		map.data[t].active = hasitem(map.data[t].set, pack)
 		redflat.service.navigator.hilight.show(pack.wa)
 		notify("Active group index: " .. tostring(map.data[t].active))
@@ -516,6 +528,7 @@ function map.switch_active(n)
 	local t = mouse.screen.selected_tag
 	local na = map.data[t].active + n
 	if map.data[t].set[na] then
+		map.data[t].autoaim = false
 		map.data[t].active = na
 		local pack = map.data[t].set[na]
 		notify("Active group index: " .. tostring(na))
@@ -565,6 +578,7 @@ function map.move_group(dn)
 	local pack = map.data[t].set[map.data[t].active]
 
 	if pack.parent then
+		map.data[t].autoaim = false
 		local i = pack.parent:get_child_id(pack)
 		if pack.parent.items[i + dn] then
 			pack.parent.items[i], pack.parent.items[i + dn] = pack.parent.items[i + dn], pack.parent.items[i]
@@ -573,14 +587,48 @@ function map.move_group(dn)
 	end
 end
 
--- Move element inside his container
+-- Insert new group before active
 --------------------------------------------------------------------------------
 function map.insert_group(is_vertical)
 	local t = mouse.screen.selected_tag
+	map.data[t].autoaim = false
 	map.data[t]:insert_group(is_vertical)
 	t:emit_signal("property::layout")
 end
 
+-- Reset layout structure
+--------------------------------------------------------------------------------
+function map.reset_tree()
+	local t = mouse.screen.selected_tag
+	map.data[t] = nil
+	t:emit_signal("property::layout")
+end
+
+
+-- Base layout scheme
+-----------------------------------------------------------------------------------------------------------------------
+function map.base_set_new_pack(cls, wa, is_vertical, parent, factor)
+	local pack = map.construct_itempack(cls, wa, true, parent)
+	table.insert(parent.items, { child = pack, factor = factor or 1 })
+	return pack
+end
+
+map.base_autoaim = true
+
+function map.base_aim(tree)
+	local active = #tree.set[3].items >= #tree.set[2].items and 2 or 3
+	return active
+end
+
+function map.base_construct(wa)
+	local tree = { set = {}, active = 1, autoaim = map.base_autoaim, aim = map.base_aim }
+
+	tree.set[1] = map.construct_itempack({}, wa, false)
+	tree.set[2] = map.base_set_new_pack({}, wa, true, tree.set[1])
+	tree.set[3] = map.base_set_new_pack({}, wa, true, tree.set[1])
+
+	return tree
+end
 
 -- Tile function
 -----------------------------------------------------------------------------------------------------------------------
@@ -594,7 +642,7 @@ function map.arrange(p)
 	if #cls == 0 then return end
 
 	-- init layout tree
-	if not data[t] then data[t] = construct_tree(cls, wa) end
+	if not data[t] then data[t] = construct_tree(cls, wa, t) end
 
 	-- tile
 	p.geometries = data[t]:rebuild(cls)
