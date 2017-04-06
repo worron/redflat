@@ -33,8 +33,10 @@ local pre_command = "dbus-send --dest=ru.gentoo.KbddService /ru/gentoo/KbddServi
 local function default_style()
 	local style = {
 		icon         = redutil.base.placeholder(),
-		micon        = {},
-		layout_color = {}
+		micon        = { blank = redutil.base.placeholder({ txt = " " }),
+		                 check = redutil.base.placeholder({ txt = "+" }) },
+		menu         = { color = { right_icon = "#a0a0a0" } },
+		layout_color = { "#a0a0a0", "#b1222b" }
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.keyboard") or {})
 end
@@ -53,7 +55,7 @@ function keybd:init(layouts, style)
 	-- initialize menu
 	self.menu = redmenu({ hide_timeout = 1, theme = style.menu, items = menu_items })
 	if self.menu.items[1].right_icon then
-		self.menu.items[1].right_icon:set_image(beautiful.icon.check)
+		self.menu.items[1].right_icon:set_image(style.micon.check)
 	end
 end
 
