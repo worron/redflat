@@ -57,14 +57,15 @@ local function default_style()
 		task_margin = { 5, 5, 0, 0 }
 	}
 	style.winmenu = {
-		icon           = {},
-		micon          = {},
-		layout_icon    = {},
+		icon           = { unknown = redutil.base.placeholder() },
+		micon          = { blank = redutil.base.placeholder({ txt = " " }),
+		                   check = redutil.base.placeholder({ txt = "+" }) },
+		layout_icon    = { unknown = redutil.base.placeholder() },
 		titleline      = { font = "Sans 16 bold", height = 35 },
 		stateline      = { height = 35 },
 		state_iconsize = { width = 20, height = 20 },
 		sep_margin     = { 3, 3, 5, 5 },
-		tagmenu        = { icon_margin = { 10, 10, 10, 10 } },
+		tagmenu        = { icon_margin = { 2, 2, 2, 2 } },
 		color          = { main = "#b1222b", icon = "#a0a0a0", gray = "#404040" }
 	}
 	style.tasktip = {
@@ -76,8 +77,9 @@ local function default_style()
 
 	}
 	style.winmenu.menu = {
-		ricon_margin = { 10, 10, 10, 10 },
-		layout_icon  = {},
+		ricon_margin = { 2, 2, 2, 2 },
+		hide_timeout = 1,
+		-- color        = { submenu_icon = "#a0a0a0", right_icon = "#a0a0a0", left_icon = "#a0a0a0" }
 		nohide       = true
 	}
 
@@ -423,7 +425,7 @@ function redtasklist.winmenu:init(style)
 	--------------------------------------------------------------------------------
 	local function icon_table_ganerator(property)
 		return {
-			icon      = style.icon[property],
+			icon      = style.icon[property] or style.icon.unknown,
 			action    = function() last.client[property] = not last.client[property] end,
 			indicator = function(c) return c[property] end
 		}
@@ -485,11 +487,11 @@ function redtasklist.winmenu:init(style)
 		items = {
 			{ widget = classline },
 			menusep,
-			{ "Move to tag", { items = movemenu_items, theme = style.tagmenu} },
-			{ "Add to tag",  { items = addmenu_items,  theme = style.tagmenu} },
-			-- { "Maximize",    maximize, nil, style.icon.maximized },
-			{ "Minimize",    minimize, nil, style.icon.minimize  },
-			{ "Close",       close,    nil, style.icon.close     },
+			{ "Move to tag", { items = movemenu_items, theme = style.tagmenu } },
+			{ "Add to tag",  { items = addmenu_items,  theme = style.tagmenu } },
+
+			{ "Minimize",    minimize, nil, style.icon.minimize or style.icon.unknown },
+			{ "Close",       close,    nil, style.icon.close or style.icon.unknown },
 			menusep,
 			{ widget = stateline }
 		}
