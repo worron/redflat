@@ -94,6 +94,40 @@ common.keys.tile = {
 	},
 }
 
+common.keys.corner = {
+	{
+		{ "Mod4" }, "l", function () awful.tag.incmwfact( common.wfactstep) end,
+		{ description = "Increase master width factor", group = "Layout" }
+	},
+	{
+		{ "Mod4" }, "h", function () awful.tag.incmwfact(-common.wfactstep) end,
+		{ description = "Decrease master width factor", group = "Layout" }
+	},
+	{
+		{ "Mod4", "Shift" }, "h", function () awful.tag.incnmaster( 1, nil, true) end,
+		{ description = "Increase the number of master clients", group = "Layout" }
+	},
+	{
+		{ "Mod4", "Shift" }, "l", function () awful.tag.incnmaster(-1, nil, true) end,
+		{ description = "Decrease the number of master clients", group = "Layout" }
+	},
+}
+
+common.keys.magnifier = {
+	{
+		{ "Mod4" }, "l", function () awful.tag.incmwfact( common.wfactstep) end,
+		{ description = "Increase master width factor", group = "Layout" }
+	},
+	{
+		{ "Mod4" }, "h", function () awful.tag.incmwfact(-common.wfactstep) end,
+		{ description = "Decrease master width factor", group = "Layout" }
+	},
+	{
+		{ "Mod4" }, "g", function () awful.client.setmaster(client.focus) end,
+		{ description = "Set focused client as master", group = "Movement" }
+	},
+}
+
 -- TODO: set real keyset from navigator theme
 common.keys._fake = {
 	{
@@ -142,6 +176,21 @@ local function build_tile_tip()
 	return awful.util.table.join(common.keys.swap, common.keys.tile, common.keys.base, common.keys._fake)
 end
 
+local function build_corner_tip()
+	return awful.util.table.join(common.keys.swap, common.keys.corner, common.keys.base, common.keys._fake)
+end
+
+local function build_magnifier_tip()
+	return awful.util.table.join(common.keys.magnifier, common.keys.base, common.keys._fake)
+end
+
+local function set_corner_tip()
+	common.tips[layout.suit.corner.nw] = build_corner_tip()
+	common.tips[layout.suit.corner.ne] = build_corner_tip()
+	common.tips[layout.suit.corner.sw] = build_corner_tip()
+	common.tips[layout.suit.corner.se] = build_corner_tip()
+end
+
 local function set_tile_tip()
 	common.tips[layout.suit.tile]        = build_tile_tip()
 	common.tips[layout.suit.tile.right]  = build_tile_tip()
@@ -151,17 +200,32 @@ local function set_tile_tip()
 end
 
 common.updates.swap = function()
-	common.tips[layout.suit.fair] = build_base_tip()
+	common.tips[layout.suit.fair]           = build_base_tip()
+	common.tips[layout.suit.spiral]         = build_base_tip()
+	common.tips[layout.suit.spiral.dwindle] = build_base_tip()
 	set_tile_tip()
+	set_corner_tip()
 end
 
 common.updates.base = function()
-	common.tips[layout.suit.fair] = build_base_tip()
+	common.tips[layout.suit.fair]           = build_base_tip()
+	common.tips[layout.suit.spiral]         = build_base_tip()
+	common.tips[layout.suit.spiral.dwindle] = build_base_tip()
+	common.tips[layout.suit.magnifier]      = build_magnifier_tip()
 	set_tile_tip()
+	set_corner_tip()
+end
+
+common.updates.magnifier = function()
+	common.tips[layout.suit.magnifier] = build_magnifier_tip()
 end
 
 common.updates.tile = function()
 	set_tile_tip()
+end
+
+common.updates.corner = function()
+	set_corner_tip()
 end
 
 -- Keys setup function
@@ -217,11 +281,29 @@ common.grabbers.tile = function(mod, key, event)
 	end
 end
 
+common.grabbers.corner = function(mod, key, event)
+	for _, k in ipairs(common.keys.corner) do
+		if redutil.key.match_grabber(k, mod, key) then k[3](); return true end
+	end
+end
+
+common.grabbers.magnifier = function(mod, key, event)
+	for _, k in ipairs(common.keys.magnifier) do
+		if redutil.key.match_grabber(k, mod, key) then k[3](); return true end
+	end
+end
+
 -- Grabbers for awful layouts
 --------------------------------------------------------------------------------
 local function fair_handler(mod, key, event)
 	if event == "press" then return end
 	if common.grabbers.swap(mod, key, event) then return end
+	if common.grabbers.base(mod, key, event) then return end
+end
+
+local function magnifier_handler(mod, key, event)
+	if event == "press" then return end
+	if common.grabbers.magnifier(mod, key, event) then return end
 	if common.grabbers.base(mod, key, event) then return end
 end
 
@@ -232,14 +314,29 @@ local function tile_handler(mod, key, event)
 	if common.grabbers.base(mod, key, event) then return end
 end
 
+local function corner_handler(mod, key, event)
+	if event == "press" then return end
+	if common.grabbers.corner(mod, key, event) then return end
+	if common.grabbers.swap(mod, key, event) then return end
+	if common.grabbers.base(mod, key, event) then return end
+end
+
 -- Handlers table
 -----------------------------------------------------------------------------------------------------------------------
 common.handler[layout.suit.fair]        = fair_handler
+common.handler[layout.suit.spiral]      = fair_handler
+common.handler[layout.suit.magnifier]   = magnifier_handler
 common.handler[layout.suit.tile]        = tile_handler
 common.handler[layout.suit.tile.right]  = tile_handler
 common.handler[layout.suit.tile.left]   = tile_handler
 common.handler[layout.suit.tile.top]    = tile_handler
 common.handler[layout.suit.tile.bottom] = tile_handler
+common.handler[layout.suit.corner.nw]   = corner_handler
+common.handler[layout.suit.corner.ne]   = corner_handler
+common.handler[layout.suit.corner.se]   = corner_handler
+common.handler[layout.suit.corner.sw]   = corner_handler
+
+common.handler[layout.suit.spiral.dwindle] = fair_handler
 
 -- tip dirty setup
 common:set_keys(nil, "base")
