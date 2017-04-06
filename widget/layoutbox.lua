@@ -35,9 +35,11 @@ local last_tag = nil
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		icon       = {},
-		micon      = {},
+		icon       = { unknown = redutil.base.placeholder() },
+		micon      = { blank = redutil.base.placeholder({ txt = " " }),
+		               check = redutil.base.placeholder({ txt = "+" }) },
 		name_alias = {},
+		menu       = { color = { right_icon = "#a0a0a0", left_icon = "#a0a0a0" } },
 		color      = { icon = "#a0a0a0" }
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.layoutbox") or {})
