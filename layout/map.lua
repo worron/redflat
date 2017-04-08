@@ -61,7 +61,7 @@ map.keys.layout = {
 	},
 	{
 		{ "Mod4", "Control" }, "d", function() map.clean_groups() end,
-		{ description = "Destroy group all empty groups", group = "Layout" }
+		{ description = "Destroy all empty groups", group = "Layout" }
 	},
 	{
 		{ "Mod4" }, "a", function() map.set_active() end,
@@ -616,7 +616,7 @@ end
 map.base_autoaim = true
 
 function map.base_aim(tree)
-	local active = #tree.set[3].items >= #tree.set[2].items and 2 or 3
+	local active = #tree.set[3].items > #tree.set[2].items and 2 or 3
 	return active
 end
 
