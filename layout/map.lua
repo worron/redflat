@@ -616,6 +616,7 @@ end
 map.base_autoaim = true
 
 function map.base_aim(tree)
+	if #tree.set[2].items == 0 then return 2 end
 	local active = #tree.set[3].items > #tree.set[2].items and 2 or 3
 	return active
 end
