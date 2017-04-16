@@ -33,6 +33,7 @@ local function default_style()
 		state_height = 60,
 		digit_num    = 3,
 		prog_height  = 100,
+		labels       = {},
 		image_gap    = 20,
 		unit         = { { "MB", - 1 }, { "GB", 1024 } },
 		color        = { main = "#b1222b", wibox = "#161616", gray = "#404040" }
@@ -59,7 +60,9 @@ local function set_info(value, args, corners, lines, icon, last_state, style)
 		lines:set_text(redutil.text.dformat(value.lines[i][2], line.unit or style.unit, style.digit_num), i)
 
 		if line.crit then
-			lines:set_text_color(value.lines[i][1] > line.crit and style.color.main or style.color.gray, i)
+			local cc = value.lines[i][1] > line.crit and style.color.main or style.color.gray
+			lines:set_text_color(cc, i)
+			if style.labels[i] then lines:set_label_color(cc, i) end
 		end
 	end
 
@@ -123,6 +126,10 @@ function multim.new(args, geometry, style)
 		lines.layout,
 		layout = wibox.layout.align.vertical
 	})
+
+	for i, label in ipairs(style.labels) do
+		lines:set_label(label, i)
+	end
 
 	-- Update info function
 	--------------------------------------------------------------------------------
