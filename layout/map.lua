@@ -12,7 +12,6 @@ local math = math
 
 local beautiful = require("beautiful")
 local awful = require("awful")
-local naughty = require("naughty")
 local timer = require("gears.timer")
 
 local redflat = require("redflat")

@@ -57,7 +57,7 @@ awesome.connect_signal("exit",
 		timestamp.make()
 		awful.spawn.with_shell(
 			string.format("sleep 2 && %s ", timestamp.bin)
-			.. [["if timestamp == nil then naughty = require('redflat.timestamp') end"]]
+			.. [["if timestamp == nil then timestamp = require('redflat.timestamp') end"]]
 		)
 	end
 )

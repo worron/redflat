@@ -25,7 +25,6 @@ local tag = require("awful.tag")
 local awful = require("awful")
 local wibox = require("wibox")
 local timer = require("gears.timer")
-local naughty = require("naughty")
 
 local basetask = require("redflat.gauge.tag.blue")
 local redutil = require("redflat.util")
