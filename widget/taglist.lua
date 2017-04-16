@@ -61,6 +61,7 @@ local function get_state(t)
 	state.active = t.selected
 	state.occupied = #client_list > 0 and not (#client_list == 1 and state.focus)
 	state.text = string.upper(t.name)
+	state.layout = awful.tag.getproperty(t, "layout")
 
 	return state
 end
@@ -161,7 +162,7 @@ function taglist.new(args, style)
 	local tag_signals = {
 		"property::selected",  "property::icon", "property::hide",
 		"property::activated", "property::name", "property::screen",
-		"property::index"
+		"property::index", "property::layout"
 	}
 	local client_signals = {
 		"focus",  "unfocus",  "property::urgent",

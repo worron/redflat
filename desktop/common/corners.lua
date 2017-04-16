@@ -27,6 +27,7 @@ local function default_style()
 		width     = nil,
 		height    = nil,
 		autoscale = true,
+		plaindash = false,
 		color     = { main = "#b1222b", gray = "#404040" }
 	}
 end
@@ -44,6 +45,14 @@ local function draw_corner(cr, width, height, gap, first_point, last_point, fill
 		cr:rel_line_to(- width / 2 + style.corner.line, - style.corner.height + style.corner.line)
 		cr:rel_line_to(- width / 2 + style.corner.line, style.corner.height - style.corner.line)
 		cr:close_path()
+	end
+	cr:fill()
+end
+
+local function draw_line(cr, width, height, dy, first_point, last_point, fill_color, style)
+	cr:set_source(color(fill_color))
+	for i = first_point, last_point do
+		cr:rectangle(0, height - (i - 1) * dy, width, - style.corner.line)
 	end
 	cr:fill()
 end
@@ -89,12 +98,17 @@ function corners.new(style)
 	-- Draw function
 	------------------------------------------------------------
 	function cornwidg:draw(context, cr, width, height)
-		local corner_gap = (height - (style.corner.num - 1) * style.corner.line
-		                   - style.corner.height) / (style.corner.num - 1)
 		local point = math.ceil(style.corner.num * data.value)
-
-		draw_corner(cr, width, height, corner_gap, 1, point, style.color.main, style)
-		draw_corner(cr, width, height, corner_gap, point + 1, style.corner.num, style.color.gray, style)
+		if style.plaindash then
+			local line_gap = style.corner.line + (height - style.corner.line * style.corner.num)/(style.corner.num - 1)
+			draw_line(cr, width, height, line_gap, 1, point, style.color.main, style)
+			draw_line(cr, width, height, line_gap, point + 1, style.corner.num, style.color.gray, style)
+		else
+			local corner_gap = (height - (style.corner.num - 1) * style.corner.line - style.corner.height)
+			                   / (style.corner.num - 1)
+			draw_corner(cr, width, height, corner_gap, 1, point, style.color.main, style)
+			draw_corner(cr, width, height, corner_gap, point + 1, style.corner.num, style.color.gray, style)
+		end
 	end
 
 	--------------------------------------------------------------------------------

@@ -31,7 +31,7 @@ local redutil = require("redflat.util")
 local separator = require("redflat.gauge.separator")
 local redmenu = require("redflat.menu")
 local svgbox = require("redflat.gauge.svgbox")
-
+local dfparser = require("redflat.service.dfparser")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -53,7 +53,10 @@ local function default_style()
 		width       = 40,
 		char_digit  = 3,
 		need_group  = true,
+		parser      = {},
+		icons       = {},
 		timeout     = 0.05,
+		custom_icon = false,
 		task_margin = { 5, 5, 0, 0 }
 	}
 	style.winmenu = {
@@ -91,9 +94,12 @@ end
 
 -- Get info about client group
 --------------------------------------------------------------------------------
-local function get_state(c_group, chars, names)
+local function get_state(c_group, style)
 
-	local names = names or {}
+	local style = style or {}
+	local names = style.names or {}
+	local chars = style.char_digit
+
 	local state = { focus = false, urgent = false, minimized = true, list = {} }
 
 	for _, c in pairs(c_group) do
@@ -107,6 +113,7 @@ local function get_state(c_group, chars, names)
 	local class = c_group[1].class or "Untitled"
 	state.text = names[class] or string.upper(string.sub(class, 1, chars))
 	state.num = #c_group
+	state.icon = style.custom_icon and style.icons[string.lower(class)]
 
 	return state
 end
@@ -354,7 +361,7 @@ local function tasklist_construct(client_groups, layout, data, buttons, style)
 		end
 
 		-- set info and buttons to widget
-		local state = get_state(c_group, style.char_digit, style.appnames)
+		local state = get_state(c_group, style)
 		task.widg:set_state(state)
 		task.widg:buttons(redutil.base.buttons(buttons, { group = c_group }))
 
@@ -625,6 +632,7 @@ function redtasklist.new(args, style)
 	local filter = args.filter or redtasklist.filter.currenttags
 
 	local style = redutil.table.merge(default_style(), style or {})
+	if style.custom_icon then style.icons = dfparser.icon_list(style.parser) end
 
 	redtasklist.winmenu:init(style.winmenu)
 	redtasklist.tasktip:init(args.buttons, style.tasktip)

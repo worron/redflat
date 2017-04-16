@@ -49,6 +49,8 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function layoutbox:init(layouts, style)
 
+	local style = style or default_style()
+
 	-- Set tooltip
 	------------------------------------------------------------
 	layoutbox.tp = tooltip({})

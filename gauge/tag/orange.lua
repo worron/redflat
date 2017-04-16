@@ -60,7 +60,7 @@ function orangetag.new(style)
 	-- User functions
 	------------------------------------------------------------
 	function widg:set_state(state)
-		data.state = awful.util.table.clone(state)
+		data.state = state
 		self:emit_signal("widget::updated")
 	end
 
