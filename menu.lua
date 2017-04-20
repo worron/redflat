@@ -312,17 +312,18 @@ function menu:show(args)
 	-- check hidetimer
 	if self.hidetimer and self.hidetimer.started then self.hidetimer:stop() end
 
-	-- hotkeys helpers
-	-- !!! fix this !!!
+	-- hotkeys helper
+	-- TODO: optimize code to cache helper (do not rebuild on every show)
 	local tip
 	if self.theme.auto_hotkey then
 		local fk = awful.util.table.clone(menu._fake_keys)
 		fk[1][4].keyset = self.keys
 		tip = awful.util.table.join(menu.keys.all, fk)
 	else
-		tip = menu.keys
+		tip = menu.keys.all
 	end
 
+	redtip.cache["Menu"] = nil -- dirty trick to renew helper for every menu instance
 	redtip:set_pack("Menu", tip, self.theme.keytip.column, self.theme.keytip.geometry)
 end
 
