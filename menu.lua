@@ -303,11 +303,17 @@ function menu:show(args)
 	local args = args or {}
 	local screen_index = mouse.screen
 
+	-- show menu
 	set_coords(self, screen_index, args.coords)
 	awful.keygrabber.run(self._keygrabber)
 	self.wibox.visible = true
 	self:item_enter(1)
 
+	-- check hidetimer
+	if self.hidetimer and self.hidetimer.started then self.hidetimer:stop() end
+
+	-- hotkeys helpers
+	-- !!! fix this !!!
 	local tip
 	if self.theme.auto_hotkey then
 		local fk = awful.util.table.clone(menu._fake_keys)
