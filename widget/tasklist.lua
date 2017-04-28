@@ -49,6 +49,7 @@ local last = {
 local function default_style()
 	local style = {
 		appnames    = {},
+		iconnames   = {},
 		widget      = basetask.new,
 		width       = 40,
 		char_digit  = 3,
@@ -113,7 +114,7 @@ local function get_state(c_group, style)
 	local class = c_group[1].class or "Untitled"
 	state.text = names[class] or string.upper(string.sub(class, 1, chars))
 	state.num = #c_group
-	state.icon = style.custom_icon and style.icons[string.lower(class)]
+	state.icon = style.custom_icon and style.icons[style.iconnames[class] or string.lower(class)]
 
 	return state
 end
