@@ -170,7 +170,7 @@ function system.memory_info()
 
 	-- calculate swap percentage
 	mem.swp.inuse = mem.swp.t - mem.swp.f
-	mem.swp.usep  = math.floor(mem.swp.inuse / mem.swp.t * 100)
+	mem.swp.usep  = mem.swp.t > 0 and math.floor(mem.swp.inuse / mem.swp.t * 100) or 0
 
 	------------------------------------------------------------
 	return mem
