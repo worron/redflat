@@ -146,7 +146,9 @@ function dfparser.lookup_icon(icon_file, style)
 		else
 
 			-- check if icon format specified but not supported
-			if string.match(icon_file, "%.") and not is_format(icon_file, icon_formats) then
+			if string.match(icon_file, "%.")
+			   and not string.match(icon_file, "org%.gnome%.") -- ignore gnome naming style
+			   and not is_format(icon_file, icon_formats) then
 				icon_file = string.match(icon_file, "[%a%d%-]+")
 			end
 
