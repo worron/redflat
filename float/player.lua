@@ -301,13 +301,15 @@ end
 
 -- Show player widget
 -----------------------------------------------------------------------------------------------------------------------
-function player:show()
+function player:show(geometry)
 	if not self.wibox then self:init() end
 
 	if not self.wibox.visible then
 		self:update()
 
-		if self.style.set_position then
+		if geometry then
+			self.wibox:geometry(geometry)
+		elseif self.style.set_position then
 			self.wibox:geometry(self.style.set_position())
 		else
 			awful.placement.under_mouse(self.wibox)
