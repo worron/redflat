@@ -48,6 +48,8 @@ local function default_style()
 		geometry       = { width = 520, height = 150 },
 		screen_gap     = 0,
 		screen_pos     = nil,
+		dashcontrol    = {},
+		progressbar    = {},
 		border_gap     = { 20, 20, 20, 20 },
 		elements_gap   = { 20, 0, 0, 0 },
 		volume_gap     = { 0, 0, 0, 3 },
@@ -69,7 +71,7 @@ local function default_style()
 			next_tr = redutil.base.placeholder({ txt = "→" }),
 			prev_tr = redutil.base.placeholder({ txt = "←" }),
 		},
-		color          = { border = "#575757", text = "#aaaaaa", main = "#b1222b",
+		color          = { border = "#575757", main = "#b1222b",
 		                   wibox = "#202020", gray = "#575757", icon = "#a0a0a0" }
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.player") or {})

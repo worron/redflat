@@ -27,7 +27,7 @@ local function button_style()
 		color = { shadow3 = "#1c1c1c", gray = "#575757",
 		          shadow4 = "#767676", text = "#cccccc", shadow_down = "404040" }
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "float.decoration1.button") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "float.decoration.button") or {})
 end
 
 local function field_style()
