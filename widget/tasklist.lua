@@ -98,7 +98,7 @@ end
 local function get_state(c_group, style)
 
 	local style = style or {}
-	local names = style.names or {}
+	local names = style.appnames or {}
 	local chars = style.char_digit
 
 	local state = { focus = false, urgent = false, minimized = true, list = {} }
