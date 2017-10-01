@@ -98,6 +98,7 @@ function player:init(args)
 		get_position = string.format(dbus_get, _player, "string:'Position'"),
 		set_volume   = string.format(dbus_set, _player, "string:'Volume' variant:double:"),
 		action       = string.format(dbus_action, _player),
+		set_position = string.format(dbus_action, _player) .. "SetPosition objpath:/not/used int64:",
 	}
 
 	self._actions = { "PlayPause", "Next", "Previous" }
@@ -178,6 +179,23 @@ function player:init(args)
 	self.volume:buttons(awful.util.table.join(
 		awful.button({}, 4, function() self:change_volume( 0.05) end),
 		awful.button({}, 5, function() self:change_volume(-0.05) end)
+	))
+
+	-- position
+	self.bar:buttons(awful.util.table.join(
+		awful.button(
+			{}, 1, function()
+				local coords = {
+					bar = mouse.current_widget_geometry,
+					wibox = mouse.current_wibox:geometry(),
+					mouse = mouse.coords(),
+				}
+
+				local position = (coords.mouse.x - coords.wibox.x - coords.bar.x) / coords.bar.width
+				awful.spawn.with_shell(self.command.set_position .. math.floor(self.last.length * position))
+				self:update()
+			end
+		)
 	))
 
 	-- switch between artist and album info on mouse click
