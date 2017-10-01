@@ -186,14 +186,13 @@ function player:init(args)
 		awful.button(
 			{}, 1, function()
 				local coords = {
-					bar = mouse.current_widget_geometry,
+					bar   = mouse.current_widget_geometry,
 					wibox = mouse.current_wibox:geometry(),
 					mouse = mouse.coords(),
 				}
 
 				local position = (coords.mouse.x - coords.wibox.x - coords.bar.x) / coords.bar.width
 				awful.spawn.with_shell(self.command.set_position .. math.floor(self.last.length * position))
-				self:update()
 			end
 		)
 	))
@@ -268,13 +267,13 @@ function player:init(args)
 					end
 
 					-- set progress bar
-					position = string.match(output, "int64%s+(%d+)")
-					progress = position / self.last.length
+					local position = string.match(output, "int64%s+(%d+)")
+					local progress = position / self.last.length
 					self.bar:set_value(progress)
 
 					-- set current time
-					ps = math.floor(position / 10^6)
-					ct = string.format("%d:%02d", math.floor(ps / 60), ps % 60)
+					local ps = math.floor(position / 10^6)
+					local ct = string.format("%d:%02d", math.floor(ps / 60), ps % 60)
 					self.box.time:set_text(ct)
 				end
 			)
@@ -402,11 +401,6 @@ function player:listen()
 			if data.Volume then
 				self.volume:set_value(data.Volume)
 				self.last.volume = data.Volume
-			end
-
-			-- Identity
-			if data.Identity then
-				print(data.Identity)
 			end
 		end
 	)
