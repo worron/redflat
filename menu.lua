@@ -591,7 +591,7 @@ function menu.new(args, parent)
 
 	-- set size
 	_menu.wibox.width = _menu.theme.width
-	_menu.wibox.height = _menu.add_size
+	_menu.wibox.height = _menu.add_size > 0 and _menu.add_size or 1
 
 	-- Set menu autohide timer
 	------------------------------------------------------------
