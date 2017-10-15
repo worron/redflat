@@ -20,7 +20,6 @@ local timestamp = {}
 
 timestamp.path = "/tmp/awesome-stamp"
 timestamp.timeout = 5
--- timestamp.bin = "~/awesome4/bin/awesome-client" -- !!! fix this on after final migration !!!
 timestamp.bin = "awesome-client"
 
 -- Grab environment
@@ -56,8 +55,10 @@ awesome.connect_signal("exit",
 	function()
 		timestamp.make()
 		awful.spawn.with_shell(
-			string.format("sleep 2 && %s ", timestamp.bin)
-			.. [["if timestamp == nil then timestamp = require('redflat.timestamp') end"]]
+			string.format(
+				"sleep 2 && %s %s",
+				timestamp.bin, [["if timestamp == nil then timestamp = require('redflat.timestamp') end"]]
+			)
 		)
 	end
 )
