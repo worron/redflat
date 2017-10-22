@@ -347,7 +347,9 @@ end
 local function tasklist_construct(client_groups, layout, data, buttons, style)
 
 	layout:reset()
-	layout:set_max_widget_size(style.width + style.task_margin[1] + style.task_margin[2])
+	local task_full_width = style.width + style.task_margin[1] + style.task_margin[2]
+	layout:set_max_widget_size(task_full_width)
+	layout:set_forced_width(task_full_width * #client_groups)
 
 	-- construct tasklist
 	for i, c_group in ipairs(client_groups) do
