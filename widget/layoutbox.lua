@@ -141,6 +141,12 @@ function layoutbox.new(args, style)
 	--------------------------------------------------------------------------------
 	tag.connect_signal("property::selected", update)
 	tag.connect_signal("property::layout", update)
+	w:connect_signal("mouse::enter",
+		function()
+			local layout = layout.getname(layout.get(s))
+			layoutbox:update_tooltip(layout)
+		end
+	)
 	w:connect_signal("mouse::leave",
 		function()
 			if layoutbox.menu.hidetimer and layoutbox.menu.wibox.visible then
