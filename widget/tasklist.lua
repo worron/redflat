@@ -139,15 +139,15 @@ end
 -- Function to rebuild the submenu entries according to current screen's tags
 --------------------------------------------------------------------------------
 local function tagmenu_rebuild(menu, submenu_index, style)
-       for _, index in ipairs(submenu_index) do
-               local new_items
-               if index == 1 then
-                   new_items = tagmenu_items(function(t) last.client:move_to_tag(t) end, style)
-               else
-                   new_items = tagmenu_items(function(t) last.client:toggle_tag(t) end, style)
-               end
-               menu.items[index].child:replace_items(new_items, style)
-       end
+	for _, index in ipairs(submenu_index) do
+			local new_items
+			if index == 1 then
+				new_items = tagmenu_items(function(t) last.client:move_to_tag(t) end, style)
+			else
+				new_items = tagmenu_items(function(t) last.client:toggle_tag(t) end, style)
+			end
+			menu.items[index].child:replace_items(new_items, style)
+	end
 end
 
 
