@@ -365,6 +365,26 @@ function menu:set_keys(keys, layout)
 	end
 end
 
+-- Clears all items from the menu
+--------------------------------------------------------------------------------
+function menu:clear()
+	self.add_size = 0
+	self.layout:reset()
+	self.items = {}
+	self.keys = {}
+	self.wibox.height = 1
+end
+
+-- Clears and then refills the menu with the given items
+--------------------------------------------------------------------------------
+function menu:replace_items(items)
+	self:clear()
+	for _, item in ipairs(items) do
+		self:add(item)
+	end
+	self.wibox.height = self.add_size > 0 and self.add_size or 1
+end
+
 -- Add a new menu entry.
 -- args.new (Default: redflat.menu.entry) The menu entry constructor.
 -- args.theme (Optional) The menu entry theme.
@@ -546,21 +566,23 @@ function menu.new(args, parent)
 	-- Initialize menu object
 	------------------------------------------------------------
 	local _menu = {
-		item_enter   = menu.item_enter,
-		item_leave   = menu.item_leave,
-		get_root     = menu.get_root,
-		delete       = menu.delete,
-		toggle       = menu.toggle,
-		hide         = menu.hide,
-		show         = menu.show,
-		exec         = menu.exec,
-		add          = menu.add,
-		items        = {},
-		keys         = {},
-		parent       = parent,
-		layout       = wibox.layout.fixed.vertical(),
-		add_size     = 0,
-		theme        = redutil.table.merge(parent and parent.theme or default_theme(), args.theme or {})
+		item_enter    = menu.item_enter,
+		item_leave    = menu.item_leave,
+		get_root      = menu.get_root,
+		delete        = menu.delete,
+		toggle        = menu.toggle,
+		hide          = menu.hide,
+		show          = menu.show,
+		exec          = menu.exec,
+		add           = menu.add,
+		clear         = menu.clear,
+		replace_items = menu.replace_items,
+		items         = {},
+		keys          = {},
+		parent        = parent,
+		layout        = wibox.layout.fixed.vertical(),
+		add_size      = 0,
+		theme         = redutil.table.merge(parent and parent.theme or default_theme(), args.theme or {})
 	}
 
 	-- Create items

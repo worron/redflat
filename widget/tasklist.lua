@@ -41,7 +41,8 @@ local last = {
 	client      = nil,
 	group       = nil,
 	client_list = nil,
-	screen      = mouse.screen
+	screen      = mouse.screen,
+	tag_screen  = mouse.screen
 }
 
 -- Generate default theme vars
@@ -135,9 +136,30 @@ local function tagmenu_items(action, style)
 	return items
 end
 
+-- Function to rebuild the submenu entries according to current screen's tags
+--------------------------------------------------------------------------------
+local function tagmenu_rebuild(menu, submenu_index, style)
+	for _, index in ipairs(submenu_index) do
+			local new_items
+			if index == 1 then
+				new_items = tagmenu_items(function(t) last.client:move_to_tag(t) end, style)
+			else
+				new_items = tagmenu_items(function(t) last.client:toggle_tag(t) end, style)
+			end
+			menu.items[index].child:replace_items(new_items)
+	end
+end
+
+
 -- Function to update tag submenu icons
 --------------------------------------------------------------------------------
 local function tagmenu_update(c, menu, submenu_index, style)
+	-- if the screen has changed (and thus the tags) since the last time the
+	-- tagmenu was built, rebuild it first
+	if last.tag_screen ~= mouse.screen then
+		tagmenu_rebuild(menu, submenu_index, style)
+		last.tag_screen = mouse.screen
+	end
 	for k, t in ipairs(last.screen.tags) do
 		if not awful.tag.getproperty(t, "hide") then
 
