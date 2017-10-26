@@ -369,12 +369,12 @@ function grid.arrange(p)
 	local wa = p.workarea
 	local cls = p.clients
 
-	-- nothing to tile here
-	if #cls == 0 then return end
-
 	-- calculate cell
 	-- fix useless gap correction?
 	grid.data.cell = cell({ width = wa.width + 2 * p.useless_gap, height = wa.height + 2 * p.useless_gap }, cellnum)
+
+	-- nothing to tile here
+	if #cls == 0 then return end
 
 	-- tile
 	for i, c in ipairs(cls) do
