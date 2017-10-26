@@ -146,7 +146,7 @@ local function tagmenu_rebuild(menu, submenu_index, style)
 			else
 				new_items = tagmenu_items(function(t) last.client:toggle_tag(t) end, style)
 			end
-			menu.items[index].child:replace_items(new_items, style)
+			menu.items[index].child:replace_items(new_items)
 	end
 end
 

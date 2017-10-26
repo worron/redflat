@@ -369,15 +369,15 @@ end
 --------------------------------------------------------------------------------
 function menu:clear()
 	self.add_size = 0
-	self.layout:remove_widgets()
 	self.layout:reset()
-	for k, _ in pairs(self.items) do self.items[k]=nil end
+	self.items = {}
+	self.keys = {}
 	self.wibox.height = 1
 end
 
 -- Clears and then refills the menu with the given items
 --------------------------------------------------------------------------------
-function menu:replace_items(items, style)
+function menu:replace_items(items)
 	self:clear()
 	for _, item in ipairs(items) do
 		self:add(item)
