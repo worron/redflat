@@ -302,6 +302,7 @@ end
 ------------------------------------------------------------
 function titlebar.icon.property(c, prop, style)
 	local w = titlebar.icon.base(c, style)
+	w:set_active(c[prop])
 	c:connect_signal("property::" .. prop, function() w:set_active(c[prop]) end)
 	return w
 end
