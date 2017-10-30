@@ -294,7 +294,7 @@ function menu:item_leave(num)
 	if item then
 		item._background:set_fg(item.theme.color.text)
 		item._background:set_bg(item.theme.color.wibox)
-		if item.icon then item.icon:set_color(item.theme.color.left_icon) end
+		if item.icon and item.theme.color.left_icon then item.icon:set_color(item.theme.color.left_icon) end
 		if item.right_icon then
 			if item.child and item.theme.color.submenu_icon then
 				-- if there's a child menu, this is a submenu icon
