@@ -274,6 +274,11 @@ function menu:item_enter(num, opts)
 
 	item._background:set_fg(item.theme.color.highlight)
 	item._background:set_bg(item.theme.color.main)
+	if item.icon and item.theme.color.left_icon then item.icon:set_color(item.theme.color.highlight) end
+	if item.right_icon and
+	   (item.child and item.theme.color.submenu_icon or not item.child and item.theme.color.right_icon) then
+		item.right_icon:set_color(item.theme.color.highlight)
+	end
 	self.sel = num
 
 	if self.theme.auto_expand and opts.hover and self.items[num].child then
@@ -289,6 +294,15 @@ function menu:item_leave(num)
 	if item then
 		item._background:set_fg(item.theme.color.text)
 		item._background:set_bg(item.theme.color.wibox)
+		if item.icon then item.icon:set_color(item.theme.color.left_icon) end
+		if item.right_icon then
+			if item.child and item.theme.color.submenu_icon then
+				-- if there's a child menu, this is a submenu icon
+				item.right_icon:set_color(item.theme.color.submenu_icon)
+			elseif item.theme.color.right_icon then
+				item.right_icon:set_color(item.theme.color.right_icon)
+			end
+		end
 		if item.child then item.child:hide() end
 	end
 end
