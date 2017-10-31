@@ -266,6 +266,10 @@ function menu:item_enter(num, opts)
 	local opts = opts or {}
 	local item = self.items[num]
 
+	if item and self.theme.auto_expand and opts.hover and item.child then
+		self.items[num].child:show()
+	end
+
 	if num == nil or self.sel == num or not item then
 		return
 	elseif self.sel then
@@ -280,10 +284,6 @@ function menu:item_enter(num, opts)
 		item.right_icon:set_color(item.theme.color.highlight)
 	end
 	self.sel = num
-
-	if self.theme.auto_expand and opts.hover and self.items[num].child then
-		self.items[num].child:show()
-	end
 end
 
 -- Unselect item
