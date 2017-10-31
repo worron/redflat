@@ -409,6 +409,7 @@ function appswitcher:show(args)
 
 	self.index = awful.util.table.hasitem(self.clients_list, client.focus) or 1
 	self.winmark(self.clients_list[self.index], true)
+	self.titlebox:set_markup(self.title_generator(self.clients_list[self.index]))
 	if not noaction then self:switch(args) end
 	self.widget:emit_signal("widget::updated")
 
