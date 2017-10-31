@@ -493,14 +493,18 @@ function system.proc_info(cpu_storage)
 		-- if process with given pid exist in /proc
 		if stat then
 
-			-- parse 'stat' file
-			local proc_stat = {}
+			-- get process name
+			local name = string.match(stat, ".+%((.+)%).+")
+			local proc_stat = { name }
+
+			-- remove process name from stat data to simplify following parsing
+			stat = stat:gsub("%s%(.+%)", "", 1)
+
+			-- the rest of 'stat' data can be splitted by whitespaces
+			-- first chunk is pid so just skip it
 			for m in string.gmatch(stat, "[%s]+([^%s]+)") do
 				table.insert(proc_stat, m)
 			end
-
-			-- get process name
-			local name = string.match(proc_stat[1], "%((.+)%)")
 
 			-- get memory usage (RSS)
 			-- !!! RSS is a very crude approximation for memory usage !!!
