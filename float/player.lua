@@ -40,6 +40,11 @@ local dbus_set = dbus_mpris
 local dbus_action = dbus_mpris
                     .. "org.mpris.MediaPlayer2.Player."
 
+-- Helper function to decode URI string format
+-----------------------------------------------------------------------------------------------------------------------
+local function decodeURI(s)
+    return string.gsub(s, '%%(%x%x)', function(hex) return string.char(tonumber(hex, 15)) end)
+end
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
@@ -369,7 +374,10 @@ function player:listen()
 				if data.Metadata["mpris:artUrl"] then
 					local image = string.match(data.Metadata["mpris:artUrl"], "file://(.+)")
 					self.box.image:set_color(nil)
-					self.box.image:set_image(image)
+					self.box.image:set_image(decodeURI(image))
+				else
+					-- reset to generic icon if no cover available
+					self.box.image:set_image(self.style.icon.cover)
 				end
 
 				-- track length
