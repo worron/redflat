@@ -22,7 +22,7 @@ local redtip = require("redflat.float.hotkeys")
 local keychain = {}
 local tip_cache = {}
 
-local label_pattern = { Mod4 = "M", Control = "C", Shift = "S" }
+local label_pattern = { Mod1 = "A", Mod4 = "M", Control = "C", Shift = "S" }
 
 -- key bindings
 keychain.service = { close = { "Escape" }, help = { "F1" }, stepback = { "BackSpace" } }
