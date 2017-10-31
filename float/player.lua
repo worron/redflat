@@ -43,7 +43,7 @@ local dbus_action = dbus_mpris
 -- Helper function to decode URI string format
 -----------------------------------------------------------------------------------------------------------------------
 local function decodeURI(s)
-    return string.gsub(s, '%%(%x%x)', function(hex) return string.char(tonumber(hex, 16)) end)
+	return string.gsub(s, '%%(%x%x)', function(hex) return string.char(tonumber(hex, 16)) end)
 end
 
 -- Generate default theme vars
