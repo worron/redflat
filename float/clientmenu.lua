@@ -52,7 +52,7 @@ local function default_style()
 		state_iconsize = { width = 20, height = 20 },
 		sep_margin     = { 3, 3, 5, 5 },
 		tagmenu        = { icon_margin = { 2, 2, 2, 2 } },
-		color          = { main = "#b1222b", icon = "#a0a0a0", gray = "#404040" },
+		color          = { main = "#b1222b", icon = "#a0a0a0", gray = "#404040", highlight = "#eeeeee" },
 	}
 	style.menu = {
 		ricon_margin = { 2, 2, 2, 2 },
