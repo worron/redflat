@@ -215,10 +215,7 @@ local function action_line_construct(setup_layout, style)
 	setup_layout:set_first(minimize_box)
 
 	-- separator
-	local sep_wrapper = wibox.layout.align.horizontal()
-	sep_wrapper:set_second(sep)
-	sep_wrapper:set_expand("outside")
-	setup_layout:set_second(sep_wrapper)
+	setup_layout:set_second(sep)
 
 	-- close button
 	local close_box = actionbox_construct(
@@ -273,10 +270,7 @@ function clientmenu:init(style)
 
 	local actionline_horizontal = wibox.layout.align.horizontal()
 	actionline_horizontal:set_expand("outside")
-	local actionline_vertical = wibox.layout.align.vertical()
-	actionline_vertical:set_second(actionline_horizontal)
-	actionline_vertical:set_expand("outside")
-	local actionline = wibox.container.constraint(actionline_vertical, "exact", nil, style.actionline.height)
+	local actionline = wibox.container.constraint(actionline_horizontal, "exact", nil, style.actionline.height)
 	action_line_construct(actionline_horizontal, style)
 
 	-- Window state line construction
