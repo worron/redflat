@@ -168,7 +168,7 @@ local function action_line_construct(setup_layout, style)
 	local sep = separator.vertical({ margin = style.sep_margin })
 
 	local function actionbox_construct(icon, action)
-		local iconbox = svgbox(icon, nil, style.color.text)
+		local iconbox = svgbox(icon, nil, style.color.icon)
 		iconbox:set_forced_width(style.state_iconsize.width)
 		iconbox:set_forced_height(style.state_iconsize.height)
 
@@ -198,7 +198,7 @@ local function action_line_construct(setup_layout, style)
 		)
 		actionbox:connect_signal("mouse::leave",
 			function()
-				iconbox:set_color(style.color.text)
+				iconbox:set_color(style.color.icon)
 				actionbox.bg = nil
 			end
 		)
