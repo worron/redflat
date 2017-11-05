@@ -340,6 +340,9 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function clientmenu:show(c)
 
+	-- init menu if needed
+	if not self.menu then self:init() end
+
 	-- toggle menu
 	if self.menu.wibox.visible and c == last.client and mouse.screen == last.screen  then
 		self.menu:hide()
