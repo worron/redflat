@@ -311,7 +311,6 @@ function clientmenu:init(style)
 	-- Create menu
 	------------------------------------------------------------
 	self.menu = redmenu({
-		hide_timeout = 1,
 		theme = style.menu,
 		items = {
 			{ widget = actionline },
