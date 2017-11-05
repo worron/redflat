@@ -32,35 +32,35 @@ local svgbox = require("redflat.gauge.svgbox")
 local clientmenu = { mt = {}, }
 
 local last = {
-    client      = nil,
-    screen      = mouse.screen,
-    tag_screen  = mouse.screen
+	client      = nil,
+	screen      = mouse.screen,
+	tag_screen  = mouse.screen
 }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
-    local style = {
-        icon           = { unknown = redutil.base.placeholder(),
-                           minimize = redutil.base.placeholder(),
-                           close = redutil.base.placeholder() },
-        micon          = { blank = redutil.base.placeholder({ txt = " " }),
-                           check = redutil.base.placeholder({ txt = "+" }) },
-        layout_icon    = { unknown = redutil.base.placeholder() },
-        actionline     = { height = 28 },
-        stateline      = { height = 35 },
-        state_iconsize = { width = 20, height = 20 },
-        sep_margin     = { 3, 3, 5, 5 },
-        tagmenu        = { icon_margin = { 2, 2, 2, 2 } },
-        color          = { main = "#b1222b", icon = "#a0a0a0", gray = "#404040" },
-    }
-    style.menu = {
-        ricon_margin = { 2, 2, 2, 2 },
-        hide_timeout = 1,
-        nohide       = true
-    }
+	local style = {
+		icon           = { unknown = redutil.base.placeholder(),
+		                   minimize = redutil.base.placeholder(),
+		                   close = redutil.base.placeholder() },
+		micon          = { blank = redutil.base.placeholder({ txt = " " }),
+		                   check = redutil.base.placeholder({ txt = "+" }) },
+		layout_icon    = { unknown = redutil.base.placeholder() },
+		actionline     = { height = 28 },
+		stateline      = { height = 35 },
+		state_iconsize = { width = 20, height = 20 },
+		sep_margin     = { 3, 3, 5, 5 },
+		tagmenu        = { icon_margin = { 2, 2, 2, 2 } },
+		color          = { main = "#b1222b", icon = "#a0a0a0", gray = "#404040" },
+	}
+	style.menu = {
+		ricon_margin = { 2, 2, 2, 2 },
+		hide_timeout = 1,
+		nohide       = true
+	}
 
-    return redutil.table.merge(style, redutil.table.check(beautiful, "widget.clientmenu") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.clientmenu") or {})
 end
 
 -- Support functions
@@ -69,295 +69,295 @@ end
 -- Function to build item list for submenu
 --------------------------------------------------------------------------------
 local function tagmenu_items(action, style)
-    local items = {}
-    for _, t in ipairs(last.screen.tags) do
-        if not awful.tag.getproperty(t, "hide") then
-            table.insert(
-                items,
-                { t.name, function() action(t) end, style.micon.blank, style.micon.blank }
-            )
-        end
-    end
-    return items
+	local items = {}
+	for _, t in ipairs(last.screen.tags) do
+		if not awful.tag.getproperty(t, "hide") then
+			table.insert(
+				items,
+				{ t.name, function() action(t) end, style.micon.blank, style.micon.blank }
+			)
+		end
+	end
+	return items
 end
 
 -- Function to rebuild the submenu entries according to current screen's tags
 --------------------------------------------------------------------------------
 local function tagmenu_rebuild(menu, submenu_index, style)
-    for _, index in ipairs(submenu_index) do
-            local new_items
-            if index == 1 then
-                new_items = tagmenu_items(function(t) last.client:move_to_tag(t) end, style)
-            else
-                new_items = tagmenu_items(function(t) last.client:toggle_tag(t) end, style)
-            end
-            menu.items[index].child:replace_items(new_items)
-    end
+	for _, index in ipairs(submenu_index) do
+			local new_items
+			if index == 1 then
+				new_items = tagmenu_items(function(t) last.client:move_to_tag(t) end, style)
+			else
+				new_items = tagmenu_items(function(t) last.client:toggle_tag(t) end, style)
+			end
+			menu.items[index].child:replace_items(new_items)
+	end
 end
 
 -- Function to update tag submenu icons
 --------------------------------------------------------------------------------
 local function tagmenu_update(c, menu, submenu_index, style)
-    -- if the screen has changed (and thus the tags) since the last time the
-    -- tagmenu was built, rebuild it first
-    if last.tag_screen ~= mouse.screen then
-        tagmenu_rebuild(menu, submenu_index, style)
-        last.tag_screen = mouse.screen
-    end
-    for k, t in ipairs(last.screen.tags) do
-        if not awful.tag.getproperty(t, "hide") then
+	-- if the screen has changed (and thus the tags) since the last time the
+	-- tagmenu was built, rebuild it first
+	if last.tag_screen ~= mouse.screen then
+		tagmenu_rebuild(menu, submenu_index, style)
+		last.tag_screen = mouse.screen
+	end
+	for k, t in ipairs(last.screen.tags) do
+		if not awful.tag.getproperty(t, "hide") then
 
-            -- set layout icon for every tag
-            local l = awful.layout.getname(awful.tag.getproperty(t, "layout"))
+			-- set layout icon for every tag
+			local l = awful.layout.getname(awful.tag.getproperty(t, "layout"))
 
-            for _, index in ipairs(submenu_index) do
-                if menu.items[index].child.items[k].icon then
-                    menu.items[index].child.items[k].icon:set_image(style.layout_icon[l] or style.layout_icon.unknown)
-                end
-            end
+			for _, index in ipairs(submenu_index) do
+				if menu.items[index].child.items[k].icon then
+					menu.items[index].child.items[k].icon:set_image(style.layout_icon[l] or style.layout_icon.unknown)
+				end
+			end
 
-            -- set "checked" icon if tag active for given client
-            -- otherwise set empty icon
-            if c then
-                local client_tags = c:tags()
-                local check_icon = awful.util.table.hasitem(client_tags, t) and style.micon.check
-                                   or style.micon.blank
+			-- set "checked" icon if tag active for given client
+			-- otherwise set empty icon
+			if c then
+				local client_tags = c:tags()
+				local check_icon = awful.util.table.hasitem(client_tags, t) and style.micon.check
+				                   or style.micon.blank
 
-                for _, index in ipairs(submenu_index) do
-                    if menu.items[index].child.items[k].right_icon then
-                        menu.items[index].child.items[k].right_icon:set_image(check_icon)
-                    end
-                end
-            end
-        end
-    end
+				for _, index in ipairs(submenu_index) do
+					if menu.items[index].child.items[k].right_icon then
+						menu.items[index].child.items[k].right_icon:set_image(check_icon)
+					end
+				end
+			end
+		end
+	end
 end
 
 -- Function to construct menu line with state icons
 --------------------------------------------------------------------------------
 local function state_line_construct(state_icons, setup_layout, style)
-    local stateboxes = {}
+	local stateboxes = {}
 
-    for i, v in ipairs(state_icons) do
-        -- create widget
-        stateboxes[i] = svgbox(v.icon)
-        stateboxes[i]:set_forced_width(style.state_iconsize.width)
-        stateboxes[i]:set_forced_height(style.state_iconsize.height)
+	for i, v in ipairs(state_icons) do
+		-- create widget
+		stateboxes[i] = svgbox(v.icon)
+		stateboxes[i]:set_forced_width(style.state_iconsize.width)
+		stateboxes[i]:set_forced_height(style.state_iconsize.height)
 
-        -- set widget in line
-        local l = wibox.layout.align.horizontal()
-        l:set_expand("outside")
-        l:set_second(stateboxes[i])
-        setup_layout:add(l)
+		-- set widget in line
+		local l = wibox.layout.align.horizontal()
+		l:set_expand("outside")
+		l:set_second(stateboxes[i])
+		setup_layout:add(l)
 
-        -- set mouse action
-        stateboxes[i]:buttons(awful.util.table.join(awful.button({}, 1,
-            function()
-                v.action()
-                stateboxes[i]:set_color(v.indicator(last.client) and style.color.main or style.color.gray)
-            end
-        )))
-    end
+		-- set mouse action
+		stateboxes[i]:buttons(awful.util.table.join(awful.button({}, 1,
+			function()
+				v.action()
+				stateboxes[i]:set_color(v.indicator(last.client) and style.color.main or style.color.gray)
+			end
+		)))
+	end
 
-    return stateboxes
+	return stateboxes
 end
 
 -- Function to construct menu line with action icons (minimize, close)
 --------------------------------------------------------------------------------
 local function action_line_construct(setup_layout, style)
-    local sep = separator.vertical({ margin = style.sep_margin })
+	local sep = separator.vertical({ margin = style.sep_margin })
 
-    local function actionbox_construct(icon, action)
-        local iconbox = svgbox(icon, nil, style.color.text)
-        iconbox:set_forced_width(style.state_iconsize.width)
-        iconbox:set_forced_height(style.state_iconsize.height)
+	local function actionbox_construct(icon, action)
+		local iconbox = svgbox(icon, nil, style.color.text)
+		iconbox:set_forced_width(style.state_iconsize.width)
+		iconbox:set_forced_height(style.state_iconsize.height)
 
-        -- center iconbox both vertically and horizontally
-        local vert_wrapper = wibox.layout.align.vertical()
-        vert_wrapper:set_second(iconbox)
-        vert_wrapper:set_expand("outside")
-        local horiz_wrapper = wibox.layout.align.horizontal()
-        horiz_wrapper:set_second(vert_wrapper)
-        horiz_wrapper:set_expand("outside")
+		-- center iconbox both vertically and horizontally
+		local vert_wrapper = wibox.layout.align.vertical()
+		vert_wrapper:set_second(iconbox)
+		vert_wrapper:set_expand("outside")
+		local horiz_wrapper = wibox.layout.align.horizontal()
+		horiz_wrapper:set_second(vert_wrapper)
+		horiz_wrapper:set_expand("outside")
 
-        -- wrap into a background container to allow bg color change of area
-        local actionbox = wibox.container.background(horiz_wrapper)
+		-- wrap into a background container to allow bg color change of area
+		local actionbox = wibox.container.background(horiz_wrapper)
 
-        -- set mouse action
-        actionbox:buttons(awful.util.table.join(awful.button({}, 1,
-            function()
-                action()
-                clientmenu.menu:hide()  -- close menu on action
-            end
-        )))
-        actionbox:connect_signal("mouse::enter",
-            function()
-                iconbox:set_color(style.color.highlight)
-                actionbox.bg = style.color.main
-            end
-        )
-        actionbox:connect_signal("mouse::leave",
-            function()
-                iconbox:set_color(style.color.text)
-                actionbox.bg = nil
-            end
-        )
-        return actionbox
-    end
+		-- set mouse action
+		actionbox:buttons(awful.util.table.join(awful.button({}, 1,
+			function()
+				action()
+				clientmenu.menu:hide()  -- close menu on action
+			end
+		)))
+		actionbox:connect_signal("mouse::enter",
+			function()
+				iconbox:set_color(style.color.highlight)
+				actionbox.bg = style.color.main
+			end
+		)
+		actionbox:connect_signal("mouse::leave",
+			function()
+				iconbox:set_color(style.color.text)
+				actionbox.bg = nil
+			end
+		)
+		return actionbox
+	end
 
-    -- minimize button
-    local minimize_box = actionbox_construct(
-        style.icon.minimize,
-        function()
-            last.client.minimized = not last.client.minimized
-        end
-    )
-    setup_layout:set_first(minimize_box)
+	-- minimize button
+	local minimize_box = actionbox_construct(
+		style.icon.minimize,
+		function()
+			last.client.minimized = not last.client.minimized
+		end
+	)
+	setup_layout:set_first(minimize_box)
 
-    -- separator
-    local sep_wrapper = wibox.layout.align.horizontal()
-    sep_wrapper:set_second(sep)
-    sep_wrapper:set_expand("outside")
-    setup_layout:set_second(sep_wrapper)
+	-- separator
+	local sep_wrapper = wibox.layout.align.horizontal()
+	sep_wrapper:set_second(sep)
+	sep_wrapper:set_expand("outside")
+	setup_layout:set_second(sep_wrapper)
 
-    -- close button
-    local close_box = actionbox_construct(
-        style.icon.close,
-        function()
-            last.client:kill()
-        end
-    )
-    setup_layout:set_third(close_box)
+	-- close button
+	local close_box = actionbox_construct(
+		style.icon.close,
+		function()
+			last.client:kill()
+		end
+	)
+	setup_layout:set_third(close_box)
 end
 
 -- Calculate menu position
 --------------------------------------------------------------------------------
 local function coords_calc(menu)
-    local coords = {}
+	local coords = {}
 
-    coords = mouse.coords()
-    coords.x = coords.x - menu.wibox.width / 2 - menu.wibox.border_width
+	coords = mouse.coords()
+	coords.x = coords.x - menu.wibox.width / 2 - menu.wibox.border_width
 
-    return coords
+	return coords
 end
 
 -- Initialize window menu widget
 -----------------------------------------------------------------------------------------------------------------------
 function clientmenu:init(style)
-    local style = redutil.table.merge(default_style(), style or {})
+	local style = redutil.table.merge(default_style(), style or {})
 
-    -- Create array of state icons
-    -- associate every icon with action and state indicator
-    --------------------------------------------------------------------------------
-    local function icon_table_generator_prop(property)
-        return {
-            icon      = style.icon[property] or style.icon.unknown,
-            action    = function() last.client[property] = not last.client[property] end,
-            indicator = function(c) return c[property] end
-        }
-    end
+	-- Create array of state icons
+	-- associate every icon with action and state indicator
+	--------------------------------------------------------------------------------
+	local function icon_table_generator_prop(property)
+		return {
+			icon      = style.icon[property] or style.icon.unknown,
+			action    = function() last.client[property] = not last.client[property] end,
+			indicator = function(c) return c[property] end
+		}
+	end
 
-    local state_icons = {
-        icon_table_generator_prop("floating"),
-        icon_table_generator_prop("sticky"),
-        icon_table_generator_prop("ontop"),
-        icon_table_generator_prop("below"),
-        icon_table_generator_prop("maximized"),
-    }
+	local state_icons = {
+		icon_table_generator_prop("floating"),
+		icon_table_generator_prop("sticky"),
+		icon_table_generator_prop("ontop"),
+		icon_table_generator_prop("below"),
+		icon_table_generator_prop("maximized"),
+	}
 
-    -- Construct menu
-    --------------------------------------------------------------------------------
+	-- Construct menu
+	--------------------------------------------------------------------------------
 
-    -- Window action line construction
-    ------------------------------------------------------------
+	-- Window action line construction
+	------------------------------------------------------------
 
-    local actionline_horizontal = wibox.layout.align.horizontal()
-    actionline_horizontal:set_expand("outside")
-    local actionline_vertical = wibox.layout.align.vertical()
-    actionline_vertical:set_second(actionline_horizontal)
-    actionline_vertical:set_expand("outside")
-    local actionline = wibox.container.constraint(actionline_vertical, "exact", nil, style.actionline.height)
-    action_line_construct(actionline_horizontal, style)
+	local actionline_horizontal = wibox.layout.align.horizontal()
+	actionline_horizontal:set_expand("outside")
+	local actionline_vertical = wibox.layout.align.vertical()
+	actionline_vertical:set_second(actionline_horizontal)
+	actionline_vertical:set_expand("outside")
+	local actionline = wibox.container.constraint(actionline_vertical, "exact", nil, style.actionline.height)
+	action_line_construct(actionline_horizontal, style)
 
-    -- Window state line construction
-    ------------------------------------------------------------
+	-- Window state line construction
+	------------------------------------------------------------
 
-    -- layouts
-    local stateline_horizontal = wibox.layout.flex.horizontal()
-    local stateline_vertical = wibox.layout.align.vertical()
-    stateline_vertical:set_second(stateline_horizontal)
-    stateline_vertical:set_expand("outside")
-    local stateline = wibox.container.constraint(stateline_vertical, "exact", nil, style.stateline.height)
+	-- layouts
+	local stateline_horizontal = wibox.layout.flex.horizontal()
+	local stateline_vertical = wibox.layout.align.vertical()
+	stateline_vertical:set_second(stateline_horizontal)
+	stateline_vertical:set_expand("outside")
+	local stateline = wibox.container.constraint(stateline_vertical, "exact", nil, style.stateline.height)
 
-    -- set all state icons in line
-    local stateboxes = state_line_construct(state_icons, stateline_horizontal, style)
+	-- set all state icons in line
+	local stateboxes = state_line_construct(state_icons, stateline_horizontal, style)
 
-    -- update function for state icons
-    local function stateboxes_update(c, state_icons, stateboxes)
-        for i, v in ipairs(state_icons) do
-            stateboxes[i]:set_color(v.indicator(c) and style.color.main or style.color.gray)
-        end
-    end
+	-- update function for state icons
+	local function stateboxes_update(c, state_icons, stateboxes)
+		for i, v in ipairs(state_icons) do
+			stateboxes[i]:set_color(v.indicator(c) and style.color.main or style.color.gray)
+		end
+	end
 
-    -- Separators config
-    ------------------------------------------------------------
-    local menusep = { widget = separator.horizontal({ margin = style.sep_margin }) }
+	-- Separators config
+	------------------------------------------------------------
+	local menusep = { widget = separator.horizontal({ margin = style.sep_margin }) }
 
-    -- Construct tag submenus ("move" and "add")
-    ------------------------------------------------------------
-    local movemenu_items = tagmenu_items(function(t) last.client:move_to_tag(t) end, style)
-    local addmenu_items  = tagmenu_items(function(t) last.client:toggle_tag(t)  end, style)
+	-- Construct tag submenus ("move" and "add")
+	------------------------------------------------------------
+	local movemenu_items = tagmenu_items(function(t) last.client:move_to_tag(t) end, style)
+	local addmenu_items  = tagmenu_items(function(t) last.client:toggle_tag(t)  end, style)
 
-    -- Create menu
-    ------------------------------------------------------------
-    self.menu = redmenu({
-        hide_timeout = 1,
-        theme = style.menu,
-        items = {
-            { widget = actionline },
-            menusep,
-            { "Move to tag", { items = movemenu_items, theme = style.tagmenu } },
-            { "Add to tag",  { items = addmenu_items,  theme = style.tagmenu } },
-            menusep,
-            { widget = stateline }
-        }
-    })
+	-- Create menu
+	------------------------------------------------------------
+	self.menu = redmenu({
+		hide_timeout = 1,
+		theme = style.menu,
+		items = {
+			{ widget = actionline },
+			menusep,
+			{ "Move to tag", { items = movemenu_items, theme = style.tagmenu } },
+			{ "Add to tag",  { items = addmenu_items,  theme = style.tagmenu } },
+			menusep,
+			{ widget = stateline }
+		}
+	})
 
-    -- Widget update functions
-    --------------------------------------------------------------------------------
-    function self:update(c)
-        if self.menu.wibox.visible then
-            stateboxes_update(c, state_icons, stateboxes)
-            tagmenu_update(c, self.menu, { 1, 2 }, style)
-        end
-    end
+	-- Widget update functions
+	--------------------------------------------------------------------------------
+	function self:update(c)
+		if self.menu.wibox.visible then
+			stateboxes_update(c, state_icons, stateboxes)
+			tagmenu_update(c, self.menu, { 1, 2 }, style)
+		end
+	end
 
-    -- Signals setup
-    --------------------------------------------------------------------------------
-    local client_signals = {
-        "property::ontop", "property::floating", "property::below", "property::maximized",
-        "tagged", "untagged"  -- refresh tagmenu when client's tags change
-    }
-    for _, sg in ipairs(client_signals) do
-        client.connect_signal(sg, function() self:update(last.client) end)
-    end
+	-- Signals setup
+	--------------------------------------------------------------------------------
+	local client_signals = {
+		"property::ontop", "property::floating", "property::below", "property::maximized",
+		"tagged", "untagged"  -- refresh tagmenu when client's tags change
+	}
+	for _, sg in ipairs(client_signals) do
+		client.connect_signal(sg, function() self:update(last.client) end)
+	end
 end
 
 -- Show window menu widget
 -----------------------------------------------------------------------------------------------------------------------
 function clientmenu:show(c)
 
-    -- toggle menu
-    if self.menu.wibox.visible and c == last.client and mouse.screen == last.screen  then
-        self.menu:hide()
-    else
-        last.client = c
-        last.screen = mouse.screen
-        self.menu:show({ coords = coords_calc(self.menu) })
+	-- toggle menu
+	if self.menu.wibox.visible and c == last.client and mouse.screen == last.screen  then
+		self.menu:hide()
+	else
+		last.client = c
+		last.screen = mouse.screen
+		self.menu:show({ coords = coords_calc(self.menu) })
 
-        if self.menu.hidetimer.started then self.menu.hidetimer:stop() end
-        self:update(c)
-    end
+		if self.menu.hidetimer.started then self.menu.hidetimer:stop() end
+		self:update(c)
+	end
 end
 
 return setmetatable(clientmenu, clientmenu.mt)
