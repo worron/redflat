@@ -41,18 +41,19 @@ local last = {
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		icon           = { unknown = redutil.base.placeholder(),
-		                   minimize = redutil.base.placeholder(),
-		                   close = redutil.base.placeholder() },
-		micon          = { blank = redutil.base.placeholder({ txt = " " }),
-		                   check = redutil.base.placeholder({ txt = "+" }) },
-		layout_icon    = { unknown = redutil.base.placeholder() },
-		actionline     = { height = 28 },
-		stateline      = { height = 35 },
-		state_iconsize = { width = 20, height = 20 },
-		sep_margin     = { horizontal = { 3, 3, 5, 5 }, vertical = { 3, 3, 3, 3 } },
-		tagmenu        = { icon_margin = { 2, 2, 2, 2 } },
-		color          = { main = "#b1222b", icon = "#a0a0a0", gray = "#404040", highlight = "#eeeeee" },
+		icon            = { unknown = redutil.base.placeholder(),
+		                    minimize = redutil.base.placeholder(),
+		                    close = redutil.base.placeholder() },
+		micon           = { blank = redutil.base.placeholder({ txt = " " }),
+		                    check = redutil.base.placeholder({ txt = "+" }) },
+		layout_icon     = { unknown = redutil.base.placeholder() },
+		actionline      = { height = 28 },
+		stateline       = { height = 35 },
+		state_iconsize  = { width = 20, height = 20 },
+		action_iconsize = { width = 18, height = 18 },
+		sep_margin      = { horizontal = { 3, 3, 5, 5 }, vertical = { 3, 3, 3, 3 } },
+		tagmenu         = { icon_margin = { 2, 2, 2, 2 } },
+		color           = { main = "#b1222b", icon = "#a0a0a0", gray = "#404040", highlight = "#eeeeee" },
 	}
 	style.menu = {
 		ricon_margin = { 2, 2, 2, 2 },
@@ -169,8 +170,8 @@ local function action_line_construct(setup_layout, style)
 
 	local function actionbox_construct(icon, action)
 		local iconbox = svgbox(icon, nil, style.color.icon)
-		iconbox:set_forced_width(style.state_iconsize.width)
-		iconbox:set_forced_height(style.state_iconsize.height)
+		iconbox:set_forced_width(style.action_iconsize.width)
+		iconbox:set_forced_height(style.action_iconsize.height)
 
 		-- center iconbox both vertically and horizontally
 		local vert_wrapper = wibox.layout.align.vertical()
