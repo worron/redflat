@@ -58,6 +58,7 @@ local function default_style()
 	style.menu = {
 		ricon_margin = { 2, 2, 2, 2 },
 		hide_timeout = 1,
+		select_first = false,
 		nohide       = true
 	}
 

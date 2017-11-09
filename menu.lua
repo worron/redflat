@@ -63,6 +63,7 @@ local function default_theme()
 		auto_hotkey  = false,
 		svg_scale    = { false, false },
 		hide_timeout = 0,
+		select_first = true,
 		keytip       = { geometry = { width = 400, height = 400 } },
 		color        = { border = "#575757", text = "#aaaaaa", highlight = "#eeeeee",
 		                 main = "#b1222b", wibox = "#202020",
@@ -323,7 +324,7 @@ function menu:show(args)
 	set_coords(self, screen_index, args.coords)
 	awful.keygrabber.run(self._keygrabber)
 	self.wibox.visible = true
-	self:item_enter(1)
+	if self.theme.select_first or self.parent then self:item_enter(1) end
 
 	-- check hidetimer
 	if self.hidetimer and self.hidetimer.started then self.hidetimer:stop() end
