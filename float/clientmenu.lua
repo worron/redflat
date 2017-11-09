@@ -308,7 +308,7 @@ function clientmenu:init(style)
 	self.menu = redmenu({
 		theme = style.menu,
 		items = {
-			{ widget = actionline },
+			{ widget = actionline, focus = true },
 			menusep,
 			{ "Move to tag", { items = movemenu_items, theme = style.tagmenu } },
 			{ "Add to tag",  { items = addmenu_items,  theme = style.tagmenu } },

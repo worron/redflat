@@ -289,6 +289,8 @@ end
 -- Unselect item
 --------------------------------------------------------------------------------
 function menu:item_leave(num)
+	if not num then return end
+
 	local item = self.items[num]
 
 	if item then
@@ -348,7 +350,7 @@ function menu:hide()
 
 	self:item_leave(self.sel)
 
-	if self.items[self.sel].child then self.items[self.sel].child:hide() end
+	if self.sel and self.items[self.sel].child then self.items[self.sel].child:hide() end
 
 	self.sel = nil
 	awful.keygrabber.stop(self._keygrabber)
@@ -416,6 +418,17 @@ function menu:add(args)
 		element.width, element.height = args.widget:fit(_fake_context, -1, -1)
 		self.add_size = self.add_size + element.height
 		self.layout:add(args.widget)
+
+		if args.focus then
+			args.widget:connect_signal(
+				"mouse::enter",
+				function()
+					self:item_leave(self.sel)
+					self.sel = nil
+				end
+			)
+		end
+
 		return
 	end
 
