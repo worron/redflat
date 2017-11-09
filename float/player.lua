@@ -106,6 +106,7 @@ function player:init(args)
 	self.command = {
 		get_all      = string.format(dbus_getall, _player),
 		get_position = string.format(dbus_get, _player, "string:'Position'"),
+		get_volume   = string.format(dbus_get, _player, "string:'Volume'"),
 		set_volume   = string.format(dbus_set, _player, "string:'Volume' variant:double:"),
 		action       = string.format(dbus_action, _player),
 		set_position = string.format(dbus_action, _player) .. "SetPosition objpath:/not/used int64:",
@@ -451,6 +452,23 @@ function player:update_from_metadata(data)
 	if data.Volume then
 		self.volume:set_value(data.Volume)
 		self.last.volume = data.Volume
+	else
+		-- try to grab volume explicitly if not supplied
+		awful.spawn.easy_async(
+			self.command.get_volume,
+			function(output, _, _, exit_code)
+
+				if exit_code ~= 0 then
+					return
+				end
+
+				local volume = tonumber(string.match(output, "double%s+([%d.]+)"))
+				if volume then
+					self.volume:set_value(volume)
+					self.last.volume = volume
+				end
+			end
+		)
 	end
 end
 
