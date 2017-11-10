@@ -33,6 +33,10 @@ local dbus_get = dbus_mpris
                  .. "org.freedesktop.DBus.Properties.Get "
                  .. "string:'org.mpris.MediaPlayer2.Player' %s"
 
+local dbus_getall = dbus_mpris
+                    .. "org.freedesktop.DBus.Properties.GetAll "
+                    .. "string:'org.mpris.MediaPlayer2.Player'"
+
 local dbus_set = dbus_mpris
                  .. "org.freedesktop.DBus.Properties.Set "
                  .. "string:'org.mpris.MediaPlayer2.Player' %s"
@@ -96,11 +100,13 @@ function player:init(args)
 
 	self.info = { artist = "Unknown", album = "Unknown" }
 	self.style = style
-	self.last = { status = "Stopped", length = 5 * 60 * 1000000, volume = 0.5 }
+	self.last = { status = "Stopped", length = 5 * 60 * 1000000, volume = nil }
 
 	-- dbus vars
 	self.command = {
+		get_all      = string.format(dbus_getall, _player),
 		get_position = string.format(dbus_get, _player, "string:'Position'"),
+		get_volume   = string.format(dbus_get, _player, "string:'Volume'"),
 		set_volume   = string.format(dbus_set, _player, "string:'Volume' variant:double:"),
 		action       = string.format(dbus_action, _player),
 		set_position = string.format(dbus_action, _player) .. "SetPosition objpath:/not/used int64:",
@@ -254,6 +260,8 @@ function player:init(args)
 		-- self.box.title:set_text("Stopped")
 		self.info = { artist = "", album = "" }
 		self.update_artist()
+
+		self.last.volume = nil
 	end
 
 	-- Main update function
@@ -293,6 +301,51 @@ function player:init(args)
 	-- Run dbus servise
 	--------------------------------------------------------------------------------
 	if not self.listening then self:listen() end
+	self:initialize_info()
+end
+
+-- Initialize all properties via dbus call
+-- should be called only once for initialization before the dbus signals trigger the updates
+-----------------------------------------------------------------------------------------------------------------------
+function player:initialize_info()
+	awful.spawn.easy_async(
+		self.command.get_all,
+		function(output, _, _, exit_code)
+
+			local data = { Metadata = {} }
+
+			local function parse_dbus_value(ident)
+				local regex = "(" .. ident .. ")%s+([a-z0-9]+)%s+(.-)%s-%)\n"
+				_, _, value = output:match(regex)
+
+				-- check for int64 type field
+				int64_val = value:match("int64%s+(%d+)")
+				if int64_val then return tonumber(int64_val) end
+
+				-- check for double type field
+				double_val = value:match("double%s+([%d.]+)")
+				if double_val then return tonumber(double_val) end
+
+				-- check for array type field as table, extract first entry only
+				array_val = value:match("array%s%[%s+([^%],]+)")
+				if array_val then return { array_val } end
+
+				return value
+			end
+
+			if exit_code == 0 then
+				data.Metadata["xesam:title"]  = parse_dbus_value("xesam:title")
+				data.Metadata["xesam:artist"] = parse_dbus_value("xesam:artist")
+				data.Metadata["xesam:album"]  = parse_dbus_value("xesam:album")
+				data.Metadata["mpris:artUrl"] = parse_dbus_value("mpris:artUrl")
+				data.Metadata["mpris:length"] = parse_dbus_value("mpris:length")
+				data["Volume"]                = parse_dbus_value("Volume")
+				data["Position"]              = parse_dbus_value("Position")
+				data["PlaybackStatus"]        = parse_dbus_value("PlaybackStatus")
+				self:update_from_metadata(data)
+			end
+		end
+	)
 end
 
 -- Player playback control
@@ -308,9 +361,11 @@ end
 -- Player volume control
 -----------------------------------------------------------------------------------------------------------------------
 function player:change_volume(step)
-	local v = self.last.volume + step
+	local v = (self.last.volume or 0) + step
 	if     v > 1 then v = 1
 	elseif v < 0 then v = 0 end
+
+	self.last.volume = nil
 	awful.spawn.with_shell(self.command.set_volume .. v)
 end
 
@@ -345,6 +400,82 @@ function player:show(geometry)
 	end
 end
 
+-- Update property values from received metadata
+-----------------------------------------------------------------------------------------------------------------------
+function player:update_from_metadata(data)
+	-- empty call
+	if not data then return end
+
+	-- set track info if playing
+	if data.Metadata then
+		-- set song title
+		self.box.title:set_text(data.Metadata["xesam:title"] or "Unknown")
+
+		-- set album or artist info
+
+		self.info.artist = data.Metadata["xesam:artist"] and data.Metadata["xesam:artist"][1] or "Unknown"
+		self.info.album  = data.Metadata["xesam:album"] or "Unknown"
+		self.update_artist()
+
+		-- set cover art
+		if data.Metadata["mpris:artUrl"] then
+			local image = string.match(data.Metadata["mpris:artUrl"], "file://(.+)")
+			self.box.image:set_color(nil)
+			self.box.image:set_image(decodeURI(image))
+		else
+			-- reset to generic icon if no cover available
+			self.box.image:set_image(self.style.icon.cover)
+		end
+
+		-- track length
+		if data.Metadata["mpris:length"] then self.last.length = data.Metadata["mpris:length"] end
+	end
+
+	if data.PlaybackStatus then
+
+		-- check player status and set suitable play/pause button image
+		local state = data.PlaybackStatus == "Playing" and "pause" or "play"
+		self.set_play_button(state)
+		self.last.status = data.PlaybackStatus
+
+		-- stop/start update timer
+		if data.PlaybackStatus == "Playing" then
+			if self.wibox.visible then self.updatetimer:start() end
+		else
+			if self.updatetimer.started then self.updatetimer:stop() end
+			self:update()
+		end
+
+		-- clear track info if stoppped
+		if data.PlaybackStatus == "Stopped" then
+			self.clear_info()
+		end
+	end
+
+	-- volume
+	if data.Volume then
+		self.volume:set_value(data.Volume)
+		self.last.volume = data.Volume
+	elseif not self.last.volume then
+		-- try to grab volume explicitly if not supplied
+		awful.spawn.easy_async(
+			self.command.get_volume,
+			function(output, _, _, exit_code)
+
+				if exit_code ~= 0 then
+					return
+				end
+
+				local volume = tonumber(string.match(output, "double%s+([%d.]+)"))
+				if volume then
+					self.volume:set_value(volume)
+					self.last.volume = volume
+				end
+			end
+		)
+	end
+end
+
 -- Dbus signal setup
 -- update some info which avaliable from dbus signal
 -----------------------------------------------------------------------------------------------------------------------
@@ -356,60 +487,7 @@ function player:listen()
 	)
 	dbus.connect_signal("org.freedesktop.DBus.Properties",
 		function (_, _, data)
-
-			-- empty call
-			if not data then return end
-
-			-- set track info if playing
-			if data.Metadata then
-				-- set song title
-				self.box.title:set_text(data.Metadata["xesam:title"] or "Unknown")
-
-				-- set album or artist info
-				self.info.artist = data.Metadata["xesam:artist"] and data.Metadata["xesam:artist"][1] or "Unknown"
-				self.info.album  = data.Metadata["xesam:album"] or "Unknown"
-				self.update_artist()
-
-				-- set cover art
-				if data.Metadata["mpris:artUrl"] then
-					local image = string.match(data.Metadata["mpris:artUrl"], "file://(.+)")
-					self.box.image:set_color(nil)
-					self.box.image:set_image(decodeURI(image))
-				else
-					-- reset to generic icon if no cover available
-					self.box.image:set_image(self.style.icon.cover)
-				end
-
-				-- track length
-				if data.Metadata["mpris:length"] then self.last.length = data.Metadata["mpris:length"] end
-			end
-
-			if data.PlaybackStatus then
-
-				-- check player status and set suitable play/pause button image
-				local state = data.PlaybackStatus == "Playing" and "pause" or "play"
-				self.set_play_button(state)
-				self.last.status = data.PlaybackStatus
-
-				-- stop/start update timer
-				if data.PlaybackStatus == "Playing" then
-					if self.wibox.visible then self.updatetimer:start() end
-				else
-					if self.updatetimer.started then self.updatetimer:stop() end
-					self:update()
-				end
-
-				-- clear track info if stoppped
-				if data.PlaybackStatus == "Stopped" then
-					self.clear_info()
-				end
-			end
-
-			-- volume
-			if data.Volume then
-				self.volume:set_value(data.Volume)
-				self.last.volume = data.Volume
-			end
+			self:update_from_metadata(data)
 		end
 	)
 
