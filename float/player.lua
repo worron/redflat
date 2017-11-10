@@ -100,7 +100,7 @@ function player:init(args)
 
 	self.info = { artist = "Unknown", album = "Unknown" }
 	self.style = style
-	self.last = { status = "Stopped", length = 5 * 60 * 1000000, volume = 0.5 }
+	self.last = { status = "Stopped", length = 5 * 60 * 1000000, volume = nil }
 
 	-- dbus vars
 	self.command = {
@@ -260,6 +260,8 @@ function player:init(args)
 		-- self.box.title:set_text("Stopped")
 		self.info = { artist = "", album = "" }
 		self.update_artist()
+
+		self.last.volume = nil
 	end
 
 	-- Main update function
@@ -359,9 +361,11 @@ end
 -- Player volume control
 -----------------------------------------------------------------------------------------------------------------------
 function player:change_volume(step)
-	local v = self.last.volume + step
+	local v = (self.last.volume or 0) + step
 	if     v > 1 then v = 1
 	elseif v < 0 then v = 0 end
+
+	self.last.volume = nil
 	awful.spawn.with_shell(self.command.set_volume .. v)
 end
 
@@ -452,7 +456,7 @@ function player:update_from_metadata(data)
 	if data.Volume then
 		self.volume:set_value(data.Volume)
 		self.last.volume = data.Volume
-	else
+	elseif not self.last.volume then
 		-- try to grab volume explicitly if not supplied
 		awful.spawn.easy_async(
 			self.command.get_volume,
