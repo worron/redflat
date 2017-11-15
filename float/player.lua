@@ -365,7 +365,7 @@ function player:change_volume(step)
 	if     v > 1 then v = 1
 	elseif v < 0 then v = 0 end
 
-	self.last.volume = nil
+	self.last.volume = v
 	awful.spawn.with_shell(self.command.set_volume .. v)
 end
 
