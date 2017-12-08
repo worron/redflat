@@ -38,11 +38,12 @@ local dfparser = require("redflat.service.dfparser")
 local redtasklist = { filter = {}, winmenu = {}, tasktip = {}, action = {}, mt = {}, }
 
 local last = {
-	client      = nil,
-	group       = nil,
-	client_list = nil,
-	screen      = mouse.screen,
-	tag_screen  = mouse.screen
+	client         = nil,
+	group          = nil,
+	client_list    = nil,
+	screen         = mouse.screen,
+	tag_screen     = mouse.screen,
+	screen_clients = {}
 }
 
 -- Generate default theme vars
@@ -675,7 +676,7 @@ function redtasklist.new(args, style)
 		local clients = visible_clients(filter, cs)
 		local client_groups = group_task(clients, style.need_group)
 
-		last.sorted_list = sort_list(client_groups)
+		last.screen_clients[cs] = sort_list(client_groups)
 
 		tasklist_construct(client_groups, tasklist, data, args.buttons, style)
 	end
@@ -763,12 +764,12 @@ end
 
 -- switch to next task
 function redtasklist.action.switch_next(args)
-	switch_focus(last.sorted_list)
+	switch_focus(last.screen_clients[mouse.screen])
 end
 
 -- switch to previous task
 function redtasklist.action.switch_prev(args)
-	switch_focus(last.sorted_list, true)
+	switch_focus(last.screen_clients[mouse.screen], true)
 end
 
 
