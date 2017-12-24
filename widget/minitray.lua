@@ -25,7 +25,6 @@ local redutil = require("redflat.util")
 local dotcount = require("redflat.gauge.graph.dots")
 local tooltip = require("redflat.float.tooltip")
 
-
 -- Initialize tables and wibox
 -----------------------------------------------------------------------------------------------------------------------
 local minitray = { widgets = {}, mt = {} }
@@ -70,23 +69,22 @@ function minitray:init(style)
 	-- Set tray
 	--------------------------------------------------------------------------------
 	local l = wibox.layout.align.horizontal()
-	l:set_middle(wibox.widget.systray())
+	local tray = wibox.widget.systray()
+	l:set_middle(tray)
 	self.wibox:set_widget(l)
+
+	-- update geometry if tray icons change
+	tray:connect_signal('widget::redraw_needed', function()
+		self:update_geometry()
+	end)
 end
 
 -- Show/hide functions for wibox
 -----------------------------------------------------------------------------------------------------------------------
 
--- Show
+-- Update Geometry
 --------------------------------------------------------------------------------
-function minitray:show()
-
-	-- Force upsdate all widgets
-	------------------------------------------------------------
-	for _, w in ipairs(self.widgets) do
-		w:update()
-	end
-
+function minitray:update_geometry()
 	-- Set wibox size and position
 	------------------------------------------------------------
 	local items = awesome.systray()
@@ -99,6 +97,19 @@ function minitray:show()
 		awful.placement.under_mouse(self.wibox)
 	end
 	redutil.placement.no_offscreen(self.wibox, self.screen_gap, mouse.screen.workarea)
+end
+
+-- Show
+--------------------------------------------------------------------------------
+function minitray:show()
+
+	-- Force update all widgets
+	------------------------------------------------------------
+	for _, w in ipairs(self.widgets) do
+		w:update()
+	end
+
+	self:update_geometry()
 
 	-- Show
 	------------------------------------------------------------
