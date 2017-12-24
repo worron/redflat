@@ -21,7 +21,7 @@ local rednotify = require("redflat.float.notify")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
-local navigator = { action = {}, data = {} }
+local navigator = { action = {}, data = {}, active = false }
 
 navigator.ignored = { "dock", "splash", "desktop" }
 
@@ -231,6 +231,24 @@ function navigator:init()
 	function self.hilight.hide()
 		for i, c in ipairs(self.cls) do self.data[i].widget:set_alert(false) end
 	end
+
+	-- close the navigator on tag switch
+	tag.connect_signal('property::selected',
+		function(t)
+			if navigator.active then
+				self:close()
+			end
+		end
+	)
+
+	-- update navigator if new client spawns
+	client.connect_signal('manage',
+		function(c)
+			if navigator.active then
+				self:restart()
+			end
+		end
+	)
 end
 
 function navigator:run()
@@ -284,6 +302,8 @@ function navigator:run()
 			self.style.keytip.base.exit and function() redflat.layout.common.action.exit() end -- fix this?
 		)
 	end
+
+	navigator.active = true
 end
 
 function navigator:close()
@@ -297,6 +317,8 @@ function navigator:close()
 	local l = client.focus and awful.layout.get(client.focus.screen)
 	if l and l.cleanup then l.cleanup() end
 	self.cls = {}
+
+	navigator.active = false
 end
 
 function navigator:restart()
