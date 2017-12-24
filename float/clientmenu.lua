@@ -89,9 +89,9 @@ local function tagmenu_rebuild(menu, submenu_index, style)
 	for _, index in ipairs(submenu_index) do
 			local new_items
 			if index == 1 then
-				new_items = tagmenu_items(function(t) last.client:move_to_tag(t) clientmenu.menu:hide() end, style)
+				new_items = tagmenu_items(function(t) last.client:move_to_tag(t); clientmenu.menu:hide(); awful.layout.arrange(t.screen) end, style)
 			else
-				new_items = tagmenu_items(function(t) last.client:toggle_tag(t) end, style)
+				new_items = tagmenu_items(function(t) last.client:toggle_tag(t); awful.layout.arrange(t.screen) end, style)
 			end
 			menu.items[index].child:replace_items(new_items)
 	end
@@ -301,8 +301,8 @@ function clientmenu:init(style)
 
 	-- Construct tag submenus ("move" and "add")
 	------------------------------------------------------------
-	local movemenu_items = tagmenu_items(function(t) last.client:move_to_tag(t); clientmenu.menu:hide() end, style)
-	local addmenu_items  = tagmenu_items(function(t) last.client:toggle_tag(t) end, style)
+	local movemenu_items = tagmenu_items(function(t) last.client:move_to_tag(t); clientmenu.menu:hide(); awful.layout.arrange(t.screen) end, style)
+	local addmenu_items  = tagmenu_items(function(t) last.client:toggle_tag(t); awful.layout.arrange(t.screen) end, style)
 
 	-- Create menu
 	------------------------------------------------------------
