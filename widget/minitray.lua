@@ -69,12 +69,12 @@ function minitray:init(style)
 	-- Set tray
 	--------------------------------------------------------------------------------
 	local l = wibox.layout.align.horizontal()
-	local tray = wibox.widget.systray()
-	l:set_middle(tray)
+	self.tray = wibox.widget.systray()
+	l:set_middle(self.tray)
 	self.wibox:set_widget(l)
 
 	-- update geometry if tray icons change
-	tray:connect_signal('widget::redraw_needed', function()
+	self.tray:connect_signal('widget::redraw_needed', function()
 		self:update_geometry()
 	end)
 end
@@ -85,34 +85,27 @@ end
 -- Update Geometry
 --------------------------------------------------------------------------------
 function minitray:update_geometry()
+
 	-- Set wibox size and position
 	------------------------------------------------------------
 	local items = awesome.systray()
 	if items == 0 then items = 1 end
 
 	self.wibox:geometry({ width = self.geometry.width or self.geometry.height * items })
+
 	if self.set_position then
 		self.wibox:geometry(self.set_position())
 	else
 		awful.placement.under_mouse(self.wibox)
 	end
+
 	redutil.placement.no_offscreen(self.wibox, self.screen_gap, mouse.screen.workarea)
 end
 
 -- Show
 --------------------------------------------------------------------------------
 function minitray:show()
-
-	-- Force update all widgets
-	------------------------------------------------------------
-	for _, w in ipairs(self.widgets) do
-		w:update()
-	end
-
 	self:update_geometry()
-
-	-- Show
-	------------------------------------------------------------
 	self.wibox.visible = true
 end
 
@@ -140,9 +133,7 @@ function minitray.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local args = args or {}
-	local timeout = args.timeout or 60
-
+	local args = args or {} -- usesless now, leave it here for backward compatibility and future cases
 	local style = redutil.table.merge(default_style(), style or {})
 
 	-- Initialize minitray window
@@ -168,10 +159,7 @@ function minitray.new(args, style)
 		minitray.tp:set_text(appcount .. " apps")
 	end
 
-	local t = timer({ timeout = timeout })
-	t:connect_signal("timeout", function() widg:update() end)
-	t:start()
-	--t:emit_signal("timeout")
+	minitray.tray:connect_signal('widget::redraw_needed', function() widg:update() end)
 
 	--------------------------------------------------------------------------------
 	return widg
