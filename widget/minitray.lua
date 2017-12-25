@@ -25,7 +25,6 @@ local redutil = require("redflat.util")
 local dotcount = require("redflat.gauge.graph.dots")
 local tooltip = require("redflat.float.tooltip")
 
-
 -- Initialize tables and wibox
 -----------------------------------------------------------------------------------------------------------------------
 local minitray = { widgets = {}, mt = {} }
@@ -70,22 +69,22 @@ function minitray:init(style)
 	-- Set tray
 	--------------------------------------------------------------------------------
 	local l = wibox.layout.align.horizontal()
-	l:set_middle(wibox.widget.systray())
+	self.tray = wibox.widget.systray()
+	l:set_middle(self.tray)
 	self.wibox:set_widget(l)
+
+	-- update geometry if tray icons change
+	self.tray:connect_signal('widget::redraw_needed', function()
+		self:update_geometry()
+	end)
 end
 
 -- Show/hide functions for wibox
 -----------------------------------------------------------------------------------------------------------------------
 
--- Show
+-- Update Geometry
 --------------------------------------------------------------------------------
-function minitray:show()
-
-	-- Force upsdate all widgets
-	------------------------------------------------------------
-	for _, w in ipairs(self.widgets) do
-		w:update()
-	end
+function minitray:update_geometry()
 
 	-- Set wibox size and position
 	------------------------------------------------------------
@@ -93,15 +92,20 @@ function minitray:show()
 	if items == 0 then items = 1 end
 
 	self.wibox:geometry({ width = self.geometry.width or self.geometry.height * items })
+
 	if self.set_position then
 		self.wibox:geometry(self.set_position())
 	else
 		awful.placement.under_mouse(self.wibox)
 	end
-	redutil.placement.no_offscreen(self.wibox, self.screen_gap, mouse.screen.workarea)
 
-	-- Show
-	------------------------------------------------------------
+	redutil.placement.no_offscreen(self.wibox, self.screen_gap, mouse.screen.workarea)
+end
+
+-- Show
+--------------------------------------------------------------------------------
+function minitray:show()
+	self:update_geometry()
 	self.wibox.visible = true
 end
 
@@ -129,9 +133,7 @@ function minitray.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local args = args or {}
-	local timeout = args.timeout or 60
-
+	local args = args or {} -- usesless now, leave it here for backward compatibility and future cases
 	local style = redutil.table.merge(default_style(), style or {})
 
 	-- Initialize minitray window
@@ -157,10 +159,7 @@ function minitray.new(args, style)
 		minitray.tp:set_text(appcount .. " apps")
 	end
 
-	local t = timer({ timeout = timeout })
-	t:connect_signal("timeout", function() widg:update() end)
-	t:start()
-	--t:emit_signal("timeout")
+	minitray.tray:connect_signal('widget::redraw_needed', function() widg:update() end)
 
 	--------------------------------------------------------------------------------
 	return widg
