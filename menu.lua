@@ -317,6 +317,7 @@ end
 -- @param args.coords Menu position defaulting to mouse.coords()
 --------------------------------------------------------------------------------
 function menu:show(args)
+	if self.wibox.visible then return end
 	local args = args or {}
 	local screen_index = mouse.screen
 

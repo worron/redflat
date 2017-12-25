@@ -143,9 +143,9 @@ local function tagmenu_rebuild(menu, submenu_index, style)
 	for _, index in ipairs(submenu_index) do
 			local new_items
 			if index == 1 then
-				new_items = tagmenu_items(function(t) last.client:move_to_tag(t) end, style)
+				new_items = tagmenu_items(function(t) last.client:move_to_tag(t); redtasklist.winmenu.menu:hide(); awful.layout.arrange(t.screen) end, style)
 			else
-				new_items = tagmenu_items(function(t) last.client:toggle_tag(t) end, style)
+				new_items = tagmenu_items(function(t) last.client:toggle_tag(t); awful.layout.arrange(t.screen) end, style)
 			end
 			menu.items[index].child:replace_items(new_items)
 	end
@@ -450,8 +450,8 @@ function redtasklist.winmenu:init(style)
 
 	-- Window managment functions
 	--------------------------------------------------------------------------------
-	local close    = function() last.client:kill() end
-	local minimize = function() last.client.minimized = not last.client.minimized end
+	local close    = function() last.client:kill(); redtasklist.winmenu.menu:hide() end
+	local minimize = function() last.client.minimized = not last.client.minimized; redtasklist.winmenu.menu:hide() end
 	local maximize = function() last.client.maximized = not last.client.maximized end
 
 	-- Create array of state icons
@@ -510,8 +510,8 @@ function redtasklist.winmenu:init(style)
 
 	-- Construct tag submenus ("move" and "add")
 	------------------------------------------------------------
-	local movemenu_items = tagmenu_items(function(t) last.client:move_to_tag(t) end, style)
-	local addmenu_items  = tagmenu_items(function(t) last.client:toggle_tag(t)  end, style)
+	local movemenu_items = tagmenu_items(function(t) last.client:move_to_tag(t); redtasklist.winmenu.menu:hide(); awful.layout.arrange(t.screen) end, style)
+	local addmenu_items  = tagmenu_items(function(t) last.client:toggle_tag(t); awful.layout.arrange(t.screen)  end, style)
 
 	-- Create menu
 	------------------------------------------------------------
