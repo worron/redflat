@@ -317,6 +317,7 @@ function player:initialize_info()
 			local function parse_dbus_value(ident)
 				local regex = "(" .. ident .. ")%s+([a-z0-9]+)%s+(.-)%s-%)\n"
 				_, _, value = output:match(regex)
+				if not value then return nil end
 
 				-- check for int64 type field
 				int64_val = value:match("int64%s+(%d+)")
