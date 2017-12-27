@@ -323,7 +323,7 @@ function system.thermal.sensors(args)
 
 	local temp = string.match(output, "%+(%d+%.%d)°[CF]")
 
-	return temp and { tonumber(temp) } or { 0 }
+	return temp and { math.floor(tonumber(temp)) } or { 0 }
 end
 
 local sensors_store
@@ -336,7 +336,7 @@ function system.thermal.sensors_core(args)
 	local line = string.match(sensors_store, "Core " .. index .."(.-)\r?\n")
 	local temp = string.match(line, "%+(%d+%.%d)°[CF]")
 
-	return temp and { tonumber(temp) } or { 0 }
+	return temp and { math.floor(tonumber(temp)) } or { 0 }
 end
 
 -- Using hddtemp
