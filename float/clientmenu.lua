@@ -53,6 +53,7 @@ local function default_style()
 		action_iconsize = { width = 18, height = 18 },
 		sep_margin      = { horizontal = { 3, 3, 5, 5 }, vertical = { 3, 3, 3, 3 } },
 		tagmenu         = { icon_margin = { 2, 2, 2, 2 } },
+		hide_action     = { move = true, add = false },
 		color           = { main = "#b1222b", icon = "#a0a0a0", gray = "#404040", highlight = "#eeeeee" },
 	}
 	style.menu = {
@@ -89,9 +90,9 @@ local function tagmenu_rebuild(menu, submenu_index, style)
 	for _, index in ipairs(submenu_index) do
 			local new_items
 			if index == 1 then
-				new_items = tagmenu_items(function(t) last.client:move_to_tag(t); clientmenu.menu:hide(); awful.layout.arrange(t.screen) end, style)
+				new_items = tagmenu_items(clientmenu.movemenu_action, style)
 			else
-				new_items = tagmenu_items(function(t) last.client:toggle_tag(t); awful.layout.arrange(t.screen) end, style)
+				new_items = tagmenu_items(clientmenu.addmenu_action, style)
 			end
 			menu.items[index].child:replace_items(new_items)
 	end
@@ -245,6 +246,10 @@ end
 function clientmenu:init(style)
 	local style = redutil.table.merge(default_style(), style or {})
 
+	self.hide_check = function(action)
+		if style.hide_action[action] then self.menu:hide() end
+	end
+
 	-- Create array of state icons
 	-- associate every icon with action and state indicator
 	--------------------------------------------------------------------------------
@@ -299,10 +304,19 @@ function clientmenu:init(style)
 	------------------------------------------------------------
 	local menusep = { widget = separator.horizontal({ margin = style.sep_margin.horizontal }) }
 
+	-- menu item actions
+	self.movemenu_action = function(t)
+		last.client:move_to_tag(t); awful.layout.arrange(t.screen); self.hide_check("move")
+	end
+
+	self.addmenu_action = function(t)
+		last.client:toggle_tag(t); awful.layout.arrange(t.screen); self.hide_check("add")
+	end
+
 	-- Construct tag submenus ("move" and "add")
 	------------------------------------------------------------
-	local movemenu_items = tagmenu_items(function(t) last.client:move_to_tag(t); clientmenu.menu:hide(); awful.layout.arrange(t.screen) end, style)
-	local addmenu_items  = tagmenu_items(function(t) last.client:toggle_tag(t); awful.layout.arrange(t.screen) end, style)
+	local movemenu_items = tagmenu_items(self.movemenu_action, style)
+	local addmenu_items  = tagmenu_items(self.addmenu_action, style)
 
 	-- Create menu
 	------------------------------------------------------------
