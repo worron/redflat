@@ -416,7 +416,7 @@ local function construct_tasktip(c_group, layout, data, buttons, style)
 			data[i] = line
 		end
 
-		line:set_text(awful.util.escape(c.name))
+		line:set_text(awful.util.escape(c.name) or "Untitled")
 		tb_w, tb_h = line.tb:get_preferred_size()
 
 		-- set state highlight only for grouped tasks
