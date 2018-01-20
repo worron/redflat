@@ -55,7 +55,9 @@ local function get_state(t)
 	for _, c in pairs(client_list) do
 		state.focus     = state.focus or client.focus == c
 		state.urgent    = state.urgent or c.urgent
-		table.insert(state.list, { focus = client.focus == c, urgent = c.urgent, minimized = c.minimized })
+		if not c.skip_taskbar then
+			table.insert(state.list, { focus = client.focus == c, urgent = c.urgent, minimized = c.minimized })
+		end
 	end
 
 	state.active = t.selected
