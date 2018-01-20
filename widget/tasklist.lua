@@ -326,7 +326,7 @@ local function tasktip_line(style)
 
 	-- tasktip line metods
 	function line:set_text(text)
-		line.tb:set_text(text)
+		line.tb:set_markup(text)
 		line.field:set_fg(style.color.text)
 		line.field:set_bg(style.color.wibox)
 	end

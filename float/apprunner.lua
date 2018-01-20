@@ -115,12 +115,12 @@ local function construct_item(style)
 		local args = args or {}
 
 		local name_text = awful.util.escape(args.Name) or ""
-		item.name:set_text(name_text)
+		item.name:set_markup(name_text)
 
 		local comment_text = args.Comment and awful.util.escape(args.Comment)
 		                     or args.Name and "No description"
 		                     or ""
-		item.comment:set_text(comment_text)
+		item.comment:set_markup(comment_text)
 
 		item.icon:set_image(args.icon_path or style.dimage)
 		item.icon:set_visible((args.Name))
