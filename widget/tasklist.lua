@@ -80,6 +80,7 @@ local function default_style()
 		border_width = 2,
 		margin       = { 10, 10, 5, 5 },
 		timeout      = 0.5,
+		sl_highlight = false, -- single line highlight
 		color        = { border = "#575757", text = "#aaaaaa", main = "#b1222b", highlight = "#eeeeee",
 		                 wibox = "#202020", gray = "#575757", urgent = "#32882d" }
 
@@ -418,20 +419,20 @@ local function construct_tasktip(c_group, layout, data, buttons, style)
 		line:set_text(awful.util.escape(c.name))
 		tb_w, tb_h = line.tb:get_preferred_size()
 
-		-- set state highlight and buttons only for grouped tasks
-		if #c_group > 1 then
+		-- set state highlight only for grouped tasks
+		if #c_group > 1 or style.sl_highlight then
 			local state = get_state({ c })
 
 			if state.focus     then line:mark_focused()   end
 			if state.minimized then line:mark_minimized() end
 			if state.urgent    then line:mark_urgent()    end
-
-			local gap = (i - 1) * (tb_h + style.margin[3] + style.margin[4])
-			if buttons then line.field:buttons(redutil.base.buttons(buttons, { group = { c }, gap = gap })) end
-		else
-			if buttons then line.field:buttons({}) end
 		end
 
+		-- set buttons
+		local gap = (i - 1) * (tb_h + style.margin[3] + style.margin[4])
+		if buttons then line.field:buttons(redutil.base.buttons(buttons, { group = { c }, gap = gap })) end
+
+		-- add line widget to tasktip layout
 		tip_width = math.max(tip_width, tb_w)
 		layout:add(line.field)
 	end
