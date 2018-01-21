@@ -422,8 +422,10 @@ function player:update_from_metadata(data)
 		local has_cover = false
 		if data.Metadata["mpris:artUrl"] then
 			local image = string.match(data.Metadata["mpris:artUrl"], "file://(.+)")
-			self.box.image:set_color(nil)
-			has_cover = self.box.image:set_image(decodeURI(image))
+			if image then
+				self.box.image:set_color(nil)
+				has_cover = self.box.image:set_image(decodeURI(image))
+			end
 		end
 		if not has_cover then
 			-- reset to generic icon if no cover available
