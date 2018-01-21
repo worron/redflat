@@ -53,7 +53,14 @@ local function default_style()
 		action_iconsize = { width = 18, height = 18 },
 		sep_margin      = { horizontal = { 3, 3, 5, 5 }, vertical = { 3, 3, 3, 3 } },
 		tagmenu         = { icon_margin = { 2, 2, 2, 2 } },
-		hide_action     = { move = true, add = false },
+		hide_action     = { move = true,
+		                    add = false,
+		                    min = true,
+		                    floating = false,
+		                    sticky = false,
+		                    ontop = false,
+		                    below = false,
+		                    maximized = false },
 		color           = { main = "#b1222b", icon = "#a0a0a0", gray = "#404040", highlight = "#eeeeee" },
 	}
 	style.menu = {
@@ -190,7 +197,6 @@ local function action_line_construct(setup_layout, style)
 		actionbox:buttons(awful.util.table.join(awful.button({}, 1,
 			function()
 				action()
-				clientmenu.menu:hide()  -- close menu on action
 			end
 		)))
 		actionbox:connect_signal("mouse::enter",
@@ -213,6 +219,7 @@ local function action_line_construct(setup_layout, style)
 		style.icon.minimize,
 		function()
 			last.client.minimized = not last.client.minimized
+			if style.hide_action["min"] then clientmenu.menu:hide() end
 		end
 	)
 	setup_layout:set_first(minimize_box)
@@ -225,6 +232,7 @@ local function action_line_construct(setup_layout, style)
 		style.icon.close,
 		function()
 			last.client:kill()
+			clientmenu.menu:hide()
 		end
 	)
 	setup_layout:set_third(close_box)
@@ -256,7 +264,7 @@ function clientmenu:init(style)
 	local function icon_table_generator_prop(property)
 		return {
 			icon      = style.icon[property] or style.icon.unknown,
-			action    = function() last.client[property] = not last.client[property] end,
+			action    = function() last.client[property] = not last.client[property]; self.hide_check(property) end,
 			indicator = function(c) return c[property] end
 		}
 	end
