@@ -53,7 +53,14 @@ local function default_style()
 		action_iconsize = { width = 18, height = 18 },
 		sep_margin      = { horizontal = { 3, 3, 5, 5 }, vertical = { 3, 3, 3, 3 } },
 		tagmenu         = { icon_margin = { 2, 2, 2, 2 } },
-		hide_action     = { move = true, add = false, min = true, floating = false, sticky = false, ontop = false, below = false, maximized = false },
+		hide_action     = { move = true,
+		                    add = false,
+		                    min = true,
+		                    floating = false,
+		                    sticky = false,
+		                    ontop = false,
+		                    below = false,
+		                    maximized = false },
 		color           = { main = "#b1222b", icon = "#a0a0a0", gray = "#404040", highlight = "#eeeeee" },
 	}
 	style.menu = {

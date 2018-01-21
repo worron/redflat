@@ -73,7 +73,15 @@ local function default_style()
 		state_iconsize = { width = 20, height = 20 },
 		sep_margin     = { 3, 3, 5, 5 },
 		tagmenu        = { icon_margin = { 2, 2, 2, 2 } },
-		hide_action    = { min = true, move = true, max = false, add = false, floating = false, sticky = false, ontop = false, below = false, maximized = false },
+		hide_action    = { min = true,
+		                   move = true,
+		                   max = false,
+		                   add = false,
+		                   floating = false,
+		                   sticky = false,
+		                   ontop = false,
+		                   below = false,
+		                   maximized = false },
 		color          = { main = "#b1222b", icon = "#a0a0a0", gray = "#404040" }
 	}
 	style.tasktip = {
