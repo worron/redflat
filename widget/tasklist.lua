@@ -326,7 +326,7 @@ local function tasktip_line(style)
 
 	-- tasktip line metods
 	function line:set_text(text)
-		line.tb:set_text(text)
+		line.tb:set_markup(text)
 		line.field:set_fg(style.color.text)
 		line.field:set_bg(style.color.wibox)
 	end
@@ -416,7 +416,7 @@ local function construct_tasktip(c_group, layout, data, buttons, style)
 			data[i] = line
 		end
 
-		line:set_text(awful.util.escape(c.name))
+		line:set_text(awful.util.escape(c.name) or "Untitled")
 		tb_w, tb_h = line.tb:get_preferred_size()
 
 		-- set state highlight only for grouped tasks
