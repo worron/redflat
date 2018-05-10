@@ -374,6 +374,10 @@ local function switch_focus(list, is_reverse)
 	list[index]:raise()
 end
 
+local function client_group_sort_by_class(a, b)
+	return a[1].class < b[1].class
+end
+
 -- Build or update tasklist.
 --------------------------------------------------------------------------------
 local function tasklist_construct(client_groups, layout, data, buttons, style)
@@ -382,6 +386,8 @@ local function tasklist_construct(client_groups, layout, data, buttons, style)
 	local task_full_width = style.width + style.task_margin[1] + style.task_margin[2]
 	layout:set_max_widget_size(task_full_width)
 	layout:set_forced_width(task_full_width * #client_groups)
+
+	table.sort(client_groups, client_group_sort_by_class)
 
 	-- construct tasklist
 	for i, c_group in ipairs(client_groups) do
