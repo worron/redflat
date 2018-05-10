@@ -249,6 +249,15 @@ function navigator:init()
 			end
 		end
 	)
+
+	-- update navigator if a client gets minimized or restored
+	client.connect_signal('property::minimized',
+		function(c)
+			if navigator.active then
+				self:restart()
+			end
+		end
+	)
 end
 
 function navigator:run()
