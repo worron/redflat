@@ -391,8 +391,6 @@ local function tasklist_construct(client_groups, layout, data, buttons, style)
 	layout:set_max_widget_size(task_full_width)
 	layout:set_forced_width(task_full_width * #client_groups)
 
-	table.sort(client_groups, client_group_sort_by_class)
-
 	-- construct tasklist
 	for i, c_group in ipairs(client_groups) do
 		local task
@@ -710,6 +708,7 @@ function redtasklist.new(args, style)
 		local clients = visible_clients(filter, cs)
 		local client_groups = group_task(clients, style.need_group)
 
+		table.sort(client_groups, client_group_sort_by_class)
 		last.screen_clients[cs] = sort_list(client_groups)
 
 		tasklist_construct(client_groups, tasklist, data, args.buttons, style)
