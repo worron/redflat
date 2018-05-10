@@ -70,7 +70,7 @@ local function default_style()
 		nohide       = true
 	}
 
-	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.clientmenu") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "float.clientmenu") or {})
 end
 
 -- Support functions
