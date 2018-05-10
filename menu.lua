@@ -317,12 +317,12 @@ end
 -- @param args.coords Menu position defaulting to mouse.coords()
 --------------------------------------------------------------------------------
 function menu:show(args)
-	if self.wibox.visible then return end
 	local args = args or {}
 	local screen_index = mouse.screen
+	set_coords(self, screen_index, args.coords)
+	if self.wibox.visible then return end
 
 	-- show menu
-	set_coords(self, screen_index, args.coords)
 	awful.keygrabber.run(self._keygrabber)
 	self.wibox.visible = true
 	if self.theme.select_first or self.parent then self:item_enter(1) end

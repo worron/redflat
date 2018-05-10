@@ -176,24 +176,28 @@ local function tagmenu_update(c, menu, submenu_index, style)
 			-- set layout icon for every tag
 			local l = awful.layout.getname(awful.tag.getproperty(t, "layout"))
 
-			for _, index in ipairs(submenu_index) do
-				if menu.items[index].child.items[k].icon then
-					menu.items[index].child.items[k].icon:set_image(style.layout_icon[l] or style.layout_icon.unknown)
-				end
-			end
-
-			-- set "checked" icon if tag active for given client
-			-- otherwise set empty icon
+			local check_icon = style.micon.blank
 			if c then
 				local client_tags = c:tags()
-				local check_icon = awful.util.table.hasitem(client_tags, t) and style.micon.check
-				                   or style.micon.blank
+				check_icon = awful.util.table.hasitem(client_tags, t) and style.micon.check or check_icon
+			end
 
-				for _, index in ipairs(submenu_index) do
-					if menu.items[index].child.items[k].right_icon then
-						menu.items[index].child.items[k].right_icon:set_image(check_icon)
+			for _, index in ipairs(submenu_index) do
+				local submenu = menu.items[index].child
+				if submenu.items[k].icon then
+					submenu.items[k].icon:set_image(style.layout_icon[l] or style.layout_icon.unknown)
+				end
+
+				-- set "checked" icon if tag active for given client
+				-- otherwise set empty icon
+				if c then
+					if submenu.items[k].right_icon then
+						submenu.items[k].right_icon:set_image(check_icon)
 					end
 				end
+
+				-- update position of any visible submenu
+				if submenu.wibox.visible then submenu:show() end
 			end
 		end
 	end
@@ -372,6 +376,10 @@ local function switch_focus(list, is_reverse)
 	-- set focus to new task
 	client.focus = list[index]
 	list[index]:raise()
+end
+
+local function client_group_sort_by_class(a, b)
+	return a[1].class < b[1].class
 end
 
 -- Build or update tasklist.
@@ -700,6 +708,7 @@ function redtasklist.new(args, style)
 		local clients = visible_clients(filter, cs)
 		local client_groups = group_task(clients, style.need_group)
 
+		table.sort(client_groups, client_group_sort_by_class)
 		last.screen_clients[cs] = sort_list(client_groups)
 
 		tasklist_construct(client_groups, tasklist, data, args.buttons, style)

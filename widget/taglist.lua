@@ -51,17 +51,19 @@ end
 local function get_state(t)
 	local state = { focus = false, urgent = false, list = {} }
 	local client_list = t:clients()
+	local client_count = 0
 
 	for _, c in pairs(client_list) do
 		state.focus     = state.focus or client.focus == c
 		state.urgent    = state.urgent or c.urgent
 		if not c.skip_taskbar then
+			client_count = client_count + 1
 			table.insert(state.list, { focus = client.focus == c, urgent = c.urgent, minimized = c.minimized })
 		end
 	end
 
 	state.active = t.selected
-	state.occupied = #client_list > 0 and not (#client_list == 1 and state.focus)
+	state.occupied = client_count > 0 and not (client_count == 1 and state.focus)
 	state.text = string.upper(t.name)
 	state.layout = awful.tag.getproperty(t, "layout")
 
