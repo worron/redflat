@@ -133,14 +133,15 @@ local function build_tip(pack, style, keypressed)
 	local text = {}
 
 	for i, column in ipairs(pack) do
-		local coltxt = ""
+		local coltxt = {}
 
 		for _, name in pairs(column.names) do
 			local group = column.groups[name]
 
 			-- set group title
-			coltxt = coltxt ..  string.format(
-				'<span font="%s" color="%s">%s</span>\n', style.titlefont, style.color.gray, name
+			coltxt[#coltxt + 1] = string.format(
+				'<span font="%s" color="%s">%s</span>',
+				style.titlefont, style.color.gray, name
 			)
 
 			-- build key tip line
@@ -149,6 +150,7 @@ local function build_tip(pack, style, keypressed)
 				-- key with align
 				local line = string.format('<b>%s</b>', key.key)
 				if style.is_align then
+					--noinspection StringConcatenationInLoops
 					line = line .. string.rep(" ", column.length - key.length)
 				end
 
@@ -166,10 +168,11 @@ local function build_tip(pack, style, keypressed)
 					'<span color="%s"><span font="%s">%s</span>%s%s</span>',
 					clr, style.keyfont, line, style.delim, key.description
 				)
-				coltxt = coltxt .. line .. "\n"
+				coltxt[#coltxt + 1] = line
 			end
 		end
-		text[i] = coltxt
+
+		text[i] = table.concat(coltxt, '\n')
 	end
 
 	return text

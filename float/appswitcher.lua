@@ -209,12 +209,15 @@ function appswitcher:init()
 	-- Function to form title string for given client (name and tags)
 	--------------------------------------------------------------------------------
 	function self.title_generator(c)
-		local client_tags = ""
+		local client_tags = {}
+
 		for _, t in ipairs(c:tags()) do
-			client_tags = client_tags .. " " .. string.upper(t.name)
+			client_tags[#client_tags + 1] = string.upper(t.name)
 		end
-		client_tags = '<span color="' .. style.color.gray .. '">' .. "  [" .. client_tags .. " ]" .. "</span>"
-		return (awful.util.escape(c.name) or "Untitled") .. client_tags
+
+		local tag_text = string.format('<span color="%s">[%s]</span>', style.color.gray, table.concat(client_tags, " "))
+
+		return string.format("%s %s", awful.util.escape(c.name) or "Untitled", tag_text)
 	end
 
 	-- Function to mark window (border color change)
