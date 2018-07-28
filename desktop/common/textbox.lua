@@ -62,7 +62,7 @@ function align.by_width(cr, width, height, text)
 	local gap = 0
 
 	for i = 1, #text do
-		c = string.sub(text, i, i)
+		local c = string.sub(text, i, i)
 		--cr:move_to(gap, height)
 		cr:move_to(gap, ext.height)
 		cr:show_text(c)

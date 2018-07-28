@@ -74,7 +74,7 @@ function layoutbox:init(layouts, style)
 	-- Update menu function
 	------------------------------------------------------------
 	function self:update_menu(t)
-		cl = awful.tag.getproperty(t, "layout")
+		local cl = awful.tag.getproperty(t, "layout")
 		for i, l in ipairs(layouts) do
 			local mark = cl == l and style.micon.check or style.micon.blank
 			if self.menu.items[i].right_icon then

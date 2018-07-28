@@ -151,7 +151,7 @@ function pulse.new(args, style)
 
 	-- create widget
 	--------------------------------------------------------------------------------
-	widg = style.widget(style.audio)
+	local widg = style.widget(style.audio)
 	table.insert(pulse.widgets, widg)
 
 	-- Set tooltip

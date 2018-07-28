@@ -83,7 +83,7 @@ function greentask.new(style)
 		data.state = redutil.table.merge(data.state, state)
 
 		-- icon
-		icon = state.icon or style.df_icon
+		local icon = state.icon or style.df_icon
 		self._svgbox:set_image(icon)
 		self._svgbox:set_color(
 			data.state.focus and style.color.main

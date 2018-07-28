@@ -137,7 +137,7 @@ function svgbox.new(image, resize_allowed, newcolor)
 	-- Fit
 	------------------------------------------------------------
 	function widg:fit(context, width, height)
-		fw, fh = self:get_forced_width(), self:get_forced_height()
+		local fw, fh = self:get_forced_width(), self:get_forced_height()
 		if fw or fh then
 			return fw or width, fh or height
 		else

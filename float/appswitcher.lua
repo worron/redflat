@@ -254,8 +254,8 @@ function appswitcher:init()
 			iscf = 1
 		else
 			-- correct height
-			wanted_widget_width = (max_width - expen_h) / inum
-			corrected_height = wanted_widget_width / style.preview_format + expen_v
+			local wanted_widget_width = (max_width - expen_h) / inum
+			local corrected_height = wanted_widget_width / style.preview_format + expen_v
 
 			w = max_width
 			h = corrected_height

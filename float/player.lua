@@ -316,19 +316,19 @@ function player:initialize_info()
 
 			local function parse_dbus_value(ident)
 				local regex = "(" .. ident .. ")%s+([a-z0-9]+)%s+(.-)%s-%)\n"
-				_, _, value = output:match(regex)
+				local _, _, value = output:match(regex)
 				if not value then return nil end
 
 				-- check for int64 type field
-				int64_val = value:match("int64%s+(%d+)")
+				local int64_val = value:match("int64%s+(%d+)")
 				if int64_val then return tonumber(int64_val) end
 
 				-- check for double type field
-				double_val = value:match("double%s+([%d.]+)")
+				local double_val = value:match("double%s+([%d.]+)")
 				if double_val then return tonumber(double_val) end
 
 				-- check for array type field as table, extract first entry only
-				array_val = value:match("array%s%[%s+([^%],]+)")
+				local array_val = value:match("array%s%[%s+([^%],]+)")
 				if array_val then return { array_val } end
 
 				return value

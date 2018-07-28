@@ -62,7 +62,7 @@ function greentag.new(style)
 	------------------------------------------------------------
 	function widg:set_state(state)
 		data.state = state
-		icon = style.icon[awful.layout.getname(state.layout)] or style.icon.unknown
+		local icon = style.icon[awful.layout.getname(state.layout)] or style.icon.unknown
 		self._svgbox:set_image(icon)
 		self._svgbox:set_color(
 			data.state.active and style.color.main
