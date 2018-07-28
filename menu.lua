@@ -513,7 +513,7 @@ function menu.entry(parent, args)
 
 	-- Set hotkey if needed
 	------------------------------------------------------------
-	local key = nil
+	local key
 	local text = awful.util.escape(args.text)
 
 	if args.key and not awful.util.table.hasitem(parent.keys, args.key) then
@@ -535,7 +535,7 @@ function menu.entry(parent, args)
 
 	-- Set left icon if needed
 	------------------------------------------------------------
-	local iconbox = nil
+	local iconbox
 	local margin = wibox.container.margin(label)
 
 	if args.icon then
@@ -547,7 +547,7 @@ function menu.entry(parent, args)
 
 	-- Set right icon if needed
 	------------------------------------------------------------
-	local right_iconbox = nil
+	local right_iconbox
 
 	if type(args.cmd) == "table" then
 		right_iconbox = svgbox(args.theme.submenu_icon, nil, args.theme.color.submenu_icon)

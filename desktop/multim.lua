@@ -89,7 +89,7 @@ function multim.new(args, geometry, style)
 	--------------------------------------------------------------------------------
 	local dwidget = {}
 	local icon
-	local last_state = nil
+	local last_state
 
 	local args = redutil.table.merge(default_args, args or {})
 	local geometry = redutil.table.merge(default_geometry, geometry or {})

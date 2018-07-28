@@ -29,7 +29,7 @@ local redtip = require("redflat.float.hotkeys")
 local apprunner = { applist = {}, command = "", keys = {} }
 
 local programs = {}
-local lastquery = nil
+local lastquery
 
 -- key bindings
 apprunner.keys.move = {
