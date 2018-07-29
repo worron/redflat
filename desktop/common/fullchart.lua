@@ -8,9 +8,6 @@
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
 local wibox = require("wibox")
-local awful = require("awful")
-local beautiful = require("beautiful")
-local color = require("gears.color")
 
 local dcommon = require("redflat.desktop.common")
 local redutil = require("redflat.util")

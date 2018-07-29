@@ -16,7 +16,7 @@ function base.buttons(buttons, object)
 	if buttons then
 		local btns = {}
 
-		for kb, b in ipairs(buttons) do
+		for _, b in ipairs(buttons) do
 			-- Create a proxy button object: it will receive the real
 			-- press and release events, and will propagate them the the
 			-- button object the user provided, but with the object as

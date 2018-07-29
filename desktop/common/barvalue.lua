@@ -7,13 +7,9 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
-local math = math
-local string = string
 local wibox = require("wibox")
-local color = require("gears.color")
 --local beautiful = require("beautiful")
 
-local redutil = require("redflat.util")
 local dcommon = require("redflat.desktop.common")
 
 -- Initialize tables for module

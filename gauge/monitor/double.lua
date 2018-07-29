@@ -55,13 +55,13 @@ function pbar(style)
 
 	-- Fit
 	------------------------------------------------------------
-	function widg:fit(context, width, height)
+	function widg:fit(_, width, height)
 		return width, height
 	end
 
 	-- Draw
 	------------------------------------------------------------
-	function widg:draw(context, cr, width, height)
+	function widg:draw(_, cr, width, height)
 
 		local wd = (width + style.line.gap) / style.line.num - style.line.gap
 		local dy = (height - (2 * style.line.width + style.line.v_gap)) / 2

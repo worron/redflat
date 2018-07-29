@@ -8,8 +8,6 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
-local math = math
-local string = string
 local awful = require("awful")
 local wibox = require("wibox")
 local beautiful = require("beautiful")
@@ -89,7 +87,7 @@ function multim.new(args, geometry, style)
 	--------------------------------------------------------------------------------
 	local dwidget = {}
 	local icon
-	local last_state = nil
+	local last_state
 
 	local args = redutil.table.merge(default_args, args or {})
 	local geometry = redutil.table.merge(default_geometry, geometry or {})

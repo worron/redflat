@@ -46,9 +46,9 @@ end
 local function build_label(item)
 	if #item[1] == 0 then return item[2] end
 
-	local label = ""
-	for _, m in ipairs(item[1]) do label = label .. label_pattern[m] .. "-" end
-	return label .. item[2]
+	local mods = {}
+	for _, m in ipairs(item[1]) do mods[#mods + 1] = label_pattern[m] end
+	return string.format("%s-%s", table.concat(mods, '-'), item[2])
 end
 
 local function build_tip(store, item, prefix)

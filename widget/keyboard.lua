@@ -8,13 +8,10 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
-local math = math
 local table = table
 local tonumber = tonumber
 local awful = require("awful")
-local wibox = require("wibox")
 local beautiful = require("beautiful")
-local color = require("gears.color")
 
 local tooltip = require("redflat.float.tooltip")
 local redmenu = require("redflat.menu")
@@ -61,7 +58,7 @@ end
 
 -- Show layout menu
 -----------------------------------------------------------------------------------------------------------------------
-function keybd:toggle_menu(t)
+function keybd:toggle_menu()
 	if self.menu.wibox.visible then
 		self.menu:hide()
 	else
@@ -90,9 +87,7 @@ function keybd.new(args, style)
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local style = redutil.table.merge(default_style(), style or {})
-
 	local args = args or {}
-	local layouts_num = #args.layouts
 
 	-- Initialize layout menu
 	--------------------------------------------------------------------------------

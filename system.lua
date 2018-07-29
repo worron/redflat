@@ -271,6 +271,7 @@ function system.battery(batname)
 	-- Get state information
 	------------------------------------------------------------
 	local state = battery_state[battery.status] or battery_state["Unknown\n"]
+	local remaining, capacity
 
 	-- Get capacity information
 	if     battery.charge_now then remaining, capacity = battery.charge_now, battery.charge_full
@@ -376,7 +377,10 @@ function system.thermal.nvprime()
 	local nvidia_on = string.find(redutil.read.output("prime-select query"), "nvidia")
 
 	if nvidia_on ~= nil then
-		t = string.match(redutil.read.output("nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader"), "%d%d")
+		local t = string.match(
+			redutil.read.output("nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader"),
+			"%d%d"
+		)
 		if t then temp = t end
 	end
 

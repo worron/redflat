@@ -8,7 +8,6 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
-local math = math
 local string = string
 
 local wibox = require("wibox")
@@ -17,7 +16,6 @@ local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
 local barpack = require("redflat.desktop.common.barpack")
-local system = require("redflat.system")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------

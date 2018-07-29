@@ -9,7 +9,6 @@
 local setmetatable = setmetatable
 local math = math
 
-local awful = require("awful")
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local color = require("gears.color")
@@ -71,7 +70,7 @@ function orangetag.new(style)
 
 	-- Fit
 	------------------------------------------------------------
-	function widg:fit(context, width, height)
+	function widg:fit(_, width, height)
 		if data.width then
 			return math.min(width, data.width), height
 		else
@@ -81,7 +80,7 @@ function orangetag.new(style)
 
 	-- Draw
 	------------------------------------------------------------
-	function widg:draw(context, cr, width, height)
+	function widg:draw(_, cr, width, height)
 
 		local sections = math.max(#data.state.list, style.min_sections)
 		local step = (TPI - sections * style.cgap) / sections

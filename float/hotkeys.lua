@@ -6,8 +6,6 @@
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
-local setmetatable = setmetatable
-local type = type
 local math = math
 
 local awful = require("awful")
@@ -17,7 +15,6 @@ local timer = require("gears.timer")
 
 local redflat = require("redflat")
 local redutil = require("redflat.util")
-local separator = require("redflat.gauge.separator")
 
 
 -- Initialize tables for module
@@ -121,7 +118,7 @@ local function parse(rawkeys, columns)
 		end
 
 		-- sort key by lenght inside group
-		for name, group in pairs(keys[i].groups) do table.sort(group, keysort) end
+		for _, group in pairs(keys[i].groups) do table.sort(group, keysort) end
 	end
 
 	return keys
@@ -133,14 +130,15 @@ local function build_tip(pack, style, keypressed)
 	local text = {}
 
 	for i, column in ipairs(pack) do
-		local coltxt = ""
+		local coltxt = {}
 
 		for _, name in pairs(column.names) do
 			local group = column.groups[name]
 
 			-- set group title
-			coltxt = coltxt ..  string.format(
-				'<span font="%s" color="%s">%s</span>\n', style.titlefont, style.color.gray, name
+			coltxt[#coltxt + 1] = string.format(
+				'<span font="%s" color="%s">%s</span>',
+				style.titlefont, style.color.gray, name
 			)
 
 			-- build key tip line
@@ -149,6 +147,7 @@ local function build_tip(pack, style, keypressed)
 				-- key with align
 				local line = string.format('<b>%s</b>', key.key)
 				if style.is_align then
+					--noinspection StringConcatenationInLoops
 					line = line .. string.rep(" ", column.length - key.length)
 				end
 
@@ -166,10 +165,11 @@ local function build_tip(pack, style, keypressed)
 					'<span color="%s"><span font="%s">%s</span>%s%s</span>',
 					clr, style.keyfont, line, style.delim, key.description
 				)
-				coltxt = coltxt .. line .. "\n"
+				coltxt[#coltxt + 1] = line
 			end
 		end
-		text[i] = coltxt
+
+		text[i] = table.concat(coltxt, '\n')
 	end
 
 	return text
@@ -237,7 +237,7 @@ function hotkeys:init()
 
 	-- Keygrabber
 	--------------------------------------------------------------------------------
-	self.keygrabber = function(mod, key, event)
+	self.keygrabber = function(_, key, event)
 		if event == "release" then
 			if hasitem(self.keys.close, key) then
 				self:hide(); return

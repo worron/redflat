@@ -7,9 +7,7 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
-local wibox = require("wibox")
 local beautiful = require("beautiful")
-local color = require("gears.color")
 local timer = require("gears.timer")
 
 local redutil = require("redflat.util")

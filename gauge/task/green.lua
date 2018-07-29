@@ -7,10 +7,8 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
-local math = math
 local wibox = require("wibox")
 local beautiful = require("beautiful")
-local color = require("gears.color")
 
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
@@ -83,7 +81,7 @@ function greentask.new(style)
 		data.state = redutil.table.merge(data.state, state)
 
 		-- icon
-		icon = state.icon or style.df_icon
+		local icon = state.icon or style.df_icon
 		self._svgbox:set_image(icon)
 		self._svgbox:set_color(
 			data.state.focus and style.color.main

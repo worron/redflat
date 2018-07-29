@@ -15,7 +15,6 @@ local setmetatable = setmetatable
 local ipairs = ipairs
 local table = table
 local awful = require("awful")
-local wibox = require("wibox")
 local layout = require("awful.layout")
 local beautiful = require("beautiful")
 
@@ -29,7 +28,7 @@ local svgbox = require("redflat.gauge.svgbox")
 -----------------------------------------------------------------------------------------------------------------------
 local layoutbox = { mt = {} }
 
-local last_tag = nil
+local last_tag
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
@@ -74,7 +73,7 @@ function layoutbox:init(layouts, style)
 	-- Update menu function
 	------------------------------------------------------------
 	function self:update_menu(t)
-		cl = awful.tag.getproperty(t, "layout")
+		local cl = awful.tag.getproperty(t, "layout")
 		for i, l in ipairs(layouts) do
 			local mark = cl == l and style.micon.check or style.micon.blank
 			if self.menu.items[i].right_icon then

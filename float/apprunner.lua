@@ -11,9 +11,6 @@
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
-local setmetatable = setmetatable
-local type = type
-
 local awful = require("awful")
 local beautiful = require("beautiful")
 local wibox = require("wibox")
@@ -29,7 +26,7 @@ local redtip = require("redflat.float.hotkeys")
 local apprunner = { applist = {}, command = "", keys = {} }
 
 local programs = {}
-local lastquery = nil
+local lastquery
 
 -- key bindings
 apprunner.keys.move = {
@@ -193,7 +190,7 @@ end
 -- Sort function
 --------------------------------------------------------------------------------
 local function sort_by_query(t, query)
-	l = string.len(query)
+	local l = string.len(query)
 	local function s(a, b)
 		return string.lower(string.sub(a.Name, 1, l)) == query and string.lower(string.sub(b.Name, 1, l)) ~= query
 	end
@@ -206,7 +203,7 @@ local function list_filtrate(query)
 	if lastquery ~= query then
 		programs.current = {}
 
-		for i, p in ipairs(programs.all) do
+		for _, p in ipairs(programs.all) do
 			if string.match(string.lower(p.Name), query) then
 				table.insert(programs.current, p)
 			end
@@ -243,7 +240,7 @@ end
 
 -- Keypress handler
 -----------------------------------------------------------------------------------------------------------------------
-local function keypressed_callback(mod, key, comm)
+local function keypressed_callback(mod, key)
 	for _, k in ipairs(apprunner.keys.all) do
 		if redutil.key.match_prompt(k, mod, key) then k[3](); return true end
 	end
@@ -292,7 +289,7 @@ function apprunner:init()
 
 	local prompt_area_layout = wibox.container.constraint(prompt_area_horizontal, "exact", nil, style.title_height)
 
-	area_vertical = wibox.layout.align.vertical()
+	local area_vertical = wibox.layout.align.vertical()
 	area_vertical:set_top(prompt_area_layout)
 	area_vertical:set_middle(wibox.container.margin(self.applist.layout, 0, 0, style.border_margin[3]))
 	local area_layout = wibox.container.margin(area_vertical, unpack(style.border_margin))

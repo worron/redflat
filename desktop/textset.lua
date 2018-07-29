@@ -63,9 +63,9 @@ function textset.new(args, style)
 
 	-- update info function
 	local function update()
-		local state = ""
-		for _, txt in ipairs(data) do state = state .. txt end
-		widg:set_markup(string.format('<span color="%s">%s</span>', style.color.gray, state))
+		local state = {}
+		for _, txt in ipairs(data) do state[#state + 1] = txt end
+		widg:set_markup(string.format('<span color="%s">%s</span>', style.color.gray, table.concat(state)))
 	end
 
 	-- Set update timers

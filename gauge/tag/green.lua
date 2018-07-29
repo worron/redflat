@@ -7,12 +7,10 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
-local math = math
 
 local awful = require("awful")
 local wibox = require("wibox")
 local beautiful = require("beautiful")
-local color = require("gears.color")
 
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
@@ -62,7 +60,7 @@ function greentag.new(style)
 	------------------------------------------------------------
 	function widg:set_state(state)
 		data.state = state
-		icon = style.icon[awful.layout.getname(state.layout)] or style.icon.unknown
+		local icon = style.icon[awful.layout.getname(state.layout)] or style.icon.unknown
 		self._svgbox:set_image(icon)
 		self._svgbox:set_color(
 			data.state.active and style.color.main

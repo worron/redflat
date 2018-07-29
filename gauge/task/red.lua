@@ -65,7 +65,7 @@ function redtask.new(style)
 
 	-- Fit
 	------------------------------------------------------------
-	function widg:fit(context, width, height)
+	function widg:fit(_, width, height)
 		if data.width then
 			return math.min(width, data.width), height
 		else
@@ -75,7 +75,7 @@ function redtask.new(style)
 
 	-- Draw
 	------------------------------------------------------------
-	function widg:draw(context, cr, width, height)
+	function widg:draw(_, cr, width)
 
 		-- label
 		cr:set_source(color(data.state.minimized and style.color.gray or style.color.icon))

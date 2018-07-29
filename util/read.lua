@@ -11,13 +11,12 @@ function read.file(path)
 	local file = io.open(path)
 
 	if file then
-		output = file:read("*a")
+		local output = file:read("*a")
 		file:close()
+		return output
 	else
 		return nil
 	end
-
-	return output
 end
 
 function read.output(cmd)
