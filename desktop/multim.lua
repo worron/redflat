@@ -8,8 +8,6 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
-local math = math
-local string = string
 local awful = require("awful")
 local wibox = require("wibox")
 local beautiful = require("beautiful")

@@ -80,13 +80,13 @@ function dashbar.new(style)
 		self:emit_signal("widget::updated")
 	end
 
-	function widg:fit(context, width, height)
+	function widg:fit(_, width, height)
 		return style.width or width, style.height or height
 	end
 
 	-- Draw function
 	------------------------------------------------------------
-	function widg:draw(context, cr, width, height)
+	function widg:draw(_, cr, width, height)
 
 		-- progressbar
 		local barnum = math.floor((width + style.bar.gap) / (style.bar.width + style.bar.gap))

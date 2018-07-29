@@ -14,12 +14,10 @@
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
 local table = table
-local ipairs = ipairs
 
 local wibox = require("wibox")
 local awful = require("awful")
 local beautiful = require("beautiful")
-local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
 local dotcount = require("redflat.gauge.graph.dots")
@@ -129,11 +127,11 @@ end
 -- @param args.timeout Update interval
 -- @param style Settings for dotcount widget
 -----------------------------------------------------------------------------------------------------------------------
-function minitray.new(args, style)
+function minitray.new(_, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local args = args or {} -- usesless now, leave it here for backward compatibility and future cases
+--	local args = args or {} -- usesless now, leave it be for backward compatibility and future cases
 	local style = redutil.table.merge(default_style(), style or {})
 
 	-- Initialize minitray window

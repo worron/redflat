@@ -6,9 +6,6 @@
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
-local setmetatable = setmetatable
-local type = type
-
 local awful = require("awful")
 local beautiful = require("beautiful")
 local wibox = require("wibox")

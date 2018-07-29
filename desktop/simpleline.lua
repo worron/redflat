@@ -7,7 +7,6 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
-local math = math
 local string = string
 
 local wibox = require("wibox")
@@ -65,7 +64,7 @@ function sline.new(args, geometry, style)
 	local mid = wibox.layout.flex.horizontal()
 
 	-- construct line
-	for i, name in ipairs(args.sensors) do
+	for i, _ in ipairs(args.sensors) do
 		dwidget.item[i] = textbox("", style.rbox)
 
 		if style.icon then dwidget.icon[i] = svgbox(style.icon) end

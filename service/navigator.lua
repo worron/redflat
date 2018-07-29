@@ -85,13 +85,13 @@ function navigator.make_paint(c)
 
 	-- Fit
 	------------------------------------------------------------
-	function widg:fit(context, width, height)
+	function widg:fit(_, width, height)
 		return width, height
 	end
 
 	-- Draw
 	------------------------------------------------------------
-	function widg:draw(context, cr, width, height)
+	function widg:draw(_, cr, width, height)
 
 		if not data.client then return end
 
@@ -229,33 +229,27 @@ function navigator:init()
 	end
 
 	function self.hilight.hide()
-		for i, c in ipairs(self.cls) do self.data[i].widget:set_alert(false) end
+		for i, _ in ipairs(self.cls) do self.data[i].widget:set_alert(false) end
 	end
 
 	-- close the navigator on tag switch
 	tag.connect_signal('property::selected',
-		function(t)
-			if navigator.active then
-				self:close()
-			end
+		function()
+			if navigator.active then self:close() end
 		end
 	)
 
 	-- update navigator if new client spawns
 	client.connect_signal('manage',
-		function(c)
-			if navigator.active then
-				self:restart()
-			end
+		function()
+			if navigator.active then self:restart() end
 		end
 	)
 
 	-- update navigator if a client gets minimized or restored
 	client.connect_signal('property::minimized',
-		function(c)
-			if navigator.active then
-				self:restart()
-			end
+		function()
+			if navigator.active then self:restart() end
 		end
 	)
 end
@@ -316,7 +310,7 @@ function navigator:run()
 end
 
 function navigator:close()
-	for i, c in ipairs(self.cls) do
+	for i, _ in ipairs(self.cls) do
 		self.data[i]:clear()
 	end
 
@@ -332,7 +326,7 @@ end
 
 function navigator:restart()
 	-- update decoration
-	for i, c in ipairs(self.cls) do self.data[i]:clear(true) end
+	for i, _ in ipairs(self.cls) do self.data[i]:clear(true) end
 	local newcls = awful.client.tiled(mouse.screen)
 	for i = 1, math.max(#self.cls, #newcls) do
 		if newcls[i] then

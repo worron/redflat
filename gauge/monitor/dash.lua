@@ -68,7 +68,7 @@ function dashmon.new(style)
 
 	-- Fit
 	------------------------------------------------------------
-	function widg:fit(context, width, height)
+	function widg:fit(_, width, height)
 		if data.width then
 			return data.width, height
 		else
@@ -79,7 +79,7 @@ function dashmon.new(style)
 
 	-- Draw
 	------------------------------------------------------------
-	function widg:draw(context, cr, width, height)
+	function widg:draw(_, cr, width, height)
 
 		local gap = (height - style.line.width * style.line.num) / (style.line.num - 1)
 		local dy = style.line.width + gap

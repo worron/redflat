@@ -10,14 +10,11 @@
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
-local io = io
 local math = math
 local table = table
 local tonumber = tonumber
-local tostring = tostring
 local string = string
 local setmetatable = setmetatable
-local wibox = require("wibox")
 local awful = require("awful")
 local beautiful = require("beautiful")
 local timer = require("gears.timer")
@@ -108,7 +105,6 @@ function pulse:update_volume()
 	-- initialize vars
 	local volmax = 65536
 	local volume = 0
-	local mute
 
 	-- get current volume and mute state
 	local v = redutil.read.output("pacmd dump | grep set-sink-volume | grep " .. pulse_def_sink)
@@ -119,14 +115,10 @@ function pulse:update_volume()
 		if pv then volume = math.floor(tonumber(pv) * 100 / volmax) end
 	end
 
-	if m ~= nil and string.find(m, "no", -4) then
-		mute = false
-	else
-		mute = true
-	end
+	local mute = not (m and string.find(m, "no", -4))
 
 	-- update tooltip
-	self.tooltip:set_text(volume.."%")
+	self.tooltip:set_text(volume .. "%")
 
 	-- update widgets value
 	for _, w in ipairs(pulse.widgets) do

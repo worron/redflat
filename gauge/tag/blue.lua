@@ -9,7 +9,6 @@
 local setmetatable = setmetatable
 local math = math
 
-local awful = require("awful")
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local color = require("gears.color")
@@ -70,7 +69,7 @@ function bluetag.new(style)
 
 	-- Fit
 	------------------------------------------------------------
-	function widg:fit(context, width, height)
+	function widg:fit(_, width, height)
 		if data.width then
 			return math.min(width, data.width), height
 		else
@@ -80,7 +79,7 @@ function bluetag.new(style)
 
 	-- Draw
 	------------------------------------------------------------
-	function widg:draw(context, cr, width, height)
+	function widg:draw(_, cr, width)
 		local n = #data.state.list
 
 		-- text

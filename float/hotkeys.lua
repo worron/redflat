@@ -6,8 +6,6 @@
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
-local setmetatable = setmetatable
-local type = type
 local math = math
 
 local awful = require("awful")
@@ -17,7 +15,6 @@ local timer = require("gears.timer")
 
 local redflat = require("redflat")
 local redutil = require("redflat.util")
-local separator = require("redflat.gauge.separator")
 
 
 -- Initialize tables for module
@@ -121,7 +118,7 @@ local function parse(rawkeys, columns)
 		end
 
 		-- sort key by lenght inside group
-		for name, group in pairs(keys[i].groups) do table.sort(group, keysort) end
+		for _, group in pairs(keys[i].groups) do table.sort(group, keysort) end
 	end
 
 	return keys
@@ -240,7 +237,7 @@ function hotkeys:init()
 
 	-- Keygrabber
 	--------------------------------------------------------------------------------
-	self.keygrabber = function(mod, key, event)
+	self.keygrabber = function(_, key, event)
 		if event == "release" then
 			if hasitem(self.keys.close, key) then
 				self:hide(); return

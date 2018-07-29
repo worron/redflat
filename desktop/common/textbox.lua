@@ -36,14 +36,14 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 local align = {}
 
-function align.by_left(cr, width, height, text)
+function align.by_left(cr, _, _, text)
 	local ext = cr:text_extents(text)
 	--cr:move_to(0, height)
 	cr:move_to(0, ext.height)
 	cr:show_text(text)
 end
 
-function align.by_right(cr, width, height, text)
+function align.by_right(cr, width, _, text)
 	local ext = cr:text_extents(text)
 	--cr:move_to(width - (ext.width + ext.x_bearing), height)
 	cr:move_to(width - (ext.width + ext.x_bearing), ext.height)
@@ -56,7 +56,7 @@ function align.by_edges(cr, width, height, text)
 	align.by_right(cr, width, height, right_text)
 end
 
-function align.by_width(cr, width, height, text)
+function align.by_width(cr, width, _, text)
 	local ext = cr:text_extents(text)
 	local text_gap = (width - ext.width - ext.x_bearing)/(#text - 1)
 	local gap = 0
@@ -89,7 +89,7 @@ function textbox.new(txt, style)
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local style = redutil.table.merge(default_style(), style or {})
-	local textdraw = align[style.draw] or align.by_left
+--	local textdraw = align[style.draw] or align.by_left
 
 	-- updating values
 	local data = {
@@ -121,13 +121,13 @@ function textbox.new(txt, style)
 
 	-- Fit
 	------------------------------------------------------------
-	function textwidg:fit(context, width, height)
+	function textwidg:fit(_, width, height)
 		return data.width or width, style.height or height
 	end
 
 	-- Draw
 	------------------------------------------------------------
-	function textwidg:draw(context, cr, width, height)
+	function textwidg:draw(_, cr, width, height)
 		cr:set_source(color(data.color))
 		redutil.cairo.set_font(cr, style.font)
 

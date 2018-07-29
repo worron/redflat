@@ -19,7 +19,6 @@ local string = string
 local awful = require("awful")
 local wibox = require("wibox")
 local beautiful = require("beautiful")
-local layout = require("awful.layout")
 local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
@@ -176,7 +175,7 @@ function taglist.new(args, style)
 	for _, sg in ipairs(tag_signals) do awful.tag.attached_connect_signal(nil, sg, ut) end
 	for _, sg in ipairs(client_signals) do client.connect_signal(sg, uc) end
 
-	client.connect_signal("property::screen", function(c) update(cs) end) -- dirty
+	client.connect_signal("property::screen", function() update(cs) end) -- dirty
 
 	--------------------------------------------------------------------------------
 	update(cs) -- create taglist widget
@@ -187,11 +186,11 @@ end
 -- @param t The awful.tag
 -- @param args unused list of extra arguments
 -----------------------------------------------------------------------------------------------------------------------
-function taglist.filter.noempty(t, args) -- to include all nonempty tags on the screen.
+function taglist.filter.noempty(t) -- to include all nonempty tags on the screen.
 	return #t:clients() > 0 or t.selected
 end
 
-function taglist.filter.all(t, args) -- to include all tags on the screen.
+function taglist.filter.all() -- to include all tags on the screen.
 	return true
 end
 

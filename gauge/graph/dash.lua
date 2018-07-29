@@ -55,13 +55,13 @@ function dashcontrol.new(style)
 
 	-- Fit
 	------------------------------------------------------------
-	function widg:fit(context, width, height)
+	function widg:fit(_, width, height)
 		return width, height
 	end
 
 	-- Draw
 	------------------------------------------------------------
-	function widg:draw(context, cr, width, height)
+	function widg:draw(_, cr, width, height)
 		local wstep = (width - style.bar.width) / (style.bar.num - 1)
 		local hstep = height / style.bar.num
 		local point = math.ceil(data.value * style.bar.num)

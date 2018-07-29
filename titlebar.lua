@@ -12,7 +12,6 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local error = error
-local type = type
 local table = table
 
 
@@ -257,9 +256,9 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 titlebar.icon = {}
 
-function titlebar.icon.base(c, style)
+function titlebar.icon.base(_, style)
 	local style = redutil.table.merge(default_style(), style or {})
-	local sigpack = sigpack or {}
+--	local sigpack = sigpack or {}
 
 	-- local data
 	local data = {
@@ -269,11 +268,11 @@ function titlebar.icon.base(c, style)
 	-- build widget
 	local widg = wibox.widget.base.make_widget()
 
-	function widg:fit(context, cr, width, height)
+	function widg:fit(_, _, width, height)
 		return width, height
 	end
 
-	function widg:draw(context, cr, width, height)
+	function widg:draw(_, cr, width, height)
 		local d = math.tan(style.icon.angle) * height
 
 		cr:set_source(color(data.color))

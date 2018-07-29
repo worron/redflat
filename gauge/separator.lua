@@ -6,7 +6,6 @@
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
-local setmetatable = setmetatable
 local unpack = unpack
 local wibox = require("wibox")
 local beautiful = require("beautiful")
@@ -47,7 +46,7 @@ local function separator_base(horizontal, style)
 
 	-- Fit
 	------------------------------------------------------------
-	function widg:fit(context, width, height)
+	function widg:fit(_, width, height)
 		if horizontal then
 			return width, 2
 		else
@@ -57,7 +56,7 @@ local function separator_base(horizontal, style)
 
 	-- Draw
 	------------------------------------------------------------
-	function widg:draw(context, cr, width, height)
+	function widg:draw(_, cr, width, height)
 		cr:set_source(color(style.color.shadow1))
 		if horizontal then cr:rectangle(0, 0, width, 1)
 		else cr:rectangle(0, 0, 1, height) end

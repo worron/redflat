@@ -10,7 +10,6 @@
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
-local setmetatable = setmetatable
 local io = io
 local table = table
 local ipairs = ipairs
@@ -70,7 +69,6 @@ end
 --------------------------------------------------------------------------------
 local function all_icon_path(style)
 
-	local icon_path = {}
 	local icon_theme_paths = {}
 
 	-- add user icon theme
@@ -86,6 +84,8 @@ local function all_icon_path(style)
 	local all_icon_sizes = style.scalable_only and { 'scalable' } or all_icon_sizes
 
 	-- form all avalible icon dirs
+	local icon_path = {}
+
 	for _, icon_theme_directory in ipairs(icon_theme_paths) do
 		for _, size in ipairs(all_icon_sizes) do
 			for _, folder in ipairs(all_icon_folders) do
@@ -114,7 +114,6 @@ end
 function dfparser.lookup_icon(icon_file, style)
 
 	local style = redutil.table.merge(default_style().icons, style or {})
-	local icon_formats = style.scalable_only and { "svg" } or { "svg", "png", "gif" }
 
 	local df_icon
 	if style.df_icon and awful.util.file_readable(style.df_icon) then
@@ -124,8 +123,9 @@ function dfparser.lookup_icon(icon_file, style)
 	-- No icon name
 	if not icon_file or icon_file == "" then return style.default_icon end
 
-
 	-- Handle full path icons
+	local icon_formats = style.scalable_only and { "svg" } or { "svg", "png", "gif" }
+
 	if icon_file:sub(1, 1) == '/' then
 		if is_format(icon_file, icon_formats) then
 			return icon_file
@@ -138,7 +138,7 @@ function dfparser.lookup_icon(icon_file, style)
  	local icon_path = all_icon_path(style)
 
 	-- Icon searching
-	for i, directory in ipairs(icon_path) do
+	for _, directory in ipairs(icon_path) do
 
 		-- check if icon format specified and supported
 		if is_format(icon_file, icon_formats) and awful.util.file_readable(directory .. icon_file) then

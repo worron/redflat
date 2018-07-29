@@ -34,9 +34,9 @@ end
 
 -- Support functions
 -----------------------------------------------------------------------------------------------------------------------
-local function round(x)
-	return math.floor(x + 0.5)
-end
+--local function round(x)
+--	return math.floor(x + 0.5)
+--end
 
 -- Create a new counter widget
 -- @param style Table containing colors and geometry parameters for all elemets
@@ -68,15 +68,15 @@ function counter.new(style)
 
 	-- Fit
 	------------------------------------------------------------
-	function widg:fit(context, width, height)
+	function widg:fit(_, _, height)
 		local width = (style.dot_size + style.dot_gap_h) * data.column_num - style.dot_gap_h
 		return width, height
 	end
 
 	-- Draw
 	------------------------------------------------------------
-	function widg:draw(context, cr, width, height)
-		local maxnum = style.row_num * data.column_num
+	function widg:draw(_, cr, width, height)
+--		local maxnum = style.row_num * data.column_num
 		local gap_v = (height - style.row_num * style.dot_size) / (style.row_num - 1)
 
 		cr:translate(0, height)

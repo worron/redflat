@@ -10,7 +10,6 @@
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
-local setmetatable = setmetatable
 local type = type
 local unpack = unpack
 

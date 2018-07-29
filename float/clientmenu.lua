@@ -17,10 +17,8 @@ local setmetatable = setmetatable
 local ipairs = ipairs
 local table = table
 local beautiful = require("beautiful")
-local tag = require("awful.tag")
 local awful = require("awful")
 local wibox = require("wibox")
-local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
 local separator = require("redflat.gauge.separator")
@@ -245,9 +243,7 @@ end
 -- Calculate menu position
 --------------------------------------------------------------------------------
 local function coords_calc(menu)
-	local coords = {}
-
-	coords = mouse.coords()
+	local coords = mouse.coords()
 	coords.x = coords.x - menu.wibox.width / 2 - menu.wibox.border_width
 
 	return coords

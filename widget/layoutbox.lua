@@ -15,7 +15,6 @@ local setmetatable = setmetatable
 local ipairs = ipairs
 local table = table
 local awful = require("awful")
-local wibox = require("wibox")
 local layout = require("awful.layout")
 local beautiful = require("beautiful")
 

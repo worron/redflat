@@ -8,7 +8,6 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local string = string
-local wibox = require("wibox")
 local awful = require("awful")
 local beautiful = require("beautiful")
 
@@ -90,12 +89,10 @@ end
 
 -- Update from dbus-send and gnome/unity settings daemon
 ------------------------------------------------------------
-function brightness.info_with_gsd(brightness_level)
+function brightness.info_with_gsd(level)
 	if not brightness.style then brightness.style = default_style() end
 
-	if not brightness_level then
-		local brightness_level = string.match(redutil.read.output(gsd_command .. gsd_get), "uint32%s(%d+)")
-	end
+	local brightness_level = level or string.match(redutil.read.output(gsd_command .. gsd_get), "uint32%s(%d+)")
 
 	rednotify:show(redutil.table.merge(
 		{ value = brightness_level / 100, text = brightness_level .. "%" },

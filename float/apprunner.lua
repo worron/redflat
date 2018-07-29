@@ -11,9 +11,6 @@
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
-local setmetatable = setmetatable
-local type = type
-
 local awful = require("awful")
 local beautiful = require("beautiful")
 local wibox = require("wibox")
@@ -206,7 +203,7 @@ local function list_filtrate(query)
 	if lastquery ~= query then
 		programs.current = {}
 
-		for i, p in ipairs(programs.all) do
+		for _, p in ipairs(programs.all) do
 			if string.match(string.lower(p.Name), query) then
 				table.insert(programs.current, p)
 			end
@@ -243,7 +240,7 @@ end
 
 -- Keypress handler
 -----------------------------------------------------------------------------------------------------------------------
-local function keypressed_callback(mod, key, comm)
+local function keypressed_callback(mod, key)
 	for _, k in ipairs(apprunner.keys.all) do
 		if redutil.key.match_prompt(k, mod, key) then k[3](); return true end
 	end

@@ -7,11 +7,8 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
-local math = math
-local string = string
 
 local wibox = require("wibox")
-local color = require("gears.color")
 --local beautiful = require("beautiful")
 
 local corners = require("redflat.desktop.common.corners")

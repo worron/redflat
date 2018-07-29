@@ -21,15 +21,14 @@ local math = math
 
 -- local Gdk = require("lgi").Gdk
 -- local pixbuf = require("lgi").GdkPixbuf
-local cairo = require("lgi").cairo
+-- local cairo = require("lgi").cairo
 local base = require("wibox.widget.base")
 local surface = require("gears.surface")
-local awful = require("awful")
 local color = require("gears.color")
 
 local pixbuf
 local function load_pixbuf()
-	local Gdk = require("lgi").Gdk
+--	local Gdk = require("lgi").Gdk
 	pixbuf = require("lgi").GdkPixbuf
 end
 local is_pixbuf_loaded = pcall(load_pixbuf)
@@ -136,7 +135,7 @@ function svgbox.new(image, resize_allowed, newcolor)
 
 	-- Fit
 	------------------------------------------------------------
-	function widg:fit(context, width, height)
+	function widg:fit(_, width, height)
 		local fw, fh = self:get_forced_width(), self:get_forced_height()
 		if fw or fh then
 			return fw or width, fh or height
@@ -156,7 +155,7 @@ function svgbox.new(image, resize_allowed, newcolor)
 
 	-- Draw
 	------------------------------------------------------------
-	function widg:draw(context, cr, width, height)
+	function widg:draw(_, cr, width, height)
 		if width == 0 or height == 0 or not self._image then return end
 
 		local w, h = self._image.width, self._image.height

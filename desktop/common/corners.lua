@@ -91,13 +91,13 @@ function corners.new(style)
 		self:emit_signal("widget::updated")
 	end
 
-	function cornwidg:fit(context, width, height)
+	function cornwidg:fit(_, width, height)
 		return style.width  or width, style.height or height
 	end
 
 	-- Draw function
 	------------------------------------------------------------
-	function cornwidg:draw(context, cr, width, height)
+	function cornwidg:draw(_, cr, width, height)
 		local point = math.ceil(style.corner.num * data.value)
 		if style.plaindash then
 			local line_gap = style.corner.line + (height - style.corner.line * style.corner.num)/(style.corner.num - 1)

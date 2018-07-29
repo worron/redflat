@@ -12,8 +12,6 @@ local tonumber = tonumber
 local io = io
 local os = os
 
-local awful = require("awful")
-
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
 local timestamp = {}
