@@ -11,9 +11,7 @@ local awful = require("awful")
 local navigator = require("redflat.service.navigator")
 
 local ipairs = ipairs
-local math = math
 
-local hasitem = awful.util.table.hasitem
 local layout = awful.layout
 local redutil = require("redflat.util")
 local redtip = require("redflat.float.hotkeys")

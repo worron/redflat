@@ -10,7 +10,6 @@ local ipairs = ipairs
 local pairs = pairs
 local math = math
 
-local beautiful = require("beautiful")
 local awful = require("awful")
 local timer = require("gears.timer")
 
@@ -529,7 +528,7 @@ function map.switch_active(n)
 	if map.data[t].set[na] then
 		map.data[t].autoaim = false
 		map.data[t].active = na
-		local pack = map.data[t].set[na]
+		--local pack = map.data[t].set[na]
 		notify("Active group index: " .. tostring(na))
 	end
 	redflat.service.navigator.hilight.show(map.data[t].set[map.data[t].active].wa)

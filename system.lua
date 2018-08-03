@@ -17,12 +17,9 @@
 local tonumber = tonumber
 local io = io
 local os = os
-local setmetatable = setmetatable
 local string = string
 
 local awful = require("awful")
-local wibox = require("wibox")
-local beautiful = require("beautiful")
 local redutil = require("redflat.util")
 
 -- Initialize tables for module
@@ -426,7 +423,7 @@ function system.transmission_parse(output)
 	-- Find state and progress for every torrent
 	-- and total upload and downoad speed
 	------------------------------------------------------------
-	local status_pos = string.find(output, "Status")
+	--local status_pos = string.find(output, "Status")
 
 	-- assuming "Up & Down" and "Downloading" is the same thing
 	output = string.gsub(output,"Up & Down","Downloading")
@@ -477,7 +474,6 @@ local storage = {}
 
 function system.proc_info(cpu_storage)
 	local process = {}
-	local new_st = {}
 	local mem_page_size = 4
 
 	-- get processes list with ps utility
