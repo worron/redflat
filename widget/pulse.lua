@@ -30,7 +30,6 @@ local redutil = require("redflat.util")
 -----------------------------------------------------------------------------------------------------------------------
 local pulse = { widgets = {}, mt = {} }
 local counter = 0
-local pulse_def_sink = redutil.read.output("pacmd dump|perl -ane 'print $F[1] if /set-default-sink/'")
 
 pulse.startup_time = 4
 
@@ -60,7 +59,7 @@ function pulse:change_volume(args)
 	local diff = args.down and -args.step or args.step
 
 	-- get current volume
-	local v = redutil.read.output("pacmd dump |grep set-sink-volume | grep " .. pulse_def_sink )
+	local v = redutil.read.output("pacmd dump |grep set-sink-volume | grep " .. self.def_sink )
 	local parsed = string.match(v, "0x%x+")
 
 	-- catch possible problems with pacmd output
@@ -89,7 +88,7 @@ function pulse:change_volume(args)
 	end
 
 	-- set new volume
-	awful.spawn("pacmd set-sink-volume " .. pulse_def_sink .. " " .. new_volume)
+	awful.spawn("pacmd set-sink-volume " .. self.def_sink .. " " .. new_volume)
 	-- update volume indicators
 	self:update_volume()
 end
@@ -97,12 +96,12 @@ end
 -- Set mute
 -----------------------------------------------------------------------------------------------------------------------
 function pulse:mute()
-	local mute = redutil.read.output("pacmd dump | grep set-sink-mute | grep " .. pulse_def_sink)
+	local mute = redutil.read.output("pacmd dump | grep set-sink-mute | grep " .. self.def_sink)
 
 	if string.find(mute, "no", -4) then
-		awful.spawn("pacmd set-sink-mute " .. pulse_def_sink .. " yes")
+		awful.spawn("pacmd set-sink-mute " .. self.def_sink .. " yes")
 	else
-		awful.spawn("pacmd set-sink-mute " .. pulse_def_sink .. " no")
+		awful.spawn("pacmd set-sink-mute " .. self.def_sink .. " no")
 	end
 	self:update_volume()
 end
@@ -116,8 +115,8 @@ function pulse:update_volume()
 	local volume = 0
 
 	-- get current volume and mute state
-	local v = redutil.read.output("pacmd dump | grep set-sink-volume | grep " .. pulse_def_sink)
-	local m = redutil.read.output("pacmd dump | grep set-sink-mute | grep " .. pulse_def_sink)
+	local v = redutil.read.output("pacmd dump | grep set-sink-volume | grep " .. self.def_sink)
+	local m = redutil.read.output("pacmd dump | grep set-sink-mute | grep " .. self.def_sink)
 
 	if v then
 		local pv = string.match(v, "0x%x+")
@@ -136,6 +135,12 @@ function pulse:update_volume()
 	end
 end
 
+-- Update default pulse sink
+-----------------------------------------------------------------------------------------------------------------------
+function pulse:update_sink()
+	self.def_sink = redutil.read.output("pacmd dump|perl -ane 'print $F[1] if /set-default-sink/'")
+end
+
 -- Create a new pulse widget
 -- @param timeout Update interval
 -----------------------------------------------------------------------------------------------------------------------
@@ -149,6 +154,7 @@ function pulse.new(args, style)
 	local args = args or {}
 	local timeout = args.timeout or 5
 	local autoupdate = args.autoupdate or false
+	pulse:update_sink()
 
 	-- create widget
 	--------------------------------------------------------------------------------
@@ -183,7 +189,7 @@ pulse.startup_updater = timer({ timeout = 1 })
 pulse.startup_updater:connect_signal("timeout",
 	function()
 		counter = counter + 1
-		pulse_def_sink = redutil.read.output("pacmd dump|perl -ane 'print $F[1] if /set-default-sink/'")
+		pulse:update_sink()
 		pulse:update_volume()
 		if counter > pulse.startup_time then pulse.startup_updater:stop() end
 	end
