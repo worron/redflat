@@ -18,6 +18,7 @@ local setmetatable = setmetatable
 local awful = require("awful")
 local beautiful = require("beautiful")
 local timer = require("gears.timer")
+local naughty = require("naughty")
 
 local tooltip = require("redflat.float.tooltip")
 local audio = require("redflat.gauge.audio.blue")
@@ -60,7 +61,15 @@ function pulse:change_volume(args)
 
 	-- get current volume
 	local v = redutil.read.output("pacmd dump |grep set-sink-volume | grep " .. pulse_def_sink )
-	local volume = tonumber(string.match(v, "0x%x+"))
+	local parsed = string.match(v, "0x%x+")
+
+	-- catch possible problems with pacmd output
+	if not parsed then
+		naughty.notify({ title = "Warning!", text = "PA widget can't parse pacmd output" })
+		return
+	end
+
+	local volume = tonumber(parsed)
 
 	-- calculate new volume
 	local new_volume = volume + diff
