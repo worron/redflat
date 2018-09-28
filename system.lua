@@ -332,8 +332,10 @@ function system.thermal.sensors_core(args)
 
 	if args.main then sensors_store = redutil.read.output("sensors | grep Core") end
 	local line = string.match(sensors_store, "Core " .. index .."(.-)\r?\n")
-	local temp = string.match(line, "%+(%d+%.%d)°[CF]")
 
+	if not line then return { 0 } end
+
+	local temp = string.match(line, "%+(%d+%.%d)°[CF]")
 	return temp and { math.floor(tonumber(temp)) } or { 0 }
 end
 
