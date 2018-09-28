@@ -44,7 +44,7 @@ function system.fs_info(args)
 
 	-- Format output special for redflat desktop widget
 	------------------------------------------------------------
-   return { tonumber(fs_info.use_p), tonumber(fs_info.used) }
+   return { tonumber(fs_info.use_p) or 0, tonumber(fs_info.used) or 0}
 end
 
 -- Get network speed
