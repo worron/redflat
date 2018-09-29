@@ -406,7 +406,7 @@ function qlaunch:run_or_raise(key, forced_run)
 
 	if cnum == 0 or forced_run then
 		-- open new application
-		if self.store[key].run ~= "" then awful.util.spawn_with_shell(self.store[key].run) end
+		if self.store[key].run ~= "" then awful.spawn.with_shell(self.store[key].run) end
 	elseif cnum == 1 then
 		-- switch to sole app
 		focus_and_raise(clients[1])

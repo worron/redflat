@@ -220,7 +220,7 @@ function top:init()
 	-- Kill selected process
 	--------------------------------------------------------------------------------
 	function self.kill_selected()
-		if selected.number then awful.util.spawn_with_shell("kill " .. selected.pid) end
+		if selected.number then awful.spawn.with_shell("kill " .. selected.pid) end
 		self:update_list()
 	end
 

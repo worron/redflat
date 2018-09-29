@@ -44,7 +44,7 @@ function system.fs_info(args)
 
 	-- Format output special for redflat desktop widget
 	------------------------------------------------------------
-   return { tonumber(fs_info.use_p), tonumber(fs_info.used) }
+   return { tonumber(fs_info.use_p) or 0, tonumber(fs_info.used) or 0}
 end
 
 -- Get network speed
@@ -332,8 +332,10 @@ function system.thermal.sensors_core(args)
 
 	if args.main then sensors_store = redutil.read.output("sensors | grep Core") end
 	local line = string.match(sensors_store, "Core " .. index .."(.-)\r?\n")
-	local temp = string.match(line, "%+(%d+%.%d)°[CF]")
 
+	if not line then return { 0 } end
+
+	local temp = string.match(line, "%+(%d+%.%d)°[CF]")
 	return temp and { math.floor(tonumber(temp)) } or { 0 }
 end
 
@@ -432,15 +434,15 @@ function system.transmission_parse(output)
 	for line in string.gmatch(output, "[^\n]+") do
 		if string.sub(line, 1, 3) == "Sum" then
 			-- get total speed
-			torrent.seed.speed, torrent.dnld.speed = string.match(line,
-				"Sum:%s+[%d%.]+%s+%a+%s+([%d%.]+)%s+([%d%.]+)"
-			)
+			local seed, dnld = string.match(line, "Sum:%s+[%d%.]+%s+%a+%s+([%d%.]+)%s+([%d%.]+)")
+			if seed and dnld then
+				torrent.seed.speed, torrent.dnld.speed = seed, dnld
+			end
 		else
 			-- get torrent info
 			local prog, status = string.match(line,
 				"%s+%d+%s+(%d+)%%%s+[%d%.]+%s%a+%s+.+%s+[%d%.]+%s+[%d%.]+%s+[%d%.]+%s+(%a+)"
 			)
-
 			if prog and status then
 				table.insert(torrent.list, { prog = prog, status = status })
 
