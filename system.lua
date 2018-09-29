@@ -434,15 +434,15 @@ function system.transmission_parse(output)
 	for line in string.gmatch(output, "[^\n]+") do
 		if string.sub(line, 1, 3) == "Sum" then
 			-- get total speed
-			torrent.seed.speed, torrent.dnld.speed = string.match(line,
-				"Sum:%s+[%d%.]+%s+%a+%s+([%d%.]+)%s+([%d%.]+)"
-			)
+			local seed, dnld = string.match(line, "Sum:%s+[%d%.]+%s+%a+%s+([%d%.]+)%s+([%d%.]+)")
+			if seed and dnld then
+				torrent.seed.speed, torrent.dnld.speed = seed, dnld
+			end
 		else
 			-- get torrent info
 			local prog, status = string.match(line,
 				"%s+%d+%s+(%d+)%%%s+[%d%.]+%s%a+%s+.+%s+[%d%.]+%s+[%d%.]+%s+[%d%.]+%s+(%a+)"
 			)
-
 			if prog and status then
 				table.insert(torrent.list, { prog = prog, status = status })
 
