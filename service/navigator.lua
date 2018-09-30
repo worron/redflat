@@ -30,7 +30,6 @@ navigator.ignored = { "dock", "splash", "desktop" }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		geometry     = { width = 200, height = 80 },
 		border_width = 2,
 		marksize     = { width = 200, height = 100, r = 20 },
 		gradstep     = 100,
@@ -163,7 +162,7 @@ function navigator.make_decor(c)
 		ontop        = true,
 		bg           = style.color.wibox,
 		border_width = style.border_width,
-		border_color = style.color.borderk
+		border_color = style.color.border
 	})
 
 	object.client = c
