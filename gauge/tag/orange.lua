@@ -29,10 +29,10 @@ local function default_style()
 		radius       = 14,
 		iradius      = 6,
 		cgap         = TPI / 20,
-		hilight_min  = true,
+		show_min     = true,
 		min_sections = 1,
-		color        = { main   = "#b1222b", gray = "#575757", icon = "#a0a0a0", urgent = "#32882d",
-		                 wibox = "#202020", empty = "#575757"}
+		color        = { main  = "#b1222b", gray  = "#575757", icon = "#a0a0a0", urgent = "#32882d",
+		                 wibox = "#202020" }
 	}
 
 	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.tag.orange") or {})
@@ -101,9 +101,9 @@ function orangetag.new(style)
 			if data.state.list[i] then
 				cl = data.state.list[i].focus and style.color.main or
 				     data.state.list[i].urgent and style.color.urgent or
- 				     data.state.list[i].minimized and style.hilight_min and style.color.gray or style.color.icon
+ 				     data.state.list[i].minimized and style.show_min and style.color.gray or style.color.icon
 			else
-				cl = style.color.empty
+				cl = style.color.gray
 			end
 
 			cr:set_source(color(cl))
