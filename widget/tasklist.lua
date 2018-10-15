@@ -71,7 +71,7 @@ local function default_style()
 		titleline      = { font = "Sans 16 bold", height = 35 },
 		stateline      = { height = 35 },
 		state_iconsize = { width = 20, height = 20 },
-		sep_margin     = { 3, 3, 5, 5 },
+		separator      = { marginh = { 3, 3, 5, 5 } },
 		tagmenu        = { icon_margin = { 2, 2, 2, 2 } },
 		hide_action    = { min = true,
 		                   move = true,
@@ -527,7 +527,7 @@ function redtasklist.winmenu:init(style)
 
 	-- Separators config
 	------------------------------------------------------------
-	local menusep = { widget = separator.horizontal({ margin = style.sep_margin }) }
+	local menusep = { widget = separator.horizontal(style.separator) }
 
 	-- Construct tag submenus ("move" and "add")
 	------------------------------------------------------------

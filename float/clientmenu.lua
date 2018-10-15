@@ -49,7 +49,7 @@ local function default_style()
 		stateline       = { height = 35 },
 		state_iconsize  = { width = 20, height = 20 },
 		action_iconsize = { width = 18, height = 18 },
-		sep_margin      = { horizontal = { 3, 3, 5, 5 }, vertical = { 3, 3, 3, 3 } },
+		separator       = { marginh = { 3, 3, 5, 5 }, marginv = { 3, 3, 3, 3 } },
 		tagmenu         = { icon_margin = { 2, 2, 2, 2 } },
 		hide_action     = { move = true,
 		                    add = false,
@@ -177,7 +177,7 @@ end
 -- Function to construct menu line with action icons (minimize, close)
 --------------------------------------------------------------------------------
 local function action_line_construct(setup_layout, style)
-	local sep = separator.vertical({ margin = style.sep_margin.vertical })
+	local sep = separator.vertical(style.separator)
 
 	local function actionbox_construct(icon, action)
 		local iconbox = svgbox(icon, nil, style.color.icon)
@@ -310,7 +310,7 @@ function clientmenu:init(style)
 
 	-- Separators config
 	------------------------------------------------------------
-	local menusep = { widget = separator.horizontal({ margin = style.sep_margin.horizontal }) }
+	local menusep = { widget = separator.horizontal(style.separator) }
 
 	-- menu item actions
 	self.movemenu_action = function(t)
