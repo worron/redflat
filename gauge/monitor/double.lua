@@ -34,7 +34,7 @@ end
 
 -- Create progressbar widget
 -----------------------------------------------------------------------------------------------------------------------
-function pbar(style)
+local function pbar(style)
 
 	-- updating values
 	local data = {
