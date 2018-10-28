@@ -53,26 +53,26 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		geometry       = { width = 520, height = 150 },
-		screen_gap     = 0,
-		screen_pos     = nil,
-		dashcontrol    = {},
-		progressbar    = {},
-		border_gap     = { 20, 20, 20, 20 },
-		elements_gap   = { 20, 0, 0, 0 },
-		volume_gap     = { 0, 0, 0, 3 },
-		control_gap    = { 0, 0, 18, 8 },
-		buttons_margin = { 0, 0, 3, 3 },
-		pause_gap      = { 12, 12 },
-		timeout        = 5,
-		line_height    = 26,
-		bar_width      = 8, -- progress bar height
-		volume_width   = 50,
-		titlefont      = "Sans 12",
-		timefont       = "Sans 12",
-		artistfont     = "Sans 12",
-		border_width   = 2,
-		icon           = {
+		geometry        = { width = 520, height = 150 },
+		screen_gap      = 0,
+		set_position    = nil,
+		dashcontrol     = {},
+		progressbar     = {},
+		border_margin   = { 20, 20, 20, 20 },
+		elements_margin = { 20, 0, 0, 0 },
+		volume_margin   = { 0, 0, 0, 3 },
+		controls_margin = { 0, 0, 18, 8 },
+		buttons_margin  = { 0, 0, 3, 3 },
+		pause_margin    = { 12, 12, 0, 0 },
+		timeout         = 5,
+		line_height     = 26,
+		bar_width       = 8, -- progress bar height
+		volume_width    = 50,
+		titlefont       = "Sans 12",
+		timefont        = "Sans 12",
+		artistfont      = "Sans 12",
+		border_width    = 2,
+		icon            = {
 			cover   = redutil.base.placeholder(),
 			play    = redutil.base.placeholder({ txt = "►" }),
 			pause   = redutil.base.placeholder({ txt = "[]" }),
@@ -143,7 +143,7 @@ function player:init(args)
 	player_buttons:add(prev_button)
 
 	self.play_button = svgbox(style.icon.play, nil, style.color.icon)
-	player_buttons:add(wibox.container.margin(self.play_button, unpack(style.pause_gap)))
+	player_buttons:add(wibox.container.margin(self.play_button, unpack(style.pause_margin)))
 
 	local next_button = svgbox(style.icon.next_tr, nil, style.color.icon)
 	player_buttons:add(next_button)
@@ -154,7 +154,7 @@ function player:init(args)
 
 	-- volume
 	self.volume = dashcontrol(style.dashcontrol)
-	local volumespace = wibox.container.margin(self.volume, unpack(style.volume_gap))
+	local volumespace = wibox.container.margin(self.volume, unpack(style.volume_margin))
 	local volume_area = wibox.container.constraint(volumespace, "exact", style.volume_width, nil)
 
 	-- full line
@@ -171,11 +171,11 @@ function player:init(args)
 	------------------------------------------------------------
 	local align_vertical = wibox.layout.align.vertical()
 	align_vertical:set_top(text_area)
-	align_vertical:set_middle(wibox.container.margin(control_align, unpack(style.control_gap)))
+	align_vertical:set_middle(wibox.container.margin(control_align, unpack(style.controls_margin)))
 	align_vertical:set_bottom(wibox.container.constraint(self.bar, "exact", nil, style.bar_width))
 	local area = wibox.layout.fixed.horizontal()
 	area:add(self.box.image)
-	area:add(wibox.container.margin(align_vertical, unpack(style.elements_gap)))
+	area:add(wibox.container.margin(align_vertical, unpack(style.elements_margin)))
 
 	-- Buttons
 	------------------------------------------------------------
@@ -226,7 +226,7 @@ function player:init(args)
 		border_color = style.color.border
 	})
 
-	self.wibox:set_widget(wibox.container.margin(area, unpack(style.border_gap)))
+	self.wibox:set_widget(wibox.container.margin(area, unpack(style.border_margin)))
 	self.wibox:geometry(style.geometry)
 
 	-- Update info functions
