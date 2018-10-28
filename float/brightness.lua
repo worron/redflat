@@ -32,7 +32,7 @@ local function default_style()
 	local style = {
 		notify = {},
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.brightness") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "float.brightness") or {})
 end
 
 -- Change brightness level
