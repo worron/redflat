@@ -65,7 +65,7 @@ local function default_style()
 		set_position  = nil,
 		geometry      = { width = 460, height = 380 },
 		border_margin = { 10, 10, 10, 10 },
-		labels_width  = { 30, 70, 120 },
+		labels_width  = { num = 30, cpu = 70, mem = 120 },
 		title_height  = 48,
 		list_side_gap = 8,
 		border_width  = 2,
@@ -116,13 +116,13 @@ local function construct_item(style)
 	local num_label_with_gap = wibox.container.margin(item.label.number, style.list_side_gap)
 
 	local right = wibox.layout.fixed.horizontal()
-	right:add(wibox.container.constraint(item.label.cpu, "exact", style.labels_width[2], nil))
-	right:add(wibox.container.constraint(mem_label_with_gap, "exact", style.labels_width[3], nil))
+	right:add(wibox.container.constraint(item.label.cpu, "exact", style.labels_width.cpu, nil))
+	right:add(wibox.container.constraint(mem_label_with_gap, "exact", style.labels_width.mem, nil))
 
 	local middle = wibox.layout.align.horizontal()
 	middle:set_left(item.label.name)
 
-	local left = wibox.container.constraint(num_label_with_gap, "exact", style.labels_width[1], nil)
+	local left = wibox.container.constraint(num_label_with_gap, "exact", style.labels_width.num, nil)
 
 	local item_horizontal  = wibox.layout.align.horizontal()
 	item_horizontal:set_left(left)
