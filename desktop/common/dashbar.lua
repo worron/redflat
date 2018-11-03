@@ -25,7 +25,6 @@ local function default_style()
 		maxm        = 1,
 		width       = nil,
 		height      = nil,
-		zero_height = 4,
 		bar         = { gap = 5, width = 5 },
 		autoscale   = true,
 		color       = { main = "#b1222b", gray = "#404040" }
