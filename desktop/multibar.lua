@@ -2,7 +2,7 @@
 --                                         RedFlat dashpack desktop widget                                           --
 -----------------------------------------------------------------------------------------------------------------------
 -- Multi monitoring widget
--- Several lines with dashbar, label and text
+-- Several lines with progressbar, label and text
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
@@ -31,7 +31,7 @@ local function default_style()
 		unit      = { { "B", -1 }, { "KB", 1024 }, { "MB", 1024^2 }, { "GB", 1024^3 } },
 		color     = { main = "#b1222b", wibox = "#161616", gray = "#404040" }
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.dashpack") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.multibar") or {})
 end
 
 local default_geometry = { width = 200, height = 100, x = 100, y = 100 }
