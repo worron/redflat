@@ -31,12 +31,13 @@ local function default_style()
 		state_height = 60,
 		digit_num    = 3,
 		prog_height  = 100,
+		icon         = nil,
 		labels       = {},
 		image_gap    = 20,
 		unit         = { { "MB", - 1 }, { "GB", 1024 } },
 		color        = { main = "#b1222b", wibox = "#161616", gray = "#404040" }
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.multim") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.multimeter") or {})
 end
 
 local default_geometry = { width = 200, height = 100, x = 100, y = 100 }
@@ -72,7 +73,7 @@ local function set_info(value, args, corners, lines, icon, last_state, style)
 	end
 
 	-- colorize icon if needed
-	if style.image and corners_alert ~= last_state then
+	if style.icon and corners_alert ~= last_state then
 		icon:set_color(corners_alert and style.color.main or style.color.gray)
 		last_state = corners_alert
 	end
@@ -107,8 +108,8 @@ function multim.new(args, geometry, style)
 	local corners = dcommon.cornerpack(args.corners.num, corner_style)
 	lines.layout:set_forced_height(style.state_height)
 
-	if style.image then
-		icon = svgbox(style.image)
+	if style.icon then
+		icon = svgbox(style.icon)
 		icon:set_color(style.color.gray)
 	end
 

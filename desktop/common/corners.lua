@@ -10,7 +10,7 @@ local setmetatable = setmetatable
 local math = math
 local wibox = require("wibox")
 local color = require("gears.color")
---local beautiful = require("beautiful")
+local beautiful = require("beautiful")
 
 local redutil = require("redflat.util")
 
@@ -21,15 +21,17 @@ local corners = { mt = {} }
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
-	return {
+	local style = {
 		corner    = { num = 10, line = 5, height = 10 },
 		maxm      = 1,
 		width     = nil,
 		height    = nil,
 		autoscale = true,
-		plaindash = false,
+		plain     = false,
 		color     = { main = "#b1222b", gray = "#404040" }
 	}
+
+	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.common.corners") or {})
 end
 
 -- Cairo drawing functions
@@ -99,7 +101,7 @@ function corners.new(style)
 	------------------------------------------------------------
 	function cornwidg:draw(_, cr, width, height)
 		local point = math.ceil(style.corner.num * data.value)
-		if style.plaindash then
+		if style.plain then
 			local line_gap = style.corner.line + (height - style.corner.line * style.corner.num)/(style.corner.num - 1)
 			draw_line(cr, width, height, line_gap, 1, point, style.color.main, style)
 			draw_line(cr, width, height, line_gap, point + 1, style.corner.num, style.color.gray, style)
