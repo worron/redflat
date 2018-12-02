@@ -32,6 +32,7 @@ local dfparser = require("redflat.service.dfparser")
 local redutil = require("redflat.util")
 local redtip = require("redflat.float.hotkeys")
 local redtitle = require("redflat.titlebar")
+local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -95,7 +96,8 @@ local function default_style()
 		hotkeys         = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" },
 		font            = { font = "Sans", size = 16, face = 0, slant = 0 },
 		color           = { border = "#575757", text = "#aaaaaa", main = "#b1222b", preview_bg = "#b1222b80",
-		                    wibox  = "#202020", icon = "#a0a0a0", bg   = "#161616", gray = "#575757" }
+		                    wibox  = "#202020", icon = "#a0a0a0", bg   = "#161616", gray = "#575757" },
+		shape           = rectshape
 	}
 
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.appswitcher") or {})
@@ -186,7 +188,8 @@ function appswitcher:init()
 		ontop        = true,
 		bg           = style.color.wibox,
 		border_width = style.border_width,
-		border_color = style.color.border
+		border_color = style.color.border,
+		shape        = style.shape
 	})
 
 	-- Keygrabber

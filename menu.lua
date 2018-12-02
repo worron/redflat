@@ -36,6 +36,7 @@ local type = type
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
 local redtip = require("redflat.float.hotkeys")
+local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -64,7 +65,8 @@ local function default_theme()
 		keytip       = { geometry = { width = 400, height = 400 } },
 		color        = { border = "#575757", text = "#aaaaaa", highlight = "#eeeeee",
 		                 main = "#b1222b", wibox = "#202020",
-		                 submenu_icon = nil, right_icon = nil, left_icon = nil }
+		                 submenu_icon = nil, right_icon = nil, left_icon = nil },
+		shape        = rectshape
 	}
 	return redutil.table.merge(style, beautiful.menu or {})
 end
@@ -631,7 +633,8 @@ function menu.new(args, parent)
 		fg    = _menu.theme.color.text,
 		bg    = _menu.theme.color.wibox,
 		border_color = _menu.theme.color.border,
-		border_width = _menu.theme.border_width
+		border_width = _menu.theme.border_width,
+		shape = _menu.theme.shape
 	})
 
 	_menu.wibox.visible = false
