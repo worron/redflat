@@ -339,6 +339,14 @@ local function tasktip_line(style)
 	-- tasktip line metods
 	function line:set_text(text)
 		line.tb:set_markup(text)
+
+		if style.max_width then
+			line.tb:set_ellipsize("middle")
+			_, line_h = line.tb:get_preferred_size()
+			line.tb:set_forced_height(line_h)
+			line.tb:set_forced_width(style.max_width)
+		end
+
 		line.field:set_fg(style.color.text)
 		line.field:set_bg(style.color.wibox)
 	end
@@ -434,6 +442,9 @@ local function construct_tasktip(c_group, layout, data, buttons, style)
 
 		line:set_text(awful.util.escape(c.name) or "Untitled")
 		tb_w, tb_h = line.tb:get_preferred_size()
+		if line.tb.forced_width then
+			tb_w = math.min(line.tb.forced_width, tb_w)
+		end
 
 		-- set state highlight only for grouped tasks
 		if #c_group > 1 or style.sl_highlight then
