@@ -18,6 +18,7 @@ local table = table
 local wibox = require("wibox")
 local awful = require("awful")
 local beautiful = require("beautiful")
+local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
 local dotcount = require("redflat.gauge.graph.dots")
@@ -36,6 +37,8 @@ local function default_style()
 		set_position = nil,
 		screen_gap   = 0,
 		border_width = 2,
+		double_wibox = false,
+		show_delay   = 0.05,
 		color        = { wibox = "#202020", border = "#575757" }
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.minitray") or {})
@@ -47,12 +50,23 @@ function minitray:init(style)
 
 	-- Create wibox for tray
 	--------------------------------------------------------------------------------
-	self.wibox = wibox({
+	local wargs = {
 		ontop        = true,
 		bg           = style.color.wibox,
 		border_width = style.border_width,
 		border_color = style.color.border
-	})
+	}
+
+	self.wibox = wibox(wargs)
+
+	-- dirty workaround for sowe tray background problems
+	if style.double_wibox then
+		self.wibox_bg = wibox(wargs)
+		self.show_with_delay = timer({
+			timeout = style.show_delay,
+			callback = function() self.wibox.visible = true; self.show_with_delay:stop() end
+		})
+	end
 
 	self.wibox:geometry(style.geometry)
 
@@ -104,13 +118,21 @@ end
 --------------------------------------------------------------------------------
 function minitray:show()
 	self:update_geometry()
-	self.wibox.visible = true
+	if self.wibox_bg then
+		self.wibox_bg:geometry(self.wibox:geometry())
+		self.wibox_bg.visible = true
+		self.show_with_delay:start()
+	else
+		self.wibox.visible = true
+	end
+
 end
 
 -- Hide
 --------------------------------------------------------------------------------
 function minitray:hide()
 	self.wibox.visible = false
+	if self.wibox_bg then self.wibox_bg.visible = false end
 end
 
 -- Toggle

@@ -124,7 +124,7 @@ local function get_state(c_group, style)
 		table.insert(state.list, { focus = client.focus == c, urgent = c.urgent, minimized = c.minimized })
 	end
 
-	local class = c_group[1].class or "Untitled"
+	local class = c_group[1].class or "Undefined"
 	state.text = names[class] or string.upper(string.sub(class, 1, chars))
 	state.num = #c_group
 	state.icon = style.custom_icon and style.icons[style.iconnames[class] or string.lower(class)]
@@ -292,11 +292,11 @@ local function group_task(clients, need_group)
 
 	for _, c in ipairs(clients) do
 		if need_group then
-			local index = awful.util.table.hasitem(classes, c.class)
+			local index = awful.util.table.hasitem(classes, c.class or "Undefined")
 			if index then
 				table.insert(client_groups[index], c)
 			else
-				table.insert(classes, c.class)
+				table.insert(classes, c.class or "Undefined")
 				table.insert(client_groups, { c })
 			end
 		else
@@ -339,6 +339,14 @@ local function tasktip_line(style)
 	-- tasktip line metods
 	function line:set_text(text)
 		line.tb:set_markup(text)
+
+		if style.max_width then
+			line.tb:set_ellipsize("middle")
+			local _, line_h = line.tb:get_preferred_size()
+			line.tb:set_forced_height(line_h)
+			line.tb:set_forced_width(style.max_width)
+		end
+
 		line.field:set_fg(style.color.text)
 		line.field:set_bg(style.color.wibox)
 	end
@@ -379,7 +387,7 @@ local function switch_focus(list, is_reverse)
 end
 
 local function client_group_sort_by_class(a, b)
-	return a[1].class < b[1].class
+	return (a[1].class or "Undefined") < (b[1].class or "Undefined")
 end
 
 -- Build or update tasklist.
@@ -434,6 +442,9 @@ local function construct_tasktip(c_group, layout, data, buttons, style)
 
 		line:set_text(awful.util.escape(c.name) or "Untitled")
 		tb_w, tb_h = line.tb:get_preferred_size()
+		if line.tb.forced_width then
+			tb_w = math.min(line.tb.forced_width, tb_w)
+		end
 
 		-- set state highlight only for grouped tasks
 		if #c_group > 1 or style.sl_highlight then
@@ -566,7 +577,7 @@ function redtasklist.winmenu:init(style)
 	--------------------------------------------------------------------------------
 	function self:update(c)
 		if self.menu.wibox.visible then
-			classbox:set_text(c.class or "Unknown")
+			classbox:set_text(c.class or "Undefined")
 			stateboxes_update(c, state_icons, stateboxes)
 			tagmenu_update(c, self.menu, { 1, 2 }, style)
 		end
