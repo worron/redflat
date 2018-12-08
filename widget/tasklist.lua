@@ -124,7 +124,7 @@ local function get_state(c_group, style)
 		table.insert(state.list, { focus = client.focus == c, urgent = c.urgent, minimized = c.minimized })
 	end
 
-	local class = c_group[1].class or "Untitled"
+	local class = c_group[1].class or "Undefined"
 	state.text = names[class] or string.upper(string.sub(class, 1, chars))
 	state.num = #c_group
 	state.icon = style.custom_icon and style.icons[style.iconnames[class] or string.lower(class)]
@@ -292,11 +292,11 @@ local function group_task(clients, need_group)
 
 	for _, c in ipairs(clients) do
 		if need_group then
-			local index = awful.util.table.hasitem(classes, c.class)
+			local index = awful.util.table.hasitem(classes, c.class or "Undefined")
 			if index then
 				table.insert(client_groups[index], c)
 			else
-				table.insert(classes, c.class)
+				table.insert(classes, c.class or "Undefined")
 				table.insert(client_groups, { c })
 			end
 		else
@@ -387,7 +387,7 @@ local function switch_focus(list, is_reverse)
 end
 
 local function client_group_sort_by_class(a, b)
-	return a[1].class < b[1].class
+	return (a[1].class or "Undefined") < (b[1].class or "Undefined")
 end
 
 -- Build or update tasklist.
@@ -577,7 +577,7 @@ function redtasklist.winmenu:init(style)
 	--------------------------------------------------------------------------------
 	function self:update(c)
 		if self.menu.wibox.visible then
-			classbox:set_text(c.class or "Unknown")
+			classbox:set_text(c.class or "Undefined")
 			stateboxes_update(c, state_icons, stateboxes)
 			tagmenu_update(c, self.menu, { 1, 2 }, style)
 		end
