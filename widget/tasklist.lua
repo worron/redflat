@@ -342,7 +342,7 @@ local function tasktip_line(style)
 
 		if style.max_width then
 			line.tb:set_ellipsize("middle")
-			_, line_h = line.tb:get_preferred_size()
+			local _, line_h = line.tb:get_preferred_size()
 			line.tb:set_forced_height(line_h)
 			line.tb:set_forced_width(style.max_width)
 		end
