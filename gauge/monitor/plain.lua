@@ -22,12 +22,12 @@ local monitor = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		line     = { width = 4, v_gap = 30 },
-		font     = { font = "Sans", size = 16, face = 0, slant = 0 },
-		text_gap = 22,
-		label    = "MON",
-		width    = nil,
-		color    = { main = "#b1222b", gray = "#575757", icon = "#a0a0a0" }
+		line       = { height = 4, y = 30 },
+		font       = { font = "Sans", size = 16, face = 0, slant = 0 },
+		text_shift = 22,
+		label      = "MON",
+		width      = nil,
+		color      = { main = "#b1222b", gray = "#575757", icon = "#a0a0a0" }
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.monitor.plain") or {})
 end
@@ -93,13 +93,13 @@ function monitor.new(style)
 		-- label
 		cr:set_source(color(data.color))
 		redutil.cairo.set_font(cr, style.font)
-		redutil.cairo.textcentre.horizontal(cr, { width/2, style.text_gap }, data.label)
+		redutil.cairo.textcentre.horizontal(cr, { width/2, style.text_shift }, data.label)
 
 		-- progressbar
 		local wd = { width, width * data.value }
 		for i = 1, 2 do
 			cr:set_source(color(i > 1 and style.color.main or style.color.gray))
-			cr:rectangle(0, style.line.v_gap, wd[i], style.line.width)
+			cr:rectangle(0, style.line.y, wd[i], style.line.height)
 			cr:fill()
 		end
 	end
