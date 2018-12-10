@@ -23,7 +23,7 @@ local dashmon = { mt = {} }
 local function default_style()
 	local style = {
 		width = 40,
-		line  = { num = 5, width = 4 },
+		line  = { num = 5, height = 4 },
 		color = { main = "#b1222b", urgent = "#00725b", gray = "#575757" }
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.monitor.dash") or {})
@@ -81,13 +81,13 @@ function dashmon.new(style)
 	------------------------------------------------------------
 	function widg:draw(_, cr, width, height)
 
-		local gap = (height - style.line.width * style.line.num) / (style.line.num - 1)
-		local dy = style.line.width + gap
+		local gap = (height - style.line.height * style.line.num) / (style.line.num - 1)
+		local dy = style.line.height + gap
 		local p = math.ceil(style.line.num * data.value)
 
 		for i = 1, style.line.num do
 			cr:set_source(color(i <= p and data.color or style.color.gray))
-			cr:rectangle(0, height - (i - 1) * dy, width, - style.line.width)
+			cr:rectangle(0, height - (i - 1) * dy, width, - style.line.height)
 			cr:fill()
 		end
 	end
