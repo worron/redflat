@@ -22,6 +22,7 @@ local color = require("gears.color")
 local wibox = require("wibox")
 
 local redutil = require("redflat.util")
+local svgbox = require("redflat.gauge.svgbox")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -35,7 +36,7 @@ local function default_style()
 	local style = {
 		size          = 8,
 		position      = "top",
-		mark          = { size = 20, gap = 10, angle = 0 },
+		--mark          = { size = 20, gap = 10, angle = 0 },
 		font          = "Sans 12 bold",
 		border_margin = { 0, 0, 0, 4 },
 		color         = { main = "#b1222b", wibox = "#202020", gray = "#575757", text = "#aaaaaa" }
@@ -44,6 +45,16 @@ local function default_style()
 	return style
 	--return redutil.table.merge(style, beautiful.titlebar or {})
 end
+
+local default_mark_style = {
+	mark = { size = 20, gap = 10, angle = 0 },
+	color = { main = "#b1222b", wibox = "#202020", gray = "#575757", text = "#aaaaaa" }
+}
+
+local default_icon_style = {
+	icon  = { list = { unknown = redutil.base.placeholder({ txt = "X" }) } },
+	color = { main = "#b1222b", wibox = "#202020", gray = "#575757", text = "#aaaaaa" }
+}
 
 
 -- Support functions
@@ -250,9 +261,12 @@ end
 -- Titlebar indicators
 -----------------------------------------------------------------------------------------------------------------------
 titlebar.mark = {}
+titlebar.icon = {}
 
+-- Client mark blank
+------------------------------------------------------------
 function titlebar.mark.base(_, style)
-	local style = redutil.table.merge(default_style(), style or {})
+	local style = redutil.table.merge(default_mark_style, style or {})
 --	local sigpack = sigpack or {}
 
 	-- local data
@@ -310,9 +324,45 @@ function titlebar.mark.focus(c, style)
 	return w
 end
 
+-- Client icon blank
+------------------------------------------------------------
+function titlebar.icon.base(icon, style)
+	local style = redutil.table.merge(default_icon_style, style or {})
+
+	-- widget
+	local widg = svgbox()
+	widg:set_image(style.icon.list[icon] or style.icon.list.unknown)
+
+	-- state
+	function widg:set_active(active)
+		widg:set_color(active and style.color.main or style.color.gray)
+		self:emit_signal("widget::updated")
+	end
+
+	return widg
+end
+
+-- Client focus icon
+------------------------------------------------------------
+function titlebar.icon.focus(c, style)
+	local w = titlebar.icon.base("focus", style)
+	c:connect_signal("focus", function() w:set_active(true) end)
+	c:connect_signal("unfocus", function() w:set_active(false) end)
+	return w
+end
+
+-- Client property icon
+------------------------------------------------------------
+function titlebar.icon.property(c, prop, style)
+	local w = titlebar.icon.base(prop, style)
+	w:set_active(c[prop])
+	c:connect_signal("property::" .. prop, function() w:set_active(c[prop]) end)
+	return w
+end
+
 -- Client name indicator
 ------------------------------------------------------------
-function titlebar.mark.label(c, style)
+function titlebar.label(c, style)
 	local style = redutil.table.merge(default_style(), style or {})
 	local w = wibox.widget.textbox()
 	w:set_font(style.font)
@@ -327,6 +377,7 @@ function titlebar.mark.label(c, style)
 
 	return w
 end
+
 
 -- Remove from list on close
 -----------------------------------------------------------------------------------------------------------------------
