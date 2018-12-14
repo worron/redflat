@@ -16,7 +16,7 @@ local table = table
 
 
 local awful = require("awful")
-local beautiful = require("beautiful")
+--local beautiful = require("beautiful")
 local drawable = require("wibox.drawable")
 local color = require("gears.color")
 local wibox = require("wibox")
@@ -41,7 +41,8 @@ local function default_style()
 		color         = { main = "#b1222b", wibox = "#202020", gray = "#575757", text = "#aaaaaa" }
 	}
 
-	return redutil.table.merge(style, beautiful.titlebar or {})
+	return style
+	--return redutil.table.merge(style, beautiful.titlebar or {})
 end
 
 
@@ -65,12 +66,6 @@ end
 function titlebar.get_model(c, position)
 	local position = position or "top"
 	return titlebar.list[c] and titlebar.list[c][position] or nil
-end
-
--- Get titlebar style
-------------------------------------------------------------
-function titlebar.get_style()
-	return default_style()
 end
 
 -- Get titlebar client list
