@@ -35,7 +35,7 @@ local function default_style()
 	local style = {
 		size          = 8,
 		position      = "top",
-		icon          = { size = 20, gap = 10, angle = 0 },
+		mark          = { size = 20, gap = 10, angle = 0 },
 		font          = "Sans 12 bold",
 		border_margin = { 0, 0, 0, 4 },
 		color         = { main = "#b1222b", wibox = "#202020", gray = "#575757", text = "#aaaaaa" }
@@ -249,9 +249,9 @@ end
 
 -- Titlebar indicators
 -----------------------------------------------------------------------------------------------------------------------
-titlebar.icon = {}
+titlebar.mark = {}
 
-function titlebar.icon.base(_, style)
+function titlebar.mark.base(_, style)
 	local style = redutil.table.merge(default_style(), style or {})
 --	local sigpack = sigpack or {}
 
@@ -268,7 +268,7 @@ function titlebar.icon.base(_, style)
 	end
 
 	function widg:draw(_, cr, width, height)
-		local d = math.tan(style.icon.angle) * height
+		local d = math.tan(style.mark.angle) * height
 
 		cr:set_source(color(data.color))
 		cr:move_to(0, height)
@@ -287,15 +287,15 @@ function titlebar.icon.base(_, style)
 	end
 
 	-- widget width setup
-	widg:set_forced_width(style.icon.size)
+	widg:set_forced_width(style.mark.size)
 
 	return widg
 end
 
 -- Client property indicator
 ------------------------------------------------------------
-function titlebar.icon.property(c, prop, style)
-	local w = titlebar.icon.base(c, style)
+function titlebar.mark.property(c, prop, style)
+	local w = titlebar.mark.base(c, style)
 	w:set_active(c[prop])
 	c:connect_signal("property::" .. prop, function() w:set_active(c[prop]) end)
 	return w
@@ -303,8 +303,8 @@ end
 
 -- Client focus indicator
 ------------------------------------------------------------
-function titlebar.icon.focus(c, style)
-	local w = titlebar.icon.base(c, style)
+function titlebar.mark.focus(c, style)
+	local w = titlebar.mark.base(c, style)
 	c:connect_signal("focus", function() w:set_active(true) end)
 	c:connect_signal("unfocus", function() w:set_active(false) end)
 	return w
@@ -312,7 +312,7 @@ end
 
 -- Client name indicator
 ------------------------------------------------------------
-function titlebar.icon.label(c, style)
+function titlebar.mark.label(c, style)
 	local style = redutil.table.merge(default_style(), style or {})
 	local w = wibox.widget.textbox()
 	w:set_font(style.font)
