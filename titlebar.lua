@@ -356,6 +356,7 @@ end
 function titlebar.icon.property(c, prop, style)
 	local w = titlebar.icon.base(prop, style)
 	w:set_active(c[prop])
+	w:buttons(awful.util.table.join(awful.button({ }, 1, function() c[prop] = not c[prop] end)))
 	c:connect_signal("property::" .. prop, function() w:set_active(c[prop]) end)
 	return w
 end
