@@ -38,7 +38,7 @@ local function default_style()
 		position      = "top",
 		font          = "Sans 12 bold",
 		border_margin = { 0, 0, 0, 4 },
-		color         = { main = "#b1222b", wibox = "#202020", gray = "#575757", text = "#aaaaaa" }
+		color         = { main = "#b1222b", wibox = "#202020", gray = "#575757", text = "#aaaaaa", icon = "#a0a0a0" }
 	}
 
 	return style
@@ -48,12 +48,12 @@ end
 local default_mark_style = {
 	size  = 20,
 	angle = 0,
-	color = { main = "#b1222b", wibox = "#202020", gray = "#575757", text = "#aaaaaa" }
+	color = { main = "#b1222b", wibox = "#202020", gray = "#575757", text = "#aaaaaa", icon = "#a0a0a0" }
 }
 
 local default_icon_style = {
 	list  = { unknown = redutil.base.placeholder({ txt = "X" }) },
-	color = { main = "#b1222b", wibox = "#202020", gray = "#575757", text = "#aaaaaa" }
+	color = { main = "#b1222b", wibox = "#202020", gray = "#575757", text = "#aaaaaa", icon = "#a0a0a0" }
 }
 
 
@@ -335,7 +335,7 @@ function titlebar.icon.base(icon, style)
 
 	-- state
 	function widg:set_active(active)
-		widg:set_color(active and style.color.main or style.color.gray)
+		widg:set_color(active and style.color.main or style.color.icon)
 		self:emit_signal("widget::updated")
 	end
 
@@ -358,6 +358,14 @@ function titlebar.icon.property(c, prop, style)
 	w:set_active(c[prop])
 	w:buttons(awful.util.table.join(awful.button({ }, 1, function() c[prop] = not c[prop] end)))
 	c:connect_signal("property::" .. prop, function() w:set_active(c[prop]) end)
+	return w
+end
+
+-- Client close icon
+------------------------------------------------------------
+function titlebar.icon.close(c, style)
+	local w = titlebar.icon.base("close", style)
+	w:buttons(awful.util.table.join(awful.button({ }, 1, function() c:kill() end)))
 	return w
 end
 
