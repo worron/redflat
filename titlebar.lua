@@ -36,7 +36,6 @@ local function default_style()
 	local style = {
 		size          = 8,
 		position      = "top",
-		--mark          = { size = 20, gap = 10, angle = 0 },
 		font          = "Sans 12 bold",
 		border_margin = { 0, 0, 0, 4 },
 		color         = { main = "#b1222b", wibox = "#202020", gray = "#575757", text = "#aaaaaa" }
@@ -47,12 +46,13 @@ local function default_style()
 end
 
 local default_mark_style = {
-	mark = { size = 20, gap = 10, angle = 0 },
+	size  = 20,
+	angle = 0,
 	color = { main = "#b1222b", wibox = "#202020", gray = "#575757", text = "#aaaaaa" }
 }
 
 local default_icon_style = {
-	icon  = { list = { unknown = redutil.base.placeholder({ txt = "X" }) } },
+	list  = { unknown = redutil.base.placeholder({ txt = "X" }) },
 	color = { main = "#b1222b", wibox = "#202020", gray = "#575757", text = "#aaaaaa" }
 }
 
@@ -282,7 +282,7 @@ function titlebar.mark.base(_, style)
 	end
 
 	function widg:draw(_, cr, width, height)
-		local d = math.tan(style.mark.angle) * height
+		local d = math.tan(style.angle) * height
 
 		cr:set_source(color(data.color))
 		cr:move_to(0, height)
@@ -301,7 +301,7 @@ function titlebar.mark.base(_, style)
 	end
 
 	-- widget width setup
-	widg:set_forced_width(style.mark.size)
+	widg:set_forced_width(style.size)
 
 	return widg
 end
@@ -331,7 +331,7 @@ function titlebar.icon.base(icon, style)
 
 	-- widget
 	local widg = svgbox()
-	widg:set_image(style.icon.list[icon] or style.icon.list.unknown)
+	widg:set_image(style.list[icon] or style.list.unknown)
 
 	-- state
 	function widg:set_active(active)
