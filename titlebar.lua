@@ -46,7 +46,7 @@ local default_mark_style = {
 	color = default_style.color
 }
 
-local default_icon_style = {
+local default_button_style = {
 	list  = { unknown = redutil.base.placeholder({ txt = "X" }) },
 	color = default_style.color
 }
@@ -256,7 +256,7 @@ end
 -- Titlebar indicators
 -----------------------------------------------------------------------------------------------------------------------
 titlebar.mark = {}
-titlebar.icon = {}
+titlebar.button = {}
 
 -- Client mark blank
 ------------------------------------------------------------
@@ -319,10 +319,10 @@ function titlebar.mark.focus(c, style)
 	return w
 end
 
--- Client icon blank
+-- Client button blank
 ------------------------------------------------------------
-function titlebar.icon.base(icon, style, is_inactive)
-	local style = redutil.table.merge(default_icon_style, style or {})
+function titlebar.button.base(icon, style, is_inactive)
+	local style = redutil.table.merge(default_button_style, style or {})
 
 	-- widget
 	local widg = svgbox()
@@ -350,29 +350,29 @@ function titlebar.icon.base(icon, style, is_inactive)
 	return widg
 end
 
--- Client focus icon
+-- Client focus button
 ------------------------------------------------------------
-function titlebar.icon.focus(c, style)
-	local w = titlebar.icon.base("focus", style, true)
+function titlebar.button.focus(c, style)
+	local w = titlebar.button.base("focus", style, true)
 	c:connect_signal("focus", function() w:set_active(true) end)
 	c:connect_signal("unfocus", function() w:set_active(false) end)
 	return w
 end
 
--- Client property icon
+-- Client property button
 ------------------------------------------------------------
-function titlebar.icon.property(c, prop, style)
-	local w = titlebar.icon.base(prop, style)
+function titlebar.button.property(c, prop, style)
+	local w = titlebar.button.base(prop, style)
 	w:set_active(c[prop])
 	w:buttons(awful.util.table.join(awful.button({ }, 1, function() c[prop] = not c[prop] end)))
 	c:connect_signal("property::" .. prop, function() w:set_active(c[prop]) end)
 	return w
 end
 
--- Client close icon
+-- Client close button
 ------------------------------------------------------------
-function titlebar.icon.close(c, style)
-	local w = titlebar.icon.base("close", style)
+function titlebar.button.close(c, style)
+	local w = titlebar.button.base("close", style)
 	w:buttons(awful.util.table.join(awful.button({ }, 1, function() c:kill() end)))
 	return w
 end
