@@ -87,6 +87,15 @@ local function filtrate_tags(screen, filter)
 	return tags
 end
 
+-- Layout composition
+--------------------------------------------------------------------------------
+local function base_pack(layout, widg, i, tags, style)
+	layout:add(widg)
+	if style.separator and i < #tags then
+		layout:add(style.separator)
+	end
+end
+
 
 -- Create a new taglist widget
 -----------------------------------------------------------------------------------------------------------------------
@@ -97,10 +106,11 @@ function taglist.new(args, style)
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local cs = args.screen
-	local layout = wibox.layout.fixed.horizontal()
+	local layout = args.layout or wibox.layout.fixed.horizontal()
 	local data = setmetatable({}, { __mode = 'k' })
 	local filter = args.filter or taglist.filter.all
 	local hint = args.hint or make_tip
+	local pack = args.pack or base_pack
 
 	local style = redutil.table.merge(default_style(), style or {})
 
@@ -142,10 +152,7 @@ function taglist.new(args, style)
 			widg.tip = hint(t)
 
 			-- add widget and separator to base layout
-			layout:add(widg)
-			if style.separator and i < #tags then
-				layout:add(style.separator)
-			end
+			pack(layout, widg, i, tags, style)
 		end
 		------------------------------------------------------------
 
