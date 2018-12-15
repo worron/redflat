@@ -16,7 +16,6 @@ local table = table
 
 
 local awful = require("awful")
---local beautiful = require("beautiful")
 local drawable = require("wibox.drawable")
 local color = require("gears.color")
 local wibox = require("wibox")
@@ -32,28 +31,24 @@ titlebar.list = setmetatable({}, { __mode = 'k' })
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
-local function default_style()
-	local style = {
-		size          = 8,
-		position      = "top",
-		font          = "Sans 12 bold",
-		border_margin = { 0, 0, 0, 4 },
-		color         = { main = "#b1222b", wibox = "#202020", gray = "#575757", text = "#aaaaaa", icon = "#a0a0a0" }
-	}
-
-	return style
-	--return redutil.table.merge(style, beautiful.titlebar or {})
-end
+local default_style = {
+	size          = 8,
+	position      = "top",
+	font          = "Sans 12 bold",
+	border_margin = { 0, 0, 0, 4 },
+	color         = { main = "#b1222b", wibox = "#202020", gray = "#575757",
+	                  text = "#aaaaaa", icon = "#a0a0a0", urgent = "#32882d" }
+}
 
 local default_mark_style = {
 	size  = 20,
 	angle = 0,
-	color = { main = "#b1222b", wibox = "#202020", gray = "#575757", text = "#aaaaaa", icon = "#a0a0a0" }
+	color = default_style.color
 }
 
 local default_icon_style = {
 	list  = { unknown = redutil.base.placeholder({ txt = "X" }) },
-	color = { main = "#b1222b", wibox = "#202020", gray = "#575757", text = "#aaaaaa", icon = "#a0a0a0" }
+	color = default_style.color
 }
 
 
@@ -92,7 +87,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function titlebar.new(c, style)
 	if not titlebar.list[c] then titlebar.list[c] = {} end
-	local style = redutil.table.merge(default_style(), style or {})
+	local style = redutil.table.merge(default_style, style or {})
 
 	-- Make sure that there is never more than one titlebar for any given client
 	local ret
@@ -326,17 +321,30 @@ end
 
 -- Client icon blank
 ------------------------------------------------------------
-function titlebar.icon.base(icon, style)
+function titlebar.icon.base(icon, style, is_inactive)
 	local style = redutil.table.merge(default_icon_style, style or {})
 
 	-- widget
 	local widg = svgbox()
+	widg._current_color = style.color.icon
+	widg.is_under_mouse = false
 	widg:set_image(style.list[icon] or style.list.unknown)
 
 	-- state
 	function widg:set_active(active)
-		widg:set_color(active and style.color.main or style.color.icon)
-		self:emit_signal("widget::updated")
+		widg._current_color = active and style.color.main or style.color.icon
+		widg:set_color(widg.is_under_mouse and style.color.urgent or widg._current_color)
+		--self:emit_signal("widget::updated")
+	end
+
+	local function update(is_under_mouse)
+		widg.is_under_mouse = is_under_mouse
+		widg:set_color(widg.is_under_mouse and style.color.urgent or widg._current_color)
+	end
+
+	if not is_inactive then
+		widg:connect_signal("mouse::enter", function() update(true) end)
+		widg:connect_signal("mouse::leave", function() update(false) end)
 	end
 
 	return widg
@@ -345,7 +353,7 @@ end
 -- Client focus icon
 ------------------------------------------------------------
 function titlebar.icon.focus(c, style)
-	local w = titlebar.icon.base("focus", style)
+	local w = titlebar.icon.base("focus", style, true)
 	c:connect_signal("focus", function() w:set_active(true) end)
 	c:connect_signal("unfocus", function() w:set_active(false) end)
 	return w
@@ -372,7 +380,7 @@ end
 -- Client name indicator
 ------------------------------------------------------------
 function titlebar.label(c, style)
-	local style = redutil.table.merge(default_style(), style or {})
+	local style = redutil.table.merge(default_style, style or {})
 	local w = wibox.widget.textbox()
 	w:set_font(style.font)
 	w:set_align("center")
