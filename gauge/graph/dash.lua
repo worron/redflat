@@ -22,6 +22,7 @@ local dashcontrol = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
+		plain = false,
 		bar   = { width = 4, num = 10 },
 		color = { main = "#b1222b", gray = "#404040" }
 	}
@@ -68,7 +69,7 @@ function dashcontrol.new(style)
 
 		for i = 1, style.bar.num do
 			cr:set_source(color(i > point and style.color.gray or style.color.main))
-			cr:rectangle((i - 1) * wstep, height, style.bar.width, - i * hstep)
+			cr:rectangle((i - 1) * wstep, height, style.bar.width,  style.plain and -height or - i * hstep)
 			cr:fill()
 		end
 	end
