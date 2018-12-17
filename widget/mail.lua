@@ -46,7 +46,7 @@ end
 
 mail.check_function["curl_imap"] = function(args)
 	local port = args.port or 993
-	local request = "-X 'SEARCH (UNSEEN)'"
+	local request = "-X 'STATUS INBOX (UNSEEN)'"
 	local head_command = "curl --connect-timeout 5 -fsm 5"
 
 	local curl_req = string.format("%s --url imaps://%s:%s/INBOX -u %s:%s %s -k",
