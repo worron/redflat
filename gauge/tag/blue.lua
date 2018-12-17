@@ -28,8 +28,7 @@ local function default_style()
 		text_shift = 32,
 		point      = { height = 4, gap = 8, dx = 6, width = 40 },
 		show_min   = false,
-		color      = { main  = "#b1222b", gray = "#575757", icon = "#a0a0a0", urgent = "#32882d",
-		               wibox = "#202020" }
+		color      = { main  = "#b1222b", gray = "#575757", icon = "#a0a0a0", urgent = "#32882d" }
 	}
 
 	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.tag.blue") or {})

@@ -81,7 +81,7 @@ function rubytag.new(style)
 		cr:set_source(color(cl))
 
 		cr:rectangle(
-			style.base.pad, (height - style.base.height) / 2,
+			style.base.pad, math.floor((height - style.base.height) / 2),
 			width - 2 * style.base.pad, style.base.height
 		)
 		cr:set_line_width(style.base.thickness)
@@ -94,7 +94,7 @@ function rubytag.new(style)
 		cr:set_source(color(cl))
 
 		cr:rectangle(
-			style.mark.pad, (height - style.mark.height) / 2,
+			style.mark.pad, math.floor((height - style.mark.height) / 2),
 			width - 2 * style.mark.pad, style.mark.height
 		)
 

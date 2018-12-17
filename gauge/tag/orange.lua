@@ -31,8 +31,7 @@ local function default_style()
 		cgap         = TPI / 20,
 		show_min     = true,
 		min_sections = 1,
-		color        = { main  = "#b1222b", gray  = "#575757", icon = "#a0a0a0", urgent = "#32882d",
-		                 wibox = "#202020" }
+		color        = { main  = "#b1222b", gray  = "#575757", icon = "#a0a0a0", urgent = "#32882d" }
 	}
 
 	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.tag.orange") or {})
