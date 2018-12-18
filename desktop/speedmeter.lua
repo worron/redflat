@@ -12,9 +12,9 @@ local wibox = require("wibox")
 local beautiful = require("beautiful")
 local timer = require("gears.timer")
 
-local fullchart = require("redflat.desktop.common.fullchart")
 local system = require("redflat.system")
 local redutil = require("redflat.util")
+local dcommon = require("redflat.desktop.common")
 local svgbox = require("redflat.gauge.svgbox")
 
 
@@ -70,6 +70,27 @@ local function colorize_icon(objects, last_state, values, crit, style)
 			last_state[i] = st
 		end
 	end
+end
+
+-- Construct complex indicator with history chart, progress bar and label
+--------------------------------------------------------------------------------
+local function fullchart(label_style, dashbar_style, chart_style, barvalue_height, maxm)
+
+	local widg = {}
+	local chart_style = redutil.table.merge(chart_style, { maxm = maxm })
+	local dashbar_style = redutil.table.merge(dashbar_style, { maxm = maxm })
+
+	-- construct layout with indicators
+	widg.barvalue = dcommon.barvalue(dashbar_style, label_style)
+	widg.chart = dcommon.chart(chart_style)
+	widg.barvalue.layout:set_forced_height(barvalue_height)
+
+	widg.layout = wibox.widget({
+		widg.barvalue.layout, nil, widg.chart,
+		layout = wibox.layout.align.vertical,
+	})
+
+	return widg
 end
 
 -- Construct speed info elements (fullchart and icon in one layout)
