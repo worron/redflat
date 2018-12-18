@@ -72,6 +72,27 @@ local function colorize_icon(objects, last_state, values, crit, style)
 	end
 end
 
+-- Construct complex indicator with progress bar and label on top of it
+--------------------------------------------------------------------------------
+local function barvalue(dashbar_style, label_style)
+	local widg = {}
+
+	-- construct layout with indicators
+	local progressbar = dcommon.dashbar(dashbar_style)
+	local label = dcommon.textbox(nil, label_style)
+
+	widg.layout = wibox.widget({
+		label, nil, progressbar,
+		layout = wibox.layout.align.vertical,
+	})
+
+	-- setup functions
+	function widg:set_text(text) label:set_text(text) end
+	function widg:set_value(x) progressbar:set_value(x) end
+
+	return widg
+end
+
 -- Construct complex indicator with history chart, progress bar and label
 --------------------------------------------------------------------------------
 local function fullchart(label_style, dashbar_style, chart_style, barvalue_height, maxm)
@@ -81,7 +102,7 @@ local function fullchart(label_style, dashbar_style, chart_style, barvalue_heigh
 	local dashbar_style = redutil.table.merge(dashbar_style, { maxm = maxm })
 
 	-- construct layout with indicators
-	widg.barvalue = dcommon.barvalue(dashbar_style, label_style)
+	widg.barvalue = barvalue(dashbar_style, label_style)
 	widg.chart = dcommon.chart(chart_style)
 	widg.barvalue.layout:set_forced_height(barvalue_height)
 
