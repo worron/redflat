@@ -16,7 +16,7 @@ local redutil = require("redflat.util")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local indicator = { mt = {} }
+local progressbar = { mt = {} }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ local function draw_line(cr, width, height, dy, first_point, last_point, fill_co
 	cr:fill()
 end
 
--- Create a new indicator widget
+-- Create a new progressbar widget
 -- @param style.chunk Table containing number and sizes for progress bar chunks
 -- @param style.color Main color
 -- @param style.width Widget width (optional)
@@ -67,7 +67,7 @@ end
 -- @param style.autoscale Scaling received values, true by default
 -- @param style.maxm Scaling value if autoscale = false
 -----------------------------------------------------------------------------------------------------------------------
-function indicator.new(style)
+function progressbar.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
@@ -117,10 +117,10 @@ function indicator.new(style)
 	return shapewidg
 end
 
--- Config metatable to call indicator module as function
+-- Config metatable to call progressbar module as function
 -----------------------------------------------------------------------------------------------------------------------
-function indicator.mt:__call(...)
-	return indicator.new(...)
+function progressbar.mt:__call(...)
+	return progressbar.new(...)
 end
 
-return setmetatable(indicator, indicator.mt)
+return setmetatable(progressbar, progressbar.mt)

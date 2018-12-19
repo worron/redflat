@@ -105,7 +105,7 @@ function multim.new(args, geometry, style)
 	-- Construct layouts
 	--------------------------------------------------------------------------------
 	local lines = dcommon.barpack(#args.lines, barpack_style)
-	local corners = dcommon.cornerpack(args.corners.num, corner_style)
+	local corners = dcommon.pack.upright(args.corners.num, corner_style)
 	lines.layout:set_forced_height(style.state_height)
 
 	if style.icon then
