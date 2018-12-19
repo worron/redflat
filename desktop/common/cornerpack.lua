@@ -11,7 +11,7 @@ local setmetatable = setmetatable
 local wibox = require("wibox")
 --local beautiful = require("beautiful")
 
-local corners = require("redflat.desktop.common.corners")
+local corners = require("redflat.desktop.common.bar.shaped")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
