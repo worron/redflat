@@ -60,7 +60,7 @@ function barpack.new(num, style)
 
 		local line_align = wibox.layout.align.horizontal()
 		line_align:set_forced_height(style.line_height)
-		lines[i].bar = dcommon.progressbar(progressbar_style)
+		lines[i].bar = dcommon.bar.plain(progressbar_style)
 		line_align:set_middle(lines[i].bar)
 
 		lines[i].label = dcommon.textbox("", label_style)

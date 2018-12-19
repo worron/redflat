@@ -30,7 +30,7 @@ local function default_style()
 		color       = { main = "#b1222b", gray = "#404040" }
 	}
 
-	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.common.progressbar") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.common.bar.plain") or {})
 end
 
 -- Cairo drawing functions

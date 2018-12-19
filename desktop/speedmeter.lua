@@ -78,7 +78,7 @@ local function barvalue(progressbar_style, label_style)
 	local widg = {}
 
 	-- construct layout with indicators
-	local progressbar = dcommon.progressbar(progressbar_style)
+	local progressbar = dcommon.bar.plain(progressbar_style)
 	local label = dcommon.textbox(nil, label_style)
 
 	widg.layout = wibox.widget({
