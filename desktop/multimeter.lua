@@ -2,7 +2,7 @@
 --                                     RedFlat multi monitoring deskotp widget                                       --
 -----------------------------------------------------------------------------------------------------------------------
 -- Multi monitoring widget
--- Pack of corner indicators and two lines with dashbar, label and text
+-- Pack of corner indicators and two lines with progressbar, label and text
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
@@ -53,7 +53,7 @@ local default_args = {
 local function set_info(value, args, corners, lines, icon, last_state, style)
 	local corners_alert = value.alert
 
-	-- set dashbar values and color
+	-- set progressbar values and color
 	for i, line in ipairs(args.lines) do
 		lines:set_values(value.lines[i][1] / line.maxm, i)
 		lines:set_text(redutil.text.dformat(value.lines[i][2], line.unit or style.unit, style.digit_num), i)
@@ -94,7 +94,7 @@ function multim.new(args, geometry, style)
 	local geometry = redutil.table.merge(default_geometry, geometry or {})
 	local style = redutil.table.merge(default_style(), style or {})
 
-	local barpack_style = redutil.table.merge(style.barpack, { dashbar = { color = style.color } })
+	local barpack_style = redutil.table.merge(style.barpack, { progressbar = { color = style.color } })
 	local corner_style = redutil.table.merge(style.corner, { color = style.color })
 
 	-- Create wibox

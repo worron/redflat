@@ -28,7 +28,7 @@ local function default_style()
 	local style = {
 		images           = {},
 		label            = { height = 20 },
-		dashbar          = { bar = { width = 10, gap = 5 }, height = 4 },
+		progressbar      = { chunk = { width = 10, gap = 5 }, height = 4 },
 		chart            = {},
 		barvalue_height  = 32,
 		fullchart_height = 78,
@@ -74,11 +74,11 @@ end
 
 -- Construct complex indicator with progress bar and label on top of it
 --------------------------------------------------------------------------------
-local function barvalue(dashbar_style, label_style)
+local function barvalue(progressbar_style, label_style)
 	local widg = {}
 
 	-- construct layout with indicators
-	local progressbar = dcommon.dashbar(dashbar_style)
+	local progressbar = dcommon.progressbar(progressbar_style)
 	local label = dcommon.textbox(nil, label_style)
 
 	widg.layout = wibox.widget({
@@ -95,14 +95,14 @@ end
 
 -- Construct complex indicator with history chart, progress bar and label
 --------------------------------------------------------------------------------
-local function fullchart(label_style, dashbar_style, chart_style, barvalue_height, maxm)
+local function fullchart(label_style, progressbar_style, chart_style, barvalue_height, maxm)
 
 	local widg = {}
 	local chart_style = redutil.table.merge(chart_style, { maxm = maxm })
-	local dashbar_style = redutil.table.merge(dashbar_style, { maxm = maxm })
+	local progressbar_style = redutil.table.merge(progressbar_style, { maxm = maxm })
 
 	-- construct layout with indicators
-	widg.barvalue = barvalue(dashbar_style, label_style)
+	widg.barvalue = barvalue(progressbar_style, label_style)
 	widg.chart = dcommon.chart(chart_style)
 	widg.barvalue.layout:set_forced_height(barvalue_height)
 
@@ -117,7 +117,7 @@ end
 -- Construct speed info elements (fullchart and icon in one layout)
 --------------------------------------------------------------------------------
 local function speed_line(image, maxm, el_style, style)
-	local fc = fullchart(el_style.label, el_style.dashbar, el_style.chart, style.barvalue_height, maxm)
+	local fc = fullchart(el_style.label, el_style.progressbar, el_style.chart, style.barvalue_height, maxm)
 	local align = wibox.layout.align.horizontal()
 	local icon
 
@@ -151,7 +151,7 @@ function speedmeter.new(args, geometry, style)
 
 	local elements_style = {
 		label   = redutil.table.merge(style.label, { draw = "by_edges", color = style.color.gray }),
-		dashbar = redutil.table.merge(style.dashbar, { autoscale = args.autoscale, color = style.color }),
+		progressbar = redutil.table.merge(style.progressbar, { autoscale = args.autoscale, color = style.color }),
 		chart   = redutil.table.merge(style.chart, { autoscale = args.autoscale, color = style.color.gray })
 	}
 

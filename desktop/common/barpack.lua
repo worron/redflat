@@ -23,7 +23,7 @@ local function default_style()
 	local style = {
 		label_style = {},
 		text_style  = {},
-		dashbar     = {},
+		progressbar = {},
 		line_height = 20,
 		text_gap    = 20,
 		label_gap   = 20,
@@ -37,7 +37,7 @@ end
 -- @param style.names Table containing labels placed at the start of line
 -- @param style.text Table containing labels at the end of line
 -- @param style.line_height Height for all elements in line
--- @param style.style.color.main Style variables for redflat dashbar
+-- @param style.progressbar Style variables for redflat progressbar
 -- @param style.label_style Style variables for redflat textbox
 -- @param style.text_style Style variables for redflat textbox
 -----------------------------------------------------------------------------------------------------------------------
@@ -45,7 +45,7 @@ function barpack.new(num, style)
 
 	local pack = {}
 	local style = redutil.table.merge(default_style(), style or {})
-	local dashbar_style = redutil.table.merge(style.dashbar, { color = style.color })
+	local progressbar_style = redutil.table.merge(style.progressbar, { color = style.color })
 	local label_style = redutil.table.merge(style.label_style, { color = style.color.gray })
 	local text_style = redutil.table.merge(style.text_style, { color = style.color.gray })
 
@@ -60,7 +60,7 @@ function barpack.new(num, style)
 
 		local line_align = wibox.layout.align.horizontal()
 		line_align:set_forced_height(style.line_height)
-		lines[i].bar = dcommon.dashbar(dashbar_style)
+		lines[i].bar = dcommon.progressbar(progressbar_style)
 		line_align:set_middle(lines[i].bar)
 
 		lines[i].label = dcommon.textbox("", label_style)

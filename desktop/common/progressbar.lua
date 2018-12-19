@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------------
---                                              RedFlat dashbar widget                                               --
+--                                       RedFlat desktop progressbar widget                                          --
 -----------------------------------------------------------------------------------------------------------------------
--- Dashed progress bar indicator
+-- Dashed horizontal progress bar
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
@@ -16,7 +16,7 @@ local redutil = require("redflat.util")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local dashbar = { mt = {} }
+local progressbar = { mt = {} }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
@@ -25,18 +25,18 @@ local function default_style()
 		maxm        = 1,
 		width       = nil,
 		height      = nil,
-		bar         = { gap = 5, width = 5 },
-		autoscale   = true,
+		chunk       = { gap = 5, width = 5 },
+		autoscale   = false,
 		color       = { main = "#b1222b", gray = "#404040" }
 	}
 
-	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.common.dashbar") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.common.progressbar") or {})
 end
 
 -- Cairo drawing functions
 -----------------------------------------------------------------------------------------------------------------------
 
-local function draw_dashbar(cr, width, height, gap, first_point, last_point, fill_color)
+local function draw_progressbar(cr, width, height, gap, first_point, last_point, fill_color)
 	cr:set_source(color(fill_color))
 	for i = first_point, last_point do
 		cr:rectangle((i - 1) * (width + gap), 0, width, height)
@@ -44,15 +44,15 @@ local function draw_dashbar(cr, width, height, gap, first_point, last_point, fil
 	cr:fill()
 end
 
--- Create a new dashbar widget
--- @param style.bar Table containing dash parameters
+-- Create a new progressbar widget
+-- @param style.chunk Table containing dash parameters
 -- @param style.color.main Main color
 -- @param style.width Widget width (optional)
 -- @param style.height Widget height (optional)
 -- @param style.autoscale Scaling received values, true by default
 -- @param style.maxm Scaling value if autoscale = false
 -----------------------------------------------------------------------------------------------------------------------
-function dashbar.new(style)
+function progressbar.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
@@ -88,23 +88,23 @@ function dashbar.new(style)
 	function widg:draw(_, cr, width, height)
 
 		-- progressbar
-		local barnum = math.floor((width + style.bar.gap) / (style.bar.width + style.bar.gap))
-		local real_gap = style.bar.gap + (width - (barnum - 1) * (style.bar.width + style.bar.gap)
-		                 - style.bar.width) / (barnum - 1)
+		local barnum = math.floor((width + style.chunk.gap) / (style.chunk.width + style.chunk.gap))
+		local real_gap = style.chunk.gap + (width - (barnum - 1) * (style.chunk.width + style.chunk.gap)
+		                 - style.chunk.width) / (barnum - 1)
 		local point = math.ceil(barnum * data.value)
 
-		draw_dashbar(cr, style.bar.width, height, real_gap, 1, point, style.color.main)
-		draw_dashbar(cr, style.bar.width, height, real_gap, point + 1, barnum, style.color.gray)
+		draw_progressbar(cr, style.chunk.width, height, real_gap, 1, point, style.color.main)
+		draw_progressbar(cr, style.chunk.width, height, real_gap, point + 1, barnum, style.color.gray)
 	end
 	--------------------------------------------------------------------------------
 
 	return widg
 end
 
--- Config metatable to call dashbar module as function
+-- Config metatable to call progressbar module as function
 -----------------------------------------------------------------------------------------------------------------------
-function dashbar.mt:__call(...)
-	return dashbar.new(...)
+function progressbar.mt:__call(...)
+	return progressbar.new(...)
 end
 
-return setmetatable(dashbar, dashbar.mt)
+return setmetatable(progressbar, progressbar.mt)
