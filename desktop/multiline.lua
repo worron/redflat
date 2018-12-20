@@ -15,7 +15,7 @@ local beautiful = require("beautiful")
 local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
-local barpack = require("redflat.desktop.common.pack.lines")
+local lines = require("redflat.desktop.common.pack.lines")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -26,12 +26,12 @@ local dashpack = { mt = {} }
 local function default_style()
 	local style = {
 		show_text = false,
-		barpack   = {},
+		lines   = {},
 		digit_num = 3,
 		unit      = { { "B", -1 }, { "KB", 1024 }, { "MB", 1024^2 }, { "GB", 1024^3 } },
 		color     = { main = "#b1222b", wibox = "#161616", gray = "#404040" }
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.multibar") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.multiline") or {})
 end
 
 local default_geometry = { width = 200, height = 100, x = 100, y = 100 }
@@ -53,9 +53,9 @@ function dashpack.new(args, geometry, style)
 	dwidget.wibox = wibox({ type = "desktop", visible = true, bg = style.color.wibox })
 	dwidget.wibox:geometry(geometry)
 
-	-- initialize bar lines
-	local barpack_style = redutil.table.merge(style.barpack, { color = style.color })
-	local pack = barpack(#args.sensors, barpack_style)
+	-- initialize progressbar lines
+	local lines_style = redutil.table.merge(style.lines, { color = style.color })
+	local pack = lines(#args.sensors, lines_style)
 	dwidget.wibox:set_widget(pack.layout)
 
 	for i, name in ipairs(args.names) do

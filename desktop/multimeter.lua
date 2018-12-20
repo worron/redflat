@@ -26,7 +26,7 @@ local multim = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		barpack      = {},
+		lines      = {},
 		corner       = { width = 40 },
 		state_height = 60,
 		digit_num    = 3,
@@ -94,7 +94,7 @@ function multim.new(args, geometry, style)
 	local geometry = redutil.table.merge(default_geometry, geometry or {})
 	local style = redutil.table.merge(default_style(), style or {})
 
-	local barpack_style = redutil.table.merge(style.barpack, { progressbar = { color = style.color } })
+	local lines_style = redutil.table.merge(style.lines, { progressbar = { color = style.color } })
 	local corner_style = redutil.table.merge(style.corner, { color = style.color })
 
 	-- Create wibox
@@ -104,7 +104,7 @@ function multim.new(args, geometry, style)
 
 	-- Construct layouts
 	--------------------------------------------------------------------------------
-	local lines = dcommon.pack.lines(#args.lines, barpack_style)
+	local lines = dcommon.pack.lines(#args.lines, lines_style)
 	local corners = dcommon.pack.upright(args.corners.num, corner_style)
 	lines.layout:set_forced_height(style.state_height)
 
