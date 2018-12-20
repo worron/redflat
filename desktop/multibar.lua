@@ -15,7 +15,7 @@ local beautiful = require("beautiful")
 local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
-local barpack = require("redflat.desktop.common.barpack")
+local barpack = require("redflat.desktop.common.pack.lines")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------

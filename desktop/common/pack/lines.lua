@@ -29,7 +29,7 @@ local function default_style()
 		label_gap   = 20,
 		color       = {}
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.common.barpack") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.common.pack.lines") or {})
 end
 
 
