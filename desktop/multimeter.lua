@@ -2,7 +2,7 @@
 --                                     RedFlat multi monitoring deskotp widget                                       --
 -----------------------------------------------------------------------------------------------------------------------
 -- Multi monitoring widget
--- Pack of corner indicators and two lines with progressbar, label and text
+-- Pack of vertical indicators and two lines with labeled progressbar
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
@@ -26,8 +26,8 @@ local multim = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		lines      = {},
-		corner       = { width = 40 },
+		lines        = {},
+		upbar        = { width = 40 },
 		state_height = 60,
 		digit_num    = 3,
 		prog_height  = 100,
@@ -42,7 +42,7 @@ end
 
 local default_geometry = { width = 200, height = 100, x = 100, y = 100 }
 local default_args = {
-	corners = { num = 1, maxm = 1},
+	topbars = { num = 1, maxm = 1},
 	lines   = { maxm = 1 },
 	meter   = { func = system.dformatted.cpumem },
 	timeout = 60,
@@ -50,8 +50,8 @@ local default_args = {
 
 -- Support functions
 -----------------------------------------------------------------------------------------------------------------------
-local function set_info(value, args, corners, lines, icon, last_state, style)
-	local corners_alert = value.alert
+local function set_info(value, args, upright, lines, icon, last_state, style)
+	local upright_alert = value.alert
 
 	-- set progressbar values and color
 	for i, line in ipairs(args.lines) do
@@ -65,17 +65,17 @@ local function set_info(value, args, corners, lines, icon, last_state, style)
 		end
 	end
 
-	-- set corners value
-	for i = 1, args.corners.num do
-		local v = value.corners[i] or 0
-		corners:set_values(v / args.corners.maxm, i)
-		if args.corners.crit then corners_alert = corners_alert or v > args.corners.crit end
+	-- set upright value
+	for i = 1, args.topbars.num do
+		local v = value.bars[i] or 0
+		upright:set_values(v / args.topbars.maxm, i)
+		if args.topbars.crit then upright_alert = upright_alert or v > args.topbars.crit end
 	end
 
 	-- colorize icon if needed
-	if style.icon and corners_alert ~= last_state then
-		icon:set_color(corners_alert and style.color.main or style.color.gray)
-		last_state = corners_alert
+	if style.icon and upright_alert ~= last_state then
+		icon:set_color(upright_alert and style.color.main or style.color.gray)
+		last_state = upright_alert
 	end
 end
 
@@ -95,7 +95,7 @@ function multim.new(args, geometry, style)
 	local style = redutil.table.merge(default_style(), style or {})
 
 	local lines_style = redutil.table.merge(style.lines, { progressbar = { color = style.color } })
-	local corner_style = redutil.table.merge(style.corner, { color = style.color })
+	local upbar_style = redutil.table.merge(style.upbar, { color = style.color })
 
 	-- Create wibox
 	--------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ function multim.new(args, geometry, style)
 	-- Construct layouts
 	--------------------------------------------------------------------------------
 	local lines = dcommon.pack.lines(#args.lines, lines_style)
-	local corners = dcommon.pack.upright(args.corners.num, corner_style)
+	local upright = dcommon.pack.upright(args.topbars.num, upbar_style)
 	lines.layout:set_forced_height(style.state_height)
 
 	if style.icon then
@@ -116,7 +116,7 @@ function multim.new(args, geometry, style)
 	dwidget.wibox:setup({
 		{
 			icon and wibox.container.margin(icon, 0, style.image_gap),
-			corners.layout,
+			upright.layout,
 			nil,
 			forced_height = style.prog_height,
 			layout = wibox.layout.align.horizontal()
@@ -134,7 +134,7 @@ function multim.new(args, geometry, style)
 	--------------------------------------------------------------------------------
 	local function get_and_set(source)
 		local state = args.meter.func(source)
-		set_info(state, args, corners, lines, icon, last_state, style)
+		set_info(state, args, upright, lines, icon, last_state, style)
 	end
 
 	local function update_plain()

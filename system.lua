@@ -411,7 +411,7 @@ function system.transmission_parse(output)
 	-- Empty output for redflat desktop widget if torrent client is not running
 	------------------------------------------------------------
 	if not is_transmission_running() then
-		return { corners = {}, lines = { { 0, 0 }, { 0, 0 } }, alert = true }
+		return { bars = {}, lines = { { 0, 0 }, { 0, 0 } }, alert = true }
 	end
 
 	-- Initialize vars
@@ -463,7 +463,7 @@ function system.transmission_parse(output)
 	for _, t in ipairs(torrent.list) do table.insert(sorted_prog , t.prog) end
 
 	return {
-		corners = sorted_prog,
+		bars = sorted_prog,
 		lines = { { torrent.seed.speed, torrent.seed.num }, { torrent.dnld.speed, torrent.dnld.num } },
 		alert = false
 	}
@@ -538,7 +538,7 @@ function system.dformatted.cpumem(storage)
 	local cores = system.cpu_usage(storage).core
 
 	return {
-		corners = cores,
+		bars = cores,
 		lines = { { mem.usep, mem.inuse }, { mem.swp.usep, mem.swp.inuse } }
 	}
 end
