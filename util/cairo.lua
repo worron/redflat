@@ -6,6 +6,7 @@ local cairo = { textcentre = {} }
 -- Functions
 -----------------------------------------------------------------------------------------------------------------------
 
+-- TODO: rename this
 -- Draw text aligned by center
 ------------------------------------------------------------
 function cairo.textcentre.vertical(cr, coord, text)
