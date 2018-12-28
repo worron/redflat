@@ -27,7 +27,6 @@ local dashpack = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		show_text = false,
 		icon      = { image = nil, margin = { 0, 0, 0, 0 } },
 		lines     = {},
 		digit_num = 3,
@@ -60,6 +59,7 @@ function dashpack.new(args, geometry, style)
 	local lines_style = redutil.table.merge(style.lines, { color = style.color })
 	local pack = lines(#args.sensors, lines_style)
 
+	-- add icon if needed
 	if style.icon.image then
 		dwidget.icon = svgbox(style.icon.image)
 		dwidget.icon:set_color(style.color.gray)
@@ -89,7 +89,7 @@ function dashpack.new(args, geometry, style)
 			pack:set_values(state[1] / sens.maxm, i)
 			pack:set_label_color(text_color, i)
 
-			if style.show_text then
+			if style.lines.show_text or style.lines.show_tooltip then
 				pack:set_text(redutil.text.dformat(state[2] or state[1], style.unit, style.digit_num), i)
 				pack:set_text_color(text_color, i)
 			end
