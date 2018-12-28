@@ -18,6 +18,7 @@ local tonumber = tonumber
 local io = io
 local os = os
 local string = string
+local math = math
 
 local awful = require("awful")
 local redutil = require("redflat.util")
@@ -46,6 +47,34 @@ function system.fs_info(args)
 	------------------------------------------------------------
    return { tonumber(fs_info.use_p) or 0, tonumber(fs_info.used) or 0}
 end
+
+-- Qemu image check
+-----------------------------------------------------------------------------------------------------------------------
+local function q_format(size, k)
+	if not size or not k then return 0 end
+	return k == "K" and size or k == "M" and size * 1024 or k == "G" and size * 1024^2 or nil
+end
+
+function system.qemu_image_size(args)
+	local img_info = {}
+
+	-- Get data from qemu-ima
+	------------------------------------------------------------
+	local line = redutil.read.output("LC_ALL=C qemu-img info " .. args)
+
+	-- Parse data
+	------------------------------------------------------------
+	local size, k = string.match(line, "disk%ssize:%s([%.%d]+)(%w)")
+	img_info.size = q_format(size, k)
+	local vsize, k = string.match(line, "virtual%ssize:%s([%.%d]+)(%w)")
+	img_info.virtual_size = q_format(vsize, k)
+	img_info.use_p = img_info.virtual_size > 0 and math.floor(img_info.size / img_info.virtual_size * 100) or 0
+
+	-- Format output special for redflat desktop widget
+	------------------------------------------------------------
+   return { img_info.use_p, img_info.size }
+end
+
 
 -- Get network speed
 -----------------------------------------------------------------------------------------------------------------------
