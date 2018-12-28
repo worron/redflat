@@ -34,6 +34,7 @@ local function default_style()
 		timeout      = 1,
 		font  = "Sans 12",
 		border_width = 2,
+		set_position = nil,
 		color        = { border = "#404040", text = "#aaaaaa", wibox = "#202020" }
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.tooltip") or {})
@@ -84,7 +85,12 @@ function tooltip.new(args, style)
 	show_timer:connect_signal("timeout",
 		function()
 			ttp:set_geometry()
-			awful.placement.under_mouse(ttp.wibox)
+			if style.set_position then
+				-- TODO: add wibox as argument to 'set_position' function
+				ttp.wibox:geometry(style.set_position())
+			else
+				awful.placement.under_mouse(ttp.wibox)
+			end
 			awful.placement.no_offscreen(ttp.wibox)
 			ttp.wibox.visible = true
 			show_timer:stop()
