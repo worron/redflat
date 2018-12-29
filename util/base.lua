@@ -35,12 +35,12 @@ end
 --------------------------------------------------------------------------------
 function base.placeholder(args)
 	local args = args or {}
-	local tb = wibox.widget {
+	local tb = wibox.widget({
 		markup = args.txt or "?",
 		align  = "center",
 		valign = "center",
 		widget = wibox.widget.textbox
-	}
+	})
 
 	return surface.widget_to_surface(tb, args.width or 24, args.height or 24)
 end

@@ -12,6 +12,8 @@ local awful = require("awful")
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local timer = require("gears.timer")
+-- TODO make proper table unpack for whole module
+local unpack = unpack
 
 local dcommon = require("redflat.desktop.common")
 local system = require("redflat.system")
@@ -26,16 +28,15 @@ local multim = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		lines        = {},
-		upbar        = { width = 40 },
-		state_height = 60,
-		digit_num    = 3,
-		prog_height  = 100,
-		icon         = nil,
-		labels       = {},
-		image_gap    = 20,
-		unit         = { { "MB", - 1 }, { "GB", 1024 } },
-		color        = { main = "#b1222b", wibox = "#161616", gray = "#404040" }
+		lines          = {},
+		upbar          = { width = 40 },
+		lines_height   = 60,
+		digit_num      = 3,
+		upright_height = 100,
+		icon           = { image = nil, margin = { 0, 20, 0, 0 }, full = false },
+		labels         = {},
+		unit           = { { "MB", - 1 }, { "GB", 1024 } },
+		color          = { main = "#b1222b", wibox = "#161616", gray = "#404040" }
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.multimeter") or {})
 end
@@ -73,7 +74,7 @@ local function set_info(value, args, upright, lines, icon, last_state, style)
 	end
 
 	-- colorize icon if needed
-	if style.icon and upright_alert ~= last_state then
+	if style.icon.image and upright_alert ~= last_state then
 		icon:set_color(upright_alert and style.color.main or style.color.gray)
 		last_state = upright_alert
 	end
@@ -106,25 +107,36 @@ function multim.new(args, geometry, style)
 	--------------------------------------------------------------------------------
 	local lines = dcommon.pack.lines(#args.lines, lines_style)
 	local upright = dcommon.pack.upright(args.topbars.num, upbar_style)
-	lines.layout:set_forced_height(style.state_height)
+	lines.layout:set_forced_height(style.lines_height)
 
-	if style.icon then
-		icon = svgbox(style.icon)
+	if style.icon.image then
+		icon = svgbox(style.icon.image)
 		icon:set_color(style.color.gray)
 	end
 
-	dwidget.wibox:setup({
+	local area = wibox.widget({
 		{
-			icon and wibox.container.margin(icon, 0, style.image_gap),
+			icon and not style.icon.full and wibox.container.margin(icon, unpack(style.icon.margin)),
 			upright.layout,
 			nil,
-			forced_height = style.prog_height,
-			layout = wibox.layout.align.horizontal()
+			forced_height = style.upright_height,
+			layout = wibox.layout.align.horizontal
 		},
 		nil,
 		lines.layout,
 		layout = wibox.layout.align.vertical
 	})
+
+	if icon and style.icon.full then
+		area = wibox.widget({
+			wibox.container.margin(icon, unpack(style.icon.margin)),
+			area,
+			nil,
+			layout = wibox.layout.align.horizontal
+		})
+	end
+
+	dwidget.wibox:set_widget(area)
 
 	for i, label in ipairs(style.labels) do
 		lines:set_label(label, i)
