@@ -83,6 +83,15 @@ local function daymarks(style)
 	-- Draw
 	------------------------------------------------------------
 	function widg:draw(_, cr, width, height)
+		-- shift canvas if pointer bigger then mark
+		local dy = style.mark.height - style.pointer.height
+		local height = height
+		if dy < 0 then
+			cr:translate(0, -dy/2)
+			height = height + dy
+		end
+
+		-- main draw
 		local gap = (height - self._data.marks * style.mark.height) / (self._data.marks - 1)
 		local mark_dy = (style.pointer.height - style.mark.height) / 2
 
