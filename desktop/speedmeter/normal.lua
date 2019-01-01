@@ -37,7 +37,7 @@ local function default_style()
 		unit             = { { "B", -1 }, { "KB", 1024 }, { "MB", 1024^2 }, { "GB", 1024^3 } },
 		color            = { main = "#b1222b", wibox = "#161616", gray = "#404040" }
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.speedmeter") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.speedmeter.normal") or {})
 end
 
 local default_args = {
