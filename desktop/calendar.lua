@@ -94,6 +94,7 @@ local function daymarks(style)
 		-- main draw
 		local gap = (height - self._data.marks * style.mark.height) / (self._data.marks - 1)
 		local mark_dy = (style.pointer.height - style.mark.height) / 2
+		cr:set_line_width(style.mark.line)
 
 		for i = 1, self._data.marks do
 			-- calendar marks
