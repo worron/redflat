@@ -26,10 +26,10 @@ local calendar = { mt = {} }
 local function default_style()
 	local style = {
 		maxed_marks = true,
-		font        = { font = "Sans", size = 14, face = 1, slant = 0 },
+		label       = { gap = 12, font = { font = "Sans", size = 18, face = 1, slant = 0 }, sep = "-" },
 		mark        = { height = 20, width = 40, dx = 10, line = 4 },
-		pointer     = { height = 32, width = 60, dx = 10 },
-		color       = { main = "#b1222b", wibox = "#161616", gray = "#404040", undertone = "#4d2124", bg = "#161616" }
+		pointer     = { height = 24, width = 8, gap = 8, dx = 8 },
+		color       = { main = "#b1222b", wibox = "#161616", gray = "#404040", bg = "#161616" }
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.calendar") or {})
 end
@@ -55,7 +55,7 @@ local function daymarks(style)
 		days = 31,
 		marks = 31,
 		today = 1,
-		label = "01.01",
+		label = "01-01",
 		weekend = { 6, 0 }
 	}
 
@@ -69,7 +69,7 @@ local function daymarks(style)
 		self._data.days = date.month == 2 and is_leap_year(date.year) and 29 or days_in_month[date.month]
 		self._data.weekend = { (7 - first_week_day) % 7, (8 - first_week_day) % 7 }
 		self._data.marks = style.maxed_marks and 31 or self._data.days
-		self._data.label = string.format("%s.%s", date.day, date.month)
+		self._data.label = string.format("%.2d%s%.2d", date.day, style.label.sep, date.month)
 
 		self:emit_signal("widget::updated")
 	end
@@ -94,6 +94,9 @@ local function daymarks(style)
 		-- main draw
 		local gap = (height - self._data.marks * style.mark.height) / (self._data.marks - 1)
 		local mark_dy = (style.pointer.height - style.mark.height) / 2
+		local pointer_x = width - style.mark.width - style.mark.dx
+		                  - style.pointer.width - style.pointer.dx - style.pointer.gap
+		local label_x = pointer_x - style.label.gap
 		cr:set_line_width(style.mark.line)
 
 		for i = 1, self._data.marks do
@@ -101,7 +104,7 @@ local function daymarks(style)
 			local id = i % 7
 			local is_weekend = id == self._data.weekend[1] or id == self._data.weekend[2]
 
-			cr:set_source(color(is_weekend and style.color.undertone or style.color.gray))
+			cr:set_source(color(is_weekend and style.color.main or style.color.gray))
 			cr:move_to(width, (style.mark.height + gap) * (i - 1))
 			cr:rel_line_to(0, style.mark.height)
 			cr:rel_line_to(-style.mark.width, 0)
@@ -118,9 +121,11 @@ local function daymarks(style)
 			if i == self._data.today then
 				-- today mark
 				cr:set_source(color(style.color.main))
-				cr:move_to(0, (style.mark.height + gap) * (i - 1) - mark_dy)
-				cr:rel_line_to(0, style.pointer.height)
+				cr:move_to(pointer_x, (style.mark.height + gap) * (i - 1) - mark_dy)
 				cr:rel_line_to(style.pointer.width, 0)
+				cr:rel_line_to(style.pointer.dx, style.pointer.height / 2)
+				cr:rel_line_to(-style.pointer.dx, style.pointer.height / 2)
+				cr:rel_line_to(-style.pointer.width, 0)
 				cr:rel_line_to(style.pointer.dx, -style.pointer.height / 2)
 				cr:rel_line_to(-style.pointer.dx, -style.pointer.height / 2)
 				cr:close_path()
@@ -128,9 +133,11 @@ local function daymarks(style)
 
 				-- today label
 				local coord_y = ((style.mark.height + gap) * (i - 1) - mark_dy) + style.pointer.height / 2
-				cr:set_source(color(style.color.bg))
-				redutil.cairo.set_font(cr, style.font)
-				redutil.cairo.textcentre.vertical(cr, { style.pointer.width/2,  coord_y}, self._data.label)
+				redutil.cairo.set_font(cr, style.label.font)
+
+				local ext = cr:text_extents(self._data.label)
+				cr:move_to(label_x - (ext.width + 2 * ext.x_bearing), coord_y - (ext.height/2 + ext.y_bearing))
+				cr:show_text(self._data.label)
 			end
 		end
 	end
