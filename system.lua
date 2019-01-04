@@ -368,6 +368,28 @@ function system.thermal.sensors_core(args)
 	return temp and { math.floor(tonumber(temp)) } or { 0 }
 end
 
+-- full parse
+system.thermal.lmsensors = { storage = {}, patterns = {}, delay = 1, time = 0 }
+
+function system.thermal.lmsensors:update()
+	local output = redutil.read.output("sensors")
+	for name, pat in pairs(self.patterns) do
+		local value = string.match(output, pat.match)
+		if value and pat.posthook then value = pat.posthook(value) end
+		value = tonumber(value)
+		self.storage[name] = value and { value } or { 0 }
+	end
+	self.time = os.time()
+end
+
+function system.thermal.lmsensors.get(name)
+	if os.time() - system.thermal.lmsensors.time > system.thermal.lmsensors.delay then
+		system.thermal.lmsensors:update()
+	end
+	return system.thermal.lmsensors.storage[name] or { 0 }
+end
+
+
 -- Using hddtemp
 ------------------------------------------------------------
 function system.thermal.hddtemp(args)
