@@ -52,7 +52,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 local function q_format(size, k)
 	if not size or not k then return 0 end
-	return k == "K" and size or k == "M" and size * 1024 or k == "G" and size * 1024^2 or nil
+	return k == "K" and tonumber(size) or k == "M" and size * 1024 or k == "G" and size * 1024^2 or 0
 end
 
 function system.qemu_image_size(args)
@@ -69,6 +69,7 @@ function system.qemu_image_size(args)
 	local vsize, k = string.match(line, "virtual%ssize:%s([%.%d]+)(%w)")
 	img_info.virtual_size = q_format(vsize, k)
 	img_info.use_p = img_info.virtual_size > 0 and math.floor(img_info.size / img_info.virtual_size * 100) or 0
+	print(img_info.virtual_size, img_info.size)
 
 	-- Format output special for redflat desktop widget
 	------------------------------------------------------------
