@@ -78,25 +78,37 @@ function dashpack.new(args, geometry, style)
 
 	-- Update info function
 	--------------------------------------------------------------------------------
-	local function update()
-		local ico_alert = false
-		for i, sens in ipairs(args.sensors) do
-			local state = sens.meter_function(sens.args)
-			local alert = sens.crit and state[1] > sens.crit
-			local text_color = alert and style.color.main or style.color.gray
+	local function set_raw_state(state, maxm, crit, i)
+		local alert = crit and state[1] > crit
+		local text_color = alert and style.color.main or style.color.gray
 
-			ico_alert = ico_alert or alert
-			pack:set_values(state[1] / sens.maxm, i)
-			pack:set_label_color(text_color, i)
+		pack:set_values(state[1] / maxm, i)
+		pack:set_label_color(text_color, i)
 
-			if style.lines.show_text or style.lines.show_tooltip then
-				pack:set_text(redutil.text.dformat(state[2] or state[1], style.unit, style.digit_num), i)
-				pack:set_text_color(text_color, i)
-			end
+		if style.lines.show_text or style.lines.show_tooltip then
+			pack:set_text(redutil.text.dformat(state[2] or state[1], style.unit, style.digit_num), i)
+			pack:set_text_color(text_color, i)
 		end
 
-		if style.icon.image then
-			dwidget.icon:set_color(ico_alert and style.color.main or style.color.gray)
+		if style.icon.image and alert then
+			dwidget.icon:set_color(style.color.main)
+		end
+	end
+
+	local function line_hadnler(maxm, crit, i)
+		return function(state) set_raw_state(state, maxm, crit, i) end
+	end
+
+	local function update()
+		if style.icon.image then dwidget.icon:set_color(style.color.gray) end
+		for i, sens in ipairs(args.sensors) do
+			local maxm, crit = sens.maxm, sens.crit
+			if sens.meter_function then
+				local state = sens.meter_function(sens.args)
+				set_raw_state(state, maxm, crit, i)
+			else
+				sens.acync_function(line_hadnler(maxm, crit, i))
+			end
 		end
 	end
 
