@@ -119,8 +119,10 @@ function svgbox.new(image, resize_allowed, newcolor)
 	end
 
 	function widg:set_color(new_color)
-		self.color = new_color
-		self:emit_signal("widget::updated")
+		if string.color ~= new_color then
+			self.color = new_color
+			self:emit_signal("widget::updated")
+		end
 	end
 
 	function widg:set_resize(allowed)
