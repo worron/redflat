@@ -69,7 +69,6 @@ function system.qemu_image_size(args)
 	local vsize, k = string.match(line, "virtual%ssize:%s([%.%d]+)(%w)")
 	img_info.virtual_size = q_format(vsize, k)
 	img_info.use_p = img_info.virtual_size > 0 and math.floor(img_info.size / img_info.virtual_size * 100) or 0
-	print(img_info.virtual_size, img_info.size)
 
 	-- Format output special for redflat desktop widget
 	------------------------------------------------------------
