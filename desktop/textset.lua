@@ -72,9 +72,9 @@ function textset.new(args, style)
 	--------------------------------------------------------------------------------
 	for i, action in ipairs(actions) do
 		timers[i] = timer({ timeout = timeout[i] or timeout[1] })
-		if args.acync then
+		if args.async then
 			timers[i]:connect_signal("timeout", function()
-				awful.spawn.easy_async(args.acync[i], function(o) data[i] = action(o); update() end)
+				awful.spawn.easy_async(args.async[i], function(o) data[i] = action(o); update() end)
 			end)
 		else
 			timers[i]:connect_signal("timeout", function()

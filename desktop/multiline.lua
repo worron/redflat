@@ -107,7 +107,7 @@ function dashpack.new(args, geometry, style)
 				local state = sens.meter_function(sens.args)
 				set_raw_state(state, maxm, crit, i)
 			else
-				sens.acync_function(line_hadnler(maxm, crit, i))
+				sens.async_function(line_hadnler(maxm, crit, i))
 			end
 		end
 	end

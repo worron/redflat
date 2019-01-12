@@ -27,6 +27,19 @@ local redutil = require("redflat.util")
 -----------------------------------------------------------------------------------------------------------------------
 local system = { thermal = {}, dformatted = {}, pformatted = {} }
 
+-- Async settlers generator
+-----------------------------------------------------------------------------------------------------------------------
+function system.simple_async(command, pattern)
+	return function(setup)
+		awful.spawn.easy_async(command,
+			function(output)
+				local value = tonumber(string.match(output, pattern))
+				setup(value and { value } or { 0 })
+			end
+		)
+	end
+end
+
 -- Disk usage
 -----------------------------------------------------------------------------------------------------------------------
 function system.fs_info(args)
