@@ -49,6 +49,7 @@ function dashpack.new(args, geometry, style)
 	local args = redutil.table.merge(default_args, args or {})
 	local geometry = redutil.table.merge(default_geometry, geometry or {})
 	local style = redutil.table.merge(default_style(), style or {})
+	local alert_data = { counter = 0, state = false }
 
 	-- Create wibox
 	--------------------------------------------------------------------------------
@@ -90,8 +91,12 @@ function dashpack.new(args, geometry, style)
 			pack:set_text_color(text_color, i)
 		end
 
-		if style.icon.image and alert then
-			dwidget.icon:set_color(style.color.main)
+		if style.icon.image then
+			alert_data.counter = alert_data.counter + 1
+			alert_data.state = alert_data.state or alert
+			if alert_data.counter == #args.sensors then
+				dwidget.icon:set_color(alert_data.state and style.color.main or style.color.gray)
+			end
 		end
 	end
 
@@ -100,7 +105,8 @@ function dashpack.new(args, geometry, style)
 	end
 
 	local function update()
-		if style.icon.image then dwidget.icon:set_color(style.color.gray) end
+		alert_data = { counter = 0, state = false }
+		--if style.icon.image then dwidget.icon:set_color(style.color.gray) end
 		for i, sens in ipairs(args.sensors) do
 			local maxm, crit = sens.maxm, sens.crit
 			if sens.meter_function then
