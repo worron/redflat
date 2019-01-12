@@ -20,6 +20,7 @@ local os = os
 local string = string
 local math = math
 
+local timer = require("gears.timer")
 local awful = require("awful")
 local redutil = require("redflat.util")
 
@@ -357,35 +358,9 @@ end
 
 -- Using lm-sensors
 ------------------------------------------------------------
-function system.thermal.sensors(args)
-	local args = args or "'Physical id 0'"
-	local output = redutil.read.output("sensors | grep " .. args)
+system.lmsensors = { storage = {}, patterns = {}, delay = 1, time = 0 }
 
-	local temp = string.match(output, "%+(%d+%.%d)°[CF]")
-
-	return temp and { math.floor(tonumber(temp)) } or { 0 }
-end
-
-local sensors_store
-
-function system.thermal.sensors_core(args)
-	local args = args or {}
-	local index = args.index or 0
-
-	if args.main then sensors_store = redutil.read.output("sensors | grep Core") end
-	local line = string.match(sensors_store, "Core " .. index .."(.-)\r?\n")
-
-	if not line then return { 0 } end
-
-	local temp = string.match(line, "%+(%d+%.%d)°[CF]")
-	return temp and { math.floor(tonumber(temp)) } or { 0 }
-end
-
--- full parse
-system.thermal.lmsensors = { storage = {}, patterns = {}, delay = 1, time = 0 }
-
-function system.thermal.lmsensors:update()
-	local output = redutil.read.output("sensors")
+function system.lmsensors:update(output)
 	for name, pat in pairs(self.patterns) do
 		local value = string.match(output, pat.match)
 		if value and pat.posthook then value = pat.posthook(value) end
@@ -395,13 +370,51 @@ function system.thermal.lmsensors:update()
 	self.time = os.time()
 end
 
-function system.thermal.lmsensors.get(name)
-	if os.time() - system.thermal.lmsensors.time > system.thermal.lmsensors.delay then
-		system.thermal.lmsensors:update()
-	end
-	return system.thermal.lmsensors.storage[name] or { 0 }
+function system.lmsensors:start(timeout)
+	if self.timer then return end
+
+	self.timer = timer({ timeout = timeout })
+	self.timer:connect_signal("timeout", function()
+		awful.spawn.easy_async("sensors", function(output) system.lmsensors:update(output) end)
+	end)
+
+	self.timer:start()
+	self.timer:emit_signal("timeout")
 end
 
+function system.lmsensors.get(name)
+	if os.time() - system.lmsensors.time > system.lmsensors.delay then
+		local output = redutil.read.output("sensors")
+		system.lmsensors:update(output)
+	end
+	return system.lmsensors.storage[name] or { 0 }
+end
+
+-- Legacy
+------------------------------------------------------------
+--function system.thermal.sensors(args)
+--	local args = args or "'Physical id 0'"
+--	local output = redutil.read.output("sensors | grep " .. args)
+--
+--	local temp = string.match(output, "%+(%d+%.%d)°[CF]")
+--
+--	return temp and { math.floor(tonumber(temp)) } or { 0 }
+--end
+--
+--local sensors_store
+--
+--function system.thermal.sensors_core(args)
+--	local args = args or {}
+--	local index = args.index or 0
+--
+--	if args.main then sensors_store = redutil.read.output("sensors | grep Core") end
+--	local line = string.match(sensors_store, "Core " .. index .."(.-)\r?\n")
+--
+--	if not line then return { 0 } end
+--
+--	local temp = string.match(line, "%+(%d+%.%d)°[CF]")
+--	return temp and { math.floor(tonumber(temp)) } or { 0 }
+--end
 
 -- Using hddtemp
 ------------------------------------------------------------
