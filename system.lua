@@ -86,7 +86,7 @@ function system.qemu_image_size(args)
 
 	-- Format output special for redflat desktop widget
 	------------------------------------------------------------
-   return { img_info.use_p, img_info.size }
+   return { img_info.use_p, img_info.size, off = img_info.size == 0 }
 end
 
 

@@ -50,6 +50,7 @@ function align.by_right(cr, width, _, text)
 	cr:show_text(text)
 end
 
+-- TODO: rework this
 function align.by_edges(cr, width, height, text)
 	local left_text, right_text = string.match(text, "(.+)%s%s(.+)")
 	align.by_left(cr, width, height, left_text)
