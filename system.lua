@@ -432,18 +432,20 @@ function system.thermal.hddtemp(args)
 end
 
 -- Using nvidia-settings on sysmem with optimus (bumblebee)
+-- Async
 ------------------------------------------------------------
-function system.thermal.nvoptimus()
-	local temp = 0
+function system.thermal.nvoptimus(setup)
 	local nvidia_on = string.find(redutil.read.output("cat /proc/acpi/bbswitch"), "ON")
-
-	if nvidia_on ~= nil then
-		temp = string.match(
-			redutil.read.output("optirun -b none nvidia-settings -c :8 -q gpucoretemp -t | tail -1"), "[^\n]+"
+	if not nvidia_on then
+		setup({ 0, off = true })
+	else
+		awful.spawn.easy_async("optirun -b none nvidia-settings -c :8 -q gpucoretemp -t | tail -1",
+			function(output)
+				local value = tonumber(string.match(output, "[^\n]+"))
+				setup({ value and { value } or { 0 }, off = false })
+			end
 		)
 	end
-
-	return { tonumber(temp), off = nvidia_on == nil }
 end
 
 -- Using nvidia-smi on sysmem with optimus (nvidia-prime)
