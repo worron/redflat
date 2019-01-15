@@ -468,30 +468,25 @@ end
 -- Get info from transmission-remote client
 -- This function adapted special for async reading
 -----------------------------------------------------------------------------------------------------------------------
+system.transmission = {}
 
 -- Check if transmission client running
 --------------------------------------------------------------------------------
-local function is_transmission_running(args)
+function system.transmission.is_running(args)
 	local t_client = args or "transmission-gtk"
 	return redutil.read.output("pidof -x " .. t_client) ~= ""
 end
 
 -- Function for torrents sorting (downloading and paused first)
 --------------------------------------------------------------------------------
-local function sort_torrent(a, b)
+function system.transmission.sort_torrent(a, b)
 	return a.status == "Downloading" and b.status ~= "Downloading"
 	       or a.status == "Stopped" and b.status ~= "Stopped" and b.status ~= "Downloading"
 end
 
 -- Function to parse 'transmission-remote -l' output
 --------------------------------------------------------------------------------
-function system.transmission_parse(output)
-
-	-- Empty output for redflat desktop widget if torrent client is not running
-	------------------------------------------------------------
-	if not is_transmission_running() then
-		return { bars = {}, lines = { { 0, 0 }, { 0, 0 } }, alert = true }
-	end
+function system.transmission.parse(output)
 
 	-- Initialize vars
 	------------------------------------------------------------
@@ -514,6 +509,7 @@ function system.transmission_parse(output)
 		if string.sub(line, 1, 3) == "Sum" then
 			-- get total speed
 			local seed, dnld = string.match(line, "Sum:%s+[%d%.]+%s+%a+%s+([%d%.]+)%s+([%d%.]+)")
+			seed, dnld = tonumber(seed), tonumber(dnld)
 			if seed and dnld then
 				torrent.seed.speed, torrent.dnld.speed = seed, dnld
 			end
@@ -534,7 +530,7 @@ function system.transmission_parse(output)
 
 	-- Sort torrents
 	------------------------------------------------------------
-	table.sort(torrent.list, sort_torrent)
+	table.sort(torrent.list, system.transmission.sort_torrent)
 
 	-- Format output special for redflat desktop widget
 	------------------------------------------------------------
@@ -546,6 +542,24 @@ function system.transmission_parse(output)
 		lines = { { torrent.seed.speed, torrent.seed.num }, { torrent.dnld.speed, torrent.dnld.num } },
 		alert = false
 	}
+end
+
+-- Async transmission meter function
+--------------------------------------------------------------------------------
+function system.transmission.info(setup, args)
+	if not system.transmission.is_running() then
+		setup({ bars = {}, lines = { { 0, 0 }, { 0, 0 } }, alert = true })
+		return
+	end
+
+	awful.spawn.easy_async("transmission-remote -l", function(output)
+		local state = system.transmission.parse(output)
+		if args.speed_only then
+			state.lines[1][2] = state.lines[1][1]
+			state.lines[2][2] = state.lines[2][1]
+		end
+		setup(state)
+	end)
 end
 
 -- Get processes list and cpu and memory usage for every process
