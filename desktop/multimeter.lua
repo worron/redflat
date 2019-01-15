@@ -8,7 +8,7 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
-local awful = require("awful")
+--local awful = require("awful")
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local timer = require("gears.timer")
@@ -16,7 +16,6 @@ local timer = require("gears.timer")
 local unpack = unpack
 
 local dcommon = require("redflat.desktop.common")
-local system = require("redflat.system")
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
 
@@ -45,7 +44,7 @@ local default_geometry = { width = 200, height = 100, x = 100, y = 100 }
 local default_args = {
 	topbars = { num = 1, maxm = 1},
 	lines   = { maxm = 1 },
-	meter   = { func = system.dformatted.cpumem },
+	meter   = {},
 	timeout = 60,
 }
 
@@ -144,20 +143,16 @@ function multim.new(args, geometry, style)
 
 	-- Update info function
 	--------------------------------------------------------------------------------
-	local function get_and_set(source)
-		local state = args.meter.func(source)
+	local function raw_set(state)
 		set_info(state, args, upright, lines, icon, last_state, style)
 	end
 
 	local function update_plain()
-		get_and_set(args.meter.args)
+		local state = args.meter.func(args.meter.args)
+		set_info(state, args, upright, lines, icon, last_state, style)
 	end
 
-	local function update_async()
-		awful.spawn.easy_async(args.async, get_and_set)
-	end
-
-	local update = args.async and update_async or update_plain
+	local update = args.meter.async and function() args.meter.async(raw_set, args.meter.args) end or update_plain
 
 	-- Set update timer
 	--------------------------------------------------------------------------------
