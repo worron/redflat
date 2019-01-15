@@ -27,7 +27,7 @@ local speedmeter = { mt = {} }
 local function default_style()
 	local style = {
 		images           = {},
-		label            = { height = 20 },
+		label            = { height = 20, separator = "^" },
 		progressbar      = { chunk = { width = 10, gap = 5 }, height = 4 },
 		chart            = {},
 		barvalue_height  = 32,
@@ -57,7 +57,9 @@ local default_maxspeed = { up = 10 * 1024, down = 10 * 1024 }
 local function set_fullchart_info(objects, label, state, style)
 	for i, o in ipairs(objects) do
 		o.barvalue:set_value(state[i])
-		o.barvalue:set_text(label .. "  " .. redutil.text.dformat(state[i], style.unit, style.digit_num, " "))
+		o.barvalue:set_text(
+			label .. style.label.separator .. redutil.text.dformat(state[i], style.unit, style.digit_num, " ")
+		)
 		o.chart:set_value(state[i])
 	end
 end
@@ -150,9 +152,9 @@ function speedmeter.new(args, geometry, style)
 	local maxspeed = redutil.table.merge(default_maxspeed, args.maxspeed or {})
 
 	local elements_style = {
-		label   = redutil.table.merge(style.label, { draw = "by_edges", color = style.color.gray }),
+		label = redutil.table.merge(style.label, { draw = "by_edges", color = style.color.gray }),
 		progressbar = redutil.table.merge(style.progressbar, { autoscale = args.autoscale, color = style.color }),
-		chart   = redutil.table.merge(style.chart, { autoscale = args.autoscale, color = style.color.gray })
+		chart = redutil.table.merge(style.chart, { autoscale = args.autoscale, color = style.color.gray })
 	}
 
 	-- Create wibox

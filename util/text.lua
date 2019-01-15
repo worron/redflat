@@ -22,7 +22,7 @@ function text.dformat(value, unit, w, spacer)
 	local res = value
 	local add = ""
 	local w = w or 3
-	local spacer = spacer or "  "
+	local spacer = spacer or " "
 
 	for _, v in pairs(unit) do
 		if value > v[2] then

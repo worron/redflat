@@ -22,11 +22,12 @@ local textbox = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		width  = nil,
-		height = nil,
-		draw   = "by_left",
-		color  = "#404040",
-		font   = { font = "Sans", size = 20, face = 0, slant = 0 }
+		width     = nil,
+		height    = nil,
+		draw      = "by_left",
+		separator = '%s',
+		color     = "#404040",
+		font      = { font = "Sans", size = 20, face = 0, slant = 0 }
 	}
 
 	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.common.textbox") or {})
@@ -50,11 +51,14 @@ function align.by_right(cr, width, _, text)
 	cr:show_text(text)
 end
 
--- TODO: rework this
-function align.by_edges(cr, width, height, text)
-	local left_text, right_text = string.match(text, "(.+)%s%s(.+)")
-	align.by_left(cr, width, height, left_text)
-	align.by_right(cr, width, height, right_text)
+function align.by_edges(cr, width, height, text, style)
+	local left_text, right_text = string.match(text, "(.+)" .. style.separator .. "(.+)")
+	if left_text and right_text then
+		align.by_left(cr, width, height, left_text)
+		align.by_right(cr, width, height, right_text)
+	else
+		align.by_right(cr, width, height, text)
+	end
 end
 
 function align.by_width(cr, width, _, text)
@@ -132,7 +136,7 @@ function textbox.new(txt, style)
 		cr:set_source(color(data.color))
 		redutil.cairo.set_font(cr, style.font)
 
-		align[style.draw](cr, width, height, data.text)
+		align[style.draw](cr, width, height, data.text, style)
 	end
 
 	--------------------------------------------------------------------------------

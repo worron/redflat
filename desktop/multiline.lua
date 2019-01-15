@@ -30,7 +30,7 @@ local function default_style()
 		icon      = { image = nil, margin = { 0, 0, 0, 0 } },
 		lines     = {},
 		digit_num = 3,
-		dislabel  = "   OFF", -- fix this?
+		dislabel  = "OFF",
 		unit      = { { "B", -1 }, { "KB", 1024 }, { "MB", 1024^2 }, { "GB", 1024^3 } },
 		color     = { main = "#b1222b", wibox = "#161616", gray = "#404040" }
 	}

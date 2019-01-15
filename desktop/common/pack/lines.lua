@@ -112,7 +112,7 @@ function barpack.new(num, style)
 		end
 
 		if lines[index].tooltip then
-			lines[index].tooltip:set_text(string.format("%s  %s", lines[index]._label_txt, value))
+			lines[index].tooltip:set_text(string.format("%s %s", lines[index]._label_txt, value))
 		end
 	end
 
