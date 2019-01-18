@@ -94,16 +94,32 @@ function sline.new(args, geometry, style)
 
 	-- Update info function
 	--------------------------------------------------------------------------------
+	local function set_raw_state(state, crit, i)
+		local text_color = crit and state[1] > crit and style.color.main or style.color.gray
+		local txt = redutil.text.dformat(state[2] or state[1], style.unit, style.digit_num)
+
+		dwidget.item[i]:set_text(txt)
+		dwidget.item[i]:set_color(text_color)
+
+		if dwidget.icon[i] then
+			local icon_color = state.off and style.color.gray or style.color.main
+			dwidget.icon[i]:set_color(icon_color)
+		end
+	end
+
+	local function item_hadnler(crit, i)
+		return function(state) set_raw_state(state, crit, i) end
+	end
+
 	local function update()
 		for i, sens in ipairs(args.sensors) do
-			local state = sens.meter_function(sens.args)
-			local text_color = sens.crit and state[1] > sens.crit and style.color.main or style.color.gray
-			local icon_color = state.off and style.color.gray or style.color.main
-			local txt = redutil.text.dformat(state[2] or state[1], style.unit, style.digit_num)
-
-			dwidget.item[i]:set_text(txt)
-			dwidget.item[i]:set_color(text_color)
-			if dwidget.icon[i] then dwidget.icon[i]:set_color(icon_color) end
+			local crit = sens.crit
+			if sens.meter_function then
+				local state = sens.meter_function(sens.args)
+				set_raw_state(state, crit, i)
+			else
+				sens.async_function(item_hadnler(crit, i))
+			end
 		end
 	end
 
