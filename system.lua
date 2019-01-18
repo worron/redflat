@@ -382,6 +382,17 @@ function system.lmsensors:start(timeout)
 	self.timer:emit_signal("timeout")
 end
 
+function system.lmsensors:soft_start(timeout, shift)
+	if self.timer then return end
+
+	timer({
+		timeout     = timeout - (shift or 1),
+		autostart   = true,
+		single_shot = true,
+		callback    = function() self:start(timeout) end
+	})
+end
+
 function system.lmsensors.get(name)
 	if os.time() - system.lmsensors.time > system.lmsensors.delay then
 		local output = redutil.read.output("sensors")
