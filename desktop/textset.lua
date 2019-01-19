@@ -9,7 +9,6 @@ local setmetatable = setmetatable
 local textbox = require("wibox.widget.textbox")
 local beautiful = require("beautiful")
 local timer = require("gears.timer")
-local awful = require("awful")
 
 local lgi = require("lgi")
 local Pango = lgi.Pango
@@ -41,9 +40,10 @@ function textset.new(args, style)
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local args = args or {}
-	local funcarg = args.arg or {}
-	local timeout = args.timeout or { 60 }
-	local actions = args.actions or {}
+	--local funcarg = args.arg or {}
+	--local timeout = args.timeout or { 60 }
+	--local actions = args.actions or {}
+	--local async = args.async or {}
 	local style = redutil.table.merge(default_style(), style or {})
 
 	-- Create widget
@@ -59,7 +59,7 @@ function textset.new(args, style)
 	-- data setup
 	local data = {}
 	local timers = {}
-	for i = 1, #actions do data[i] = "" end
+	for i = 1, #args do data[i] = "" end
 
 	-- update info function
 	local function update()
@@ -70,16 +70,15 @@ function textset.new(args, style)
 
 	-- Set update timers
 	--------------------------------------------------------------------------------
-	for i, action in ipairs(actions) do
-		timers[i] = timer({ timeout = timeout[i] or timeout[1] })
-		if args.async then
+	for i, block in ipairs(args) do
+		timers[i] = timer({ timeout = block.timeout or args[1].timeout })
+		if block.async then
 			timers[i]:connect_signal("timeout", function()
-				awful.spawn.easy_async(args.async[i], function(o) data[i] = action(o); update() end)
+				block.async(function(state) data[i] = block.action(state); update() end)
 			end)
 		else
 			timers[i]:connect_signal("timeout", function()
-				data[i] = action(funcarg[i])
-				update()
+				data[i] = block.action(); update()
 			end)
 		end
 		timers[i]:start()
