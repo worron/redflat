@@ -450,10 +450,11 @@ function system.thermal.nvoptimus(setup)
 	if not nvidia_on then
 		setup({ 0, off = true })
 	else
-		awful.spawn.easy_async("optirun -b none nvidia-settings -c :8 -q gpucoretemp -t | tail -1",
+		--awful.spawn.easy_async("optirun -b none nvidia-settings -c :8 -q gpucoretemp -t | tail -1",
+		awful.spawn.easy_async("optirun -b none nvidia-settings -c :8 -q gpucoretemp -t",
 			function(output)
 				local value = tonumber(string.match(output, "[^\n]+"))
-				setup({ value and { value } or { 0 }, off = false })
+				setup({ value or 0, off = false })
 			end
 		)
 	end
