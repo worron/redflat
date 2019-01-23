@@ -9,8 +9,11 @@
 local setmetatable = setmetatable
 local table = table
 local string = string
+local os = os
+local unpack = unpack
 
 local beautiful = require("beautiful")
+local wibox = require("wibox")
 local awful = require("awful")
 local timer = require("gears.timer")
 
@@ -28,29 +31,165 @@ local upgrades = { objects = {}, mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
+		wibox = {
+			geometry     = { width = 400, height = 200 },
+			border_width = 2,
+			set_position = nil,
+			icon         = {
+				package = redutil.base.placeholder(),
+				close   = redutil.base.placeholder({ txt = "X" }),
+				dayly   = redutil.base.placeholder(),
+				weekly  = redutil.base.placeholder(),
+				normal  = redutil.base.placeholder(),
+				silent  = redutil.base.placeholder(),
+			},
+			height = { title = 40, state = 50 },
+			margin = { close = { 0, 0, 0, 0 }, state = { 0, 0, 0, 0 } },
+		},
 		icon        = redutil.base.placeholder(),
 		notify      = {},
 		firstrun    = false,
 		need_notify = true,
-		color       = { main = "#b1222b", icon = "#a0a0a0" }
+		color       = { main = "#b1222b", icon = "#a0a0a0", wibox = "#202020", border = "#575757", gray = "#404040" }
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.upgrades") or {})
 end
 
+
+local STATE = { NORMAL = 1, DAYLY = 2, WEEKLY = 3, SILENT = 4 }
+
+-- Initialize notify widbox
+-----------------------------------------------------------------------------------------------------------------------
+function upgrades:init(args, style)
+
+	-- Initialize vars
+	--------------------------------------------------------------------------------
+	local args = args or {}
+	local update_timeout = args.update_timeout or 3600
+	local command = args.command or "echo 0"
+
+	local style = redutil.table.merge(default_style(), style or {})
+
+	self.force_notify = false
+	self.style = style
+	self.is_updates = false
+	self.time = nil
+
+	-- Create floating wibox for upgrades widget
+	--------------------------------------------------------------------------------
+	self.wibox = wibox({
+		ontop        = true,
+		bg           = style.color.wibox,
+		border_width = style.wibox.border_width,
+		border_color = style.color.border
+	})
+
+	self.wibox:geometry(style.wibox.geometry)
+
+	-- Floating widget structure
+	--------------------------------------------------------------------------------
+	local packbox = svgbox(style.wibox.icon.package, nil, style.color.icon)
+
+	-- close button
+	local closebox = svgbox(style.wibox.icon.close, nil, style.color.icon)
+	closebox:buttons(awful.util.table.join(awful.button({}, 1, function() self:hide() end)))
+
+	-- control buttons
+	local statebox = {}
+	local statearea = wibox.layout.flex.horizontal()
+	statearea:set_forced_height(style.wibox.height.state)
+
+	local function update_state_colors()
+		for k, box in pairs(statebox) do
+			box:set_color(STATE[k] == self.state and style.color.main or style.color.gray)
+		end
+	end
+
+	local function update_widget_colors()
+		local is_alert = self.is_updates and self.state == STATE.NORMAL
+		local color = is_alert and style.color.main or style.color.icon
+		for _, o in ipairs(upgrades.objects) do o.widget:set_color(color) end
+	end
+
+	for state, k in pairs({ "NORMAL", "DAYLY", "WEEKLY", "SILENT" }) do
+		statebox[k] = svgbox(style.wibox.icon[k:lower()], nil, style.color.gray)
+		statebox[k]:buttons(awful.util.table.join(
+			awful.button({}, 1, function()
+				if self.state ~= state then
+					self.state = state
+					self.time = (state == STATE.DAYLY or state == STATE.WEEKLY) and os.time() or nil
+					update_state_colors()
+					update_widget_colors()
+				end
+			end)
+		))
+
+		local area = wibox.layout.align.horizontal()
+		area:set_middle(statebox[k])
+		area:set_expand("outside")
+
+		statearea:add(area)
+	end
+
+	-- start up state setup
+	self.state = STATE.NORMAL
+	update_state_colors()
+
+	-- setup layouts
+	self.wibox:setup({
+		{
+			nil, nil, wibox.container.margin(closebox, unpack(style.wibox.margin.close)),
+			forced_height = style.wibox.height.title,
+			layout = wibox.layout.align.horizontal
+		},
+		{
+			nil, packbox, nil,
+			expand = "outside",
+			layout = wibox.layout.align.horizontal
+		},
+		wibox.container.margin(statearea, unpack(style.wibox.margin.state)),
+		layout = wibox.layout.align.vertical
+	})
+
+	-- Update info function
+	--------------------------------------------------------------------------------
+	local function update_count(output)
+		local c = string.match(output, "(%d+)")
+
+		self.is_updates = tonumber(c) > 0
+		local is_alert = self.is_updates and self.state == STATE.NORMAL
+
+		if style.need_notify and (is_alert or self.force_notify) then
+			rednotify:show(redutil.table.merge({ text = c .. " updates available" }, style.notify))
+		end
+
+		for _, o in ipairs(self.objects) do o.tp:set_text(c .. " updates") end
+		update_widget_colors()
+	end
+
+	-- Set update timer
+	--------------------------------------------------------------------------------
+	upgrades.timer = timer({ timeout = update_timeout })
+	upgrades.timer:connect_signal("timeout", function()
+		self.force_notify = false
+		awful.spawn.easy_async(command, update_count)
+	end)
+	upgrades.timer:start()
+
+	if style.firstrun then upgrades.timer:emit_signal("timeout") end
+end
+
 -- Create a new upgrades widget
 -- @param style Table containing colors and geometry parameters for all elemets
--- @param update_timeout Update interval
 -----------------------------------------------------------------------------------------------------------------------
-function upgrades.new(args, style)
+function upgrades.new(style)
+
+	if not upgrades.wibox then upgrades:init({}) end
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local object = {}
-	local args = args or {}
-	local update_timeout = args.update_timeout or 3600
-	local command = args.command or [[bash -c 'apt-get upgrade -s | grep -P "^\d+ upgraded" | cut -d " " -f1']]
-	local force_notify = false
-	local style = redutil.table.merge(default_style(), style or {})
+	local style = redutil.table.merge(upgrades.style, style or {})
 
 	object.widget = svgbox(style.icon)
 	object.widget:set_color(style.color.icon)
@@ -58,44 +197,42 @@ function upgrades.new(args, style)
 
 	-- Set tooltip
 	--------------------------------------------------------------------------------
-	object.tp = tooltip({ objects =  { object.widget } }, style.tooltip)
-
-	-- Update info function
-	--------------------------------------------------------------------------------
-	local function update_count(output)
-		local c = string.match(output, "(%d+)")
-		object.tp:set_text(c .. " updates")
-
-		local color = tonumber(c) > 0 and style.color.main or style.color.icon
-		object.widget:set_color(color)
-
-		if style.need_notify and (tonumber(c) > 0 or force_notify) then
-			rednotify:show(redutil.table.merge({ text = c .. " updates available" }, style.notify))
-		end
-	end
-
-	function object.update(args)
-		local args = args or {}
-		force_notify = args.is_force
-		awful.spawn.easy_async(command, update_count)
-	end
-
-	-- Set update timer
-	--------------------------------------------------------------------------------
-	local t = timer({ timeout = update_timeout })
-	t:connect_signal("timeout", object.update)
-	t:start()
-
-	if style.firstrun then t:emit_signal("timeout") end
+	object.tp = tooltip({ objects = { object.widget } }, style.tooltip)
 
 	--------------------------------------------------------------------------------
 	return object.widget
 end
 
+-- Show/hide upgrades wibox
+-----------------------------------------------------------------------------------------------------------------------
+function upgrades:show()
+	if self.style.wibox.set_position then
+		self.wibox:geometry(self.style.set_position())
+	else
+		redutil.placement.centered(self.wibox, nil, mouse.screen.workarea)
+	end
+	redutil.placement.no_offscreen(self.wibox, self.style.screen_gap, screen[mouse.screen].workarea)
+
+	self.wibox.visible = true
+end
+
+function upgrades:hide()
+	self.wibox.visible = false
+end
+
+function upgrades:toggle()
+	if self.wibox.visible then
+		self:hide()
+	else
+		self:show()
+	end
+end
+
 -- Update upgrades info for every widget
 -----------------------------------------------------------------------------------------------------------------------
 function upgrades:update(is_force)
-	for _, o in ipairs(upgrades.objects) do o.update({ is_force = is_force }) end
+	self.force_notify = is_force
+	self.timer:emit_signal("timeout")
 end
 
 -- Config metatable to call upgrades module as function
