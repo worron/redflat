@@ -34,6 +34,7 @@ local function default_style()
 		wibox = {
 			geometry     = { width = 400, height = 200 },
 			border_width = 2,
+			title_font   = "Sans 14 bold",
 			set_position = nil,
 			icon         = {
 				package = redutil.base.placeholder(),
@@ -44,7 +45,7 @@ local function default_style()
 				silent  = redutil.base.placeholder(),
 			},
 			height = { title = 40, state = 50 },
-			margin = { close = { 0, 0, 0, 0 }, state = { 0, 0, 0, 0 } },
+			margin = { close = { 0, 0, 0, 0 }, state = { 0, 0, 0, 0 }, title = { 0, 0, 0, 0 } },
 		},
 		icon        = redutil.base.placeholder(),
 		notify      = {},
@@ -89,8 +90,13 @@ function upgrades:init(args, style)
 	-- Floating widget structure
 	--------------------------------------------------------------------------------
 
-	-- titlebar
+	-- main image
 	local packbox = svgbox(style.wibox.icon.package, nil, style.color.icon)
+
+	-- titlebar
+	self.titlebox = wibox.widget.textbox("0 UPDATES")
+	self.titlebox:set_font(style.wibox.title_font)
+	self.titlebox:set_align("center")
 
 	-- close button
 	local closebox = svgbox(style.wibox.icon.close, nil, style.color.icon)
@@ -120,7 +126,7 @@ function upgrades:init(args, style)
 	local function update_widget_colors()
 		local is_alert = check_alert()
 		local color = is_alert and style.color.main or style.color.icon
-		for _, o in ipairs(upgrades.objects) do o.widget:set_color(color) end
+		for _, w in ipairs(upgrades.objects) do w:set_color(color) end
 	end
 
 	-- create control buttons
@@ -144,14 +150,18 @@ function upgrades:init(args, style)
 		statearea:add(area)
 	end
 
-	-- Setupwibox layouts
+	-- Setup wibox layouts
 	------------------------------------------------------------
+	local titlebar = wibox.widget({
+		nil,
+		self.titlebox,
+		wibox.container.margin(closebox, unpack(style.wibox.margin.close)),
+		forced_height = style.wibox.height.title,
+		layout        = wibox.layout.align.horizontal
+	})
+
 	self.wibox:setup({
-		{
-			nil, nil, wibox.container.margin(closebox, unpack(style.wibox.margin.close)),
-			forced_height = style.wibox.height.title,
-			layout = wibox.layout.align.horizontal
-		},
+		wibox.container.margin(titlebar, unpack(style.wibox.margin.title)),
 		{
 			nil, packbox, nil,
 			expand = "outside",
@@ -177,8 +187,9 @@ function upgrades:init(args, style)
 		if style.need_notify and (is_alert or self.force_notify) then
 			rednotify:show(redutil.table.merge({ text = c .. " updates available" }, style.notify))
 		end
+		self.titlebox:set_text(c .." UPDATES")
 
-		for _, o in ipairs(self.objects) do o.tp:set_text(c .. " updates") end
+		if self.tp then self.tp:set_text(c .. " updates") end
 		update_widget_colors()
 	end
 
@@ -211,19 +222,23 @@ function upgrades.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local object = {}
+	--local object = {}
 	local style = redutil.table.merge(upgrades.style, style or {})
 
-	object.widget = svgbox(style.icon)
-	object.widget:set_color(style.color.icon)
-	table.insert(upgrades.objects, object)
+	local widg = svgbox(style.icon)
+	widg:set_color(style.color.icon)
+	table.insert(upgrades.objects, widg)
 
 	-- Set tooltip
 	--------------------------------------------------------------------------------
-	object.tp = tooltip({ objects = { object.widget } }, style.tooltip)
+	if not upgrades.tp then
+		upgrades.tp = tooltip({ objects = { widg } }, style.tooltip)
+	else
+		upgrades.tp:add_to_object(widg)
+	end
 
 	--------------------------------------------------------------------------------
-	return object.widget
+	return widg
 end
 
 -- Show/hide upgrades wibox
