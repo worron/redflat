@@ -39,7 +39,7 @@ local function default_style()
 			icon         = {
 				package = redutil.base.placeholder(),
 				close   = redutil.base.placeholder({ txt = "X" }),
-				dayly   = redutil.base.placeholder(),
+				daily   = redutil.base.placeholder(),
 				weekly  = redutil.base.placeholder(),
 				normal  = redutil.base.placeholder(),
 				silent  = redutil.base.placeholder(),
@@ -57,7 +57,7 @@ local function default_style()
 end
 
 
-local STATE = { NORMAL = 1, DAYLY = 2, WEEKLY = 3, SILENT = 4 }
+local STATE = { NORMAL = 1, DAILY = 2, WEEKLY = 3, SILENT = 4 }
 
 -- Initialize notify widbox
 -----------------------------------------------------------------------------------------------------------------------
@@ -119,7 +119,7 @@ function upgrades:init(args, style)
 		local time = os.time()
 		return self.is_updates and
 		       (  self.state == STATE.NORMAL
-		       or self.state == STATE.DAYLY  and (time - self.time > 24 * 3600)
+		       or self.state == STATE.DAILY  and (time - self.time > 24 * 3600)
 		       or self.state == STATE.WEEKLY and (time - self.time > 7 * 24 * 3600))
 	end
 
@@ -130,13 +130,13 @@ function upgrades:init(args, style)
 	end
 
 	-- create control buttons
-	for state, k in pairs({ "NORMAL", "DAYLY", "WEEKLY", "SILENT" }) do
+	for state, k in pairs({ "NORMAL", "DAILY", "WEEKLY", "SILENT" }) do
 		statebox[k] = svgbox(style.wibox.icon[k:lower()], nil, style.color.gray)
 		statebox[k]:buttons(awful.util.table.join(
 			awful.button({}, 1, function()
 				if self.state ~= state then
 					self.state = state
-					self.time = (state == STATE.DAYLY or state == STATE.WEEKLY) and os.time() or 0
+					self.time = (state == STATE.DAILY or state == STATE.WEEKLY) and os.time() or 0
 					update_state_colors()
 					update_widget_colors()
 				end
