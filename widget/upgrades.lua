@@ -73,7 +73,7 @@ function upgrades:init(args, style)
 	self.force_notify = false
 	self.style = style
 	self.is_updates = false
-	self.time = 0
+	self.config = awful.util.getdir("cache") .. "/upgrades"
 
 	-- Create floating wibox for upgrades widget
 	--------------------------------------------------------------------------------
@@ -110,11 +110,11 @@ function upgrades:init(args, style)
 	end
 
 	local function check_alert()
-		local t = os.time()
+		local time = os.time()
 		return self.is_updates and
 		       (  self.state == STATE.NORMAL
-		       or self.state == STATE.DAYLY  and (t - self.time > 24 * 3600)
-		       or self.state == STATE.WEEKLY and (t - self.time > 7 * 24 * 3600))
+		       or self.state == STATE.DAYLY  and (time - self.time > 24 * 3600)
+		       or self.state == STATE.WEEKLY and (time - self.time > 7 * 24 * 3600))
 	end
 
 	local function update_widget_colors()
@@ -163,7 +163,7 @@ function upgrades:init(args, style)
 
 	-- Start up setup
 	------------------------------------------------------------
-	self.state = STATE.NORMAL
+	self:load_state()
 	update_state_colors()
 
 	-- Update info function
@@ -184,14 +184,22 @@ function upgrades:init(args, style)
 
 	-- Set update timer
 	--------------------------------------------------------------------------------
+	self.check_updates = function()
+		awful.spawn.easy_async(command, update_count)
+	end
+
 	upgrades.timer = timer({ timeout = update_timeout })
 	upgrades.timer:connect_signal("timeout", function()
 		self.force_notify = false
-		awful.spawn.easy_async(command, update_count)
+		self.check_updates()
 	end)
 	upgrades.timer:start()
 
 	if style.firstrun then upgrades.timer:emit_signal("timeout") end
+
+	-- Connect additional signals
+	------------------------------------------------------------
+	awesome.connect_signal("exit", function() self:save_state() end)
 end
 
 -- Create a new upgrades widget
@@ -243,11 +251,30 @@ function upgrades:toggle()
 	end
 end
 
+-- Save/restore state between sessions
+-----------------------------------------------------------------------------------------------------------------------
+function upgrades:load_state()
+	local info = redutil.read.file(self.config)
+	if info then
+		local state, time = string.match(info, "(%d)=(%d+)")
+		self.state, self.time = tonumber(state), tonumber(time)
+	else
+		self.state = STATE.NORMAL
+		self.time = 0
+	end
+end
+
+function upgrades:save_state()
+	local file = io.open(self.config, "w")
+	file:write(string.format("%d=%d", self.state, self.time))
+	file:close()
+end
+
 -- Update upgrades info for every widget
 -----------------------------------------------------------------------------------------------------------------------
 function upgrades:update(is_force)
 	self.force_notify = is_force
-	self.timer:emit_signal("timeout")
+	self.check_updates()
 end
 
 -- Config metatable to call upgrades module as function

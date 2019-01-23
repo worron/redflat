@@ -130,7 +130,7 @@ end
 
 -- Check if file exist
 ------------------------------------------------------------
-function is_file_exists(file)
+local function is_file_exists(file)
 	local f = io.open(file, "r")
 	if f then f:close(); return true else return false end
 end
@@ -140,7 +140,7 @@ end
 
 -- Build application state indicator
 --------------------------------------------------------------------------------
-function build_state_indicator(style)
+local function build_state_indicator(style)
 
 	-- Initialize vars
 	------------------------------------------------------------
