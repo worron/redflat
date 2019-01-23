@@ -73,7 +73,7 @@ function upgrades:init(args, style)
 	self.force_notify = false
 	self.style = style
 	self.is_updates = false
-	self.time = nil
+	self.time = 0
 
 	-- Create floating wibox for upgrades widget
 	--------------------------------------------------------------------------------
@@ -88,36 +88,49 @@ function upgrades:init(args, style)
 
 	-- Floating widget structure
 	--------------------------------------------------------------------------------
+
+	-- titlebar
 	local packbox = svgbox(style.wibox.icon.package, nil, style.color.icon)
 
 	-- close button
 	local closebox = svgbox(style.wibox.icon.close, nil, style.color.icon)
 	closebox:buttons(awful.util.table.join(awful.button({}, 1, function() self:hide() end)))
 
-	-- control buttons
+	-- Control buttons
+	------------------------------------------------------------
 	local statebox = {}
 	local statearea = wibox.layout.flex.horizontal()
 	statearea:set_forced_height(style.wibox.height.state)
 
+	-- color update fucntions
 	local function update_state_colors()
 		for k, box in pairs(statebox) do
 			box:set_color(STATE[k] == self.state and style.color.main or style.color.gray)
 		end
 	end
 
+	local function check_alert()
+		local t = os.time()
+		return self.is_updates and
+		       (  self.state == STATE.NORMAL
+		       or self.state == STATE.DAYLY  and (t - self.time > 24 * 3600)
+		       or self.state == STATE.WEEKLY and (t - self.time > 7 * 24 * 3600))
+	end
+
 	local function update_widget_colors()
-		local is_alert = self.is_updates and self.state == STATE.NORMAL
+		local is_alert = check_alert()
 		local color = is_alert and style.color.main or style.color.icon
 		for _, o in ipairs(upgrades.objects) do o.widget:set_color(color) end
 	end
 
+	-- create control buttons
 	for state, k in pairs({ "NORMAL", "DAYLY", "WEEKLY", "SILENT" }) do
 		statebox[k] = svgbox(style.wibox.icon[k:lower()], nil, style.color.gray)
 		statebox[k]:buttons(awful.util.table.join(
 			awful.button({}, 1, function()
 				if self.state ~= state then
 					self.state = state
-					self.time = (state == STATE.DAYLY or state == STATE.WEEKLY) and os.time() or nil
+					self.time = (state == STATE.DAYLY or state == STATE.WEEKLY) and os.time() or 0
 					update_state_colors()
 					update_widget_colors()
 				end
@@ -131,11 +144,8 @@ function upgrades:init(args, style)
 		statearea:add(area)
 	end
 
-	-- start up state setup
-	self.state = STATE.NORMAL
-	update_state_colors()
-
-	-- setup layouts
+	-- Setupwibox layouts
+	------------------------------------------------------------
 	self.wibox:setup({
 		{
 			nil, nil, wibox.container.margin(closebox, unpack(style.wibox.margin.close)),
@@ -151,13 +161,18 @@ function upgrades:init(args, style)
 		layout = wibox.layout.align.vertical
 	})
 
+	-- Start up setup
+	------------------------------------------------------------
+	self.state = STATE.NORMAL
+	update_state_colors()
+
 	-- Update info function
 	--------------------------------------------------------------------------------
 	local function update_count(output)
 		local c = string.match(output, "(%d+)")
 
 		self.is_updates = tonumber(c) > 0
-		local is_alert = self.is_updates and self.state == STATE.NORMAL
+		local is_alert = check_alert()
 
 		if style.need_notify and (is_alert or self.force_notify) then
 			rednotify:show(redutil.table.merge({ text = c .. " updates available" }, style.notify))
