@@ -21,6 +21,7 @@ local rednotify = require("redflat.float.notify")
 local tooltip = require("redflat.float.tooltip")
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
+local separator = require("redflat.gauge.separator")
 
 
 -- Initialize tables for module
@@ -37,6 +38,7 @@ local function default_style()
 			title_font   = "Sans 14 bold",
 			tip_font     = "Sans 10",
 			set_position = nil,
+			separator    = {},
 			icon         = {
 				package = redutil.base.placeholder(),
 				close   = redutil.base.placeholder({ txt = "X" }),
@@ -46,7 +48,7 @@ local function default_style()
 				silent  = redutil.base.placeholder(),
 			},
 			height = { title = 40, state = 50, tip = 20 },
-			margin = { close = { 0, 0, 0, 0 }, state = { 0, 0, 0, 0 }, title = { 0, 0, 0, 0 } },
+			margin = { close = { 0, 0, 0, 0 }, state = { 0, 0, 0, 0 }, title = { 0, 0, 0, 0 }, image = { 0, 0, 0, 0 } }
 		},
 		icon        = redutil.base.placeholder(),
 		notify      = {},
@@ -180,11 +182,16 @@ function upgrades:init(args, style)
 	})
 
 	self.wibox:setup({
-		wibox.container.margin(titlebar, unpack(style.wibox.margin.title)),
+		{
+			nil,
+			wibox.container.margin(titlebar, unpack(style.wibox.margin.title)),
+			separator.horizontal(style.wibox.separator),
+			layout = wibox.layout.align.vertical
+		},
 		{
 			nil,
 			{
-				nil, packbox, nil,
+				nil, wibox.container.margin(packbox, unpack(style.wibox.margin.image)), nil,
 				expand = "outside",
 				layout = wibox.layout.align.horizontal
 			},
