@@ -54,7 +54,8 @@ local function default_style()
 		notify      = {},
 		firstrun    = false,
 		need_notify = true,
-		color       = { main = "#b1222b", icon = "#a0a0a0", wibox = "#202020", border = "#575757", gray = "#404040" }
+		color       = { main = "#b1222b", icon = "#a0a0a0", wibox = "#202020", border = "#575757", gray = "#404040",
+		                urgent = "#32882d" }
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.upgrades") or {})
 end
@@ -121,6 +122,8 @@ function upgrades:init(args, style)
 	-- close button
 	local closebox = svgbox(style.wibox.icon.close, nil, style.color.icon)
 	closebox:buttons(awful.util.table.join(awful.button({}, 1, function() self:hide() end)))
+	closebox:connect_signal("mouse::enter", function() closebox:set_color(style.color.urgent) end)
+	closebox:connect_signal("mouse::leave", function() closebox:set_color(style.color.icon) end)
 
 	-- Control buttons
 	------------------------------------------------------------
