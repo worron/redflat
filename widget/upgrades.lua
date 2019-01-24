@@ -35,6 +35,7 @@ local function default_style()
 			geometry     = { width = 400, height = 200 },
 			border_width = 2,
 			title_font   = "Sans 14 bold",
+			tip_font     = "Sans 10",
 			set_position = nil,
 			icon         = {
 				package = redutil.base.placeholder(),
@@ -44,7 +45,7 @@ local function default_style()
 				normal  = redutil.base.placeholder(),
 				silent  = redutil.base.placeholder(),
 			},
-			height = { title = 40, state = 50 },
+			height = { title = 40, state = 50, tip = 20 },
 			margin = { close = { 0, 0, 0, 0 }, state = { 0, 0, 0, 0 }, title = { 0, 0, 0, 0 } },
 		},
 		icon        = redutil.base.placeholder(),
@@ -57,7 +58,18 @@ local function default_style()
 end
 
 
-local STATE = { NORMAL = 1, DAILY = 2, WEEKLY = 3, SILENT = 4 }
+local STATE = setmetatable(
+	{ keywords = { "NORMAL", "DAILY", "WEEKLY", "SILENT" } },
+	{ __index = function(table, key)
+		return awful.util.table.hasitem(table.keywords, key) or rawget(table, key)
+	end }
+)
+
+local tips = {}
+tips[STATE.NORMAL] = "regular notifications"
+tips[STATE.DAILY]  = "postponed for a day"
+tips[STATE.WEEKLY] = "postponed for a week"
+tips[STATE.SILENT] = "notifications disabled"
 
 -- Initialize notify widbox
 -----------------------------------------------------------------------------------------------------------------------
@@ -98,6 +110,12 @@ function upgrades:init(args, style)
 	self.titlebox:set_font(style.wibox.title_font)
 	self.titlebox:set_align("center")
 
+	-- tip line
+	self.tipbox = wibox.widget.textbox()
+	self.tipbox:set_font(style.wibox.tip_font)
+	self.tipbox:set_align("center")
+	self.tipbox:set_forced_height(style.wibox.height.tip)
+
 	-- close button
 	local closebox = svgbox(style.wibox.icon.close, nil, style.color.icon)
 	closebox:buttons(awful.util.table.join(awful.button({}, 1, function() self:hide() end)))
@@ -109,10 +127,11 @@ function upgrades:init(args, style)
 	statearea:set_forced_height(style.wibox.height.state)
 
 	-- color update fucntions
-	local function update_state_colors()
+	local function update_state()
 		for k, box in pairs(statebox) do
 			box:set_color(STATE[k] == self.state and style.color.main or style.color.gray)
 		end
+		self.tipbox:set_markup(string.format('<span color="%s">%s</span>', style.color.gray, tips[self.state]))
 	end
 
 	local function check_alert()
@@ -130,14 +149,14 @@ function upgrades:init(args, style)
 	end
 
 	-- create control buttons
-	for state, k in pairs({ "NORMAL", "DAILY", "WEEKLY", "SILENT" }) do
+	for state, k in pairs(STATE.keywords) do
 		statebox[k] = svgbox(style.wibox.icon[k:lower()], nil, style.color.gray)
 		statebox[k]:buttons(awful.util.table.join(
 			awful.button({}, 1, function()
 				if self.state ~= state then
 					self.state = state
 					self.time = (state == STATE.DAILY or state == STATE.WEEKLY) and os.time() or 0
-					update_state_colors()
+					update_state()
 					update_widget_colors()
 				end
 			end)
@@ -163,9 +182,14 @@ function upgrades:init(args, style)
 	self.wibox:setup({
 		wibox.container.margin(titlebar, unpack(style.wibox.margin.title)),
 		{
-			nil, packbox, nil,
-			expand = "outside",
-			layout = wibox.layout.align.horizontal
+			nil,
+			{
+				nil, packbox, nil,
+				expand = "outside",
+				layout = wibox.layout.align.horizontal
+			},
+			self.tipbox,
+			layout = wibox.layout.align.vertical
 		},
 		wibox.container.margin(statearea, unpack(style.wibox.margin.state)),
 		layout = wibox.layout.align.vertical
@@ -174,7 +198,7 @@ function upgrades:init(args, style)
 	-- Start up setup
 	------------------------------------------------------------
 	self:load_state()
-	update_state_colors()
+	update_state()
 
 	-- Update info function
 	--------------------------------------------------------------------------------
