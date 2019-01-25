@@ -38,7 +38,7 @@ local function default_style()
 end
 
 local default_geometry = { width = 200, height = 100, x = 100, y = 100 }
-local default_args = { names = {}, textadd = "", timeout = 60, sensors = {} }
+local default_args = { timeout = 60, sensors = {} }
 
 -- Create a new widget
 -----------------------------------------------------------------------------------------------------------------------
@@ -74,8 +74,8 @@ function dashpack.new(args, geometry, style)
 		dwidget.wibox:set_widget(pack.layout)
 	end
 
-	for i, name in ipairs(args.names) do
-		pack:set_label(string.upper(name), i)
+	for i, sensor in ipairs(args.sensors) do
+		if sensor.name then pack:set_label(string.upper(sensor.name), i) end
 	end
 
 	-- Update info function

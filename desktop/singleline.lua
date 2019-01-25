@@ -37,7 +37,7 @@ local function default_style()
 end
 
 local default_geometry = { width = 200, height = 100, x = 100, y = 100 }
-local default_args = { names = {}, textadd = "", timeout = 60, sensors = {} }
+local default_args = { timeout = 60, sensors = {} }
 
 -- Create a new widget
 -----------------------------------------------------------------------------------------------------------------------
@@ -70,7 +70,7 @@ function sline.new(args, geometry, style)
 		if style.icon then dwidget.icon[i] = svgbox(style.icon) end
 
 		local boxlayout = wibox.widget({
-			textbox(string.upper(args.names[i] or "mon"), style.lbox),
+			textbox(string.upper(args.sensors[i].name or "mon"), style.lbox),
 			style.icon and {
 				nil, dwidget.icon[i], nil,
 				expand = "outside",
