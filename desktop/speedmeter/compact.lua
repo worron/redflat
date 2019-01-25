@@ -67,7 +67,13 @@ local function value_chart(style, image, maxspeed)
 	local area = wibox.widget({
 		progressbar,
 		{
-			wibox.container.margin(text, unpack(style.margins.label)),
+			{
+				nil,
+				wibox.container.margin(text, unpack(style.margins.label)),
+				nil,
+				expand = "outside",
+				layout = wibox.layout.align.vertical
+			},
 			wibox.container.margin(chart, unpack(style.margins.chart)),
 			nil,
 			layout = wibox.layout.align.horizontal
