@@ -12,7 +12,7 @@
 -----------------------------------------------------------------------------------------------------------------------
 local type = type
 local math = math
-local unpack = unpack
+local unpack = unpack or table.unpack
 local table = table
 
 local awful = require("awful")

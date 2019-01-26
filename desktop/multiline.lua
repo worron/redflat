@@ -9,7 +9,7 @@
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
 local string = string
-local unpack = unpack
+local unpack = unpack or table.unpack
 
 local wibox = require("wibox")
 local beautiful = require("beautiful")

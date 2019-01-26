@@ -10,7 +10,7 @@ local setmetatable = setmetatable
 local table = table
 local string = string
 local os = os
-local unpack = unpack
+local unpack = unpack or table.unpack
 
 local beautiful = require("beautiful")
 local wibox = require("wibox")

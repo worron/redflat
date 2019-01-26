@@ -11,7 +11,7 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local type = type
-local unpack = unpack
+local unpack = unpack or table.unpack
 
 local awful = require("awful")
 local beautiful = require("beautiful")

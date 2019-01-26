@@ -7,7 +7,7 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local table = table
-local unpack = unpack
+local unpack = unpack or table.unpack
 local string = string
 local math = math
 local io = io

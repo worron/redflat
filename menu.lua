@@ -32,6 +32,7 @@ local pcall = pcall
 local print = print
 local table = table
 local type = type
+local unpack = unpack or table.unpack
 
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")

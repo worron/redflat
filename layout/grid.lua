@@ -11,6 +11,7 @@ local beautiful = require("beautiful")
 local ipairs = ipairs
 local pairs = pairs
 local math = math
+local unpack = unpack or table.unpack
 
 local awful = require("awful")
 local common = require("redflat.layout.common")

@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
 local ipairs = ipairs
-local unpack = unpack
+local unpack = unpack or table.unpack
 local wibox = require("wibox")
 local awful = require("awful")
 local beautiful = require("beautiful")

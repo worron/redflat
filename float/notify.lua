@@ -7,7 +7,7 @@
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
-local unpack = unpack
+local unpack = unpack or table.unpack
 local beautiful = require("beautiful")
 local wibox = require("wibox")
 local timer = require("gears.timer")

@@ -7,6 +7,7 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local math = math
+local unpack = unpack or table.unpack
 
 local awful = require("awful")
 local beautiful = require("beautiful")

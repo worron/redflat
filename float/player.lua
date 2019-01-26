@@ -8,7 +8,7 @@
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
-local unpack = unpack
+local unpack = unpack or table.unpack
 local math = math
 
 local awful = require("awful")

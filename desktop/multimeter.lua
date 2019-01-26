@@ -12,8 +12,7 @@ local setmetatable = setmetatable
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local timer = require("gears.timer")
--- TODO make proper table unpack for whole module
-local unpack = unpack
+local unpack = unpack or table.unpack
 
 local dcommon = require("redflat.desktop.common")
 local redutil = require("redflat.util")

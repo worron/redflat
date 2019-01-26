@@ -20,6 +20,8 @@ local ipairs = ipairs
 local table = table
 local string = string
 local math = math
+local unpack = unpack or table.unpack
+
 local beautiful = require("beautiful")
 local tag = require("awful.tag")
 local awful = require("awful")
