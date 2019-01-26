@@ -72,10 +72,10 @@ end
 local function parse(rawkeys, columns)
 	local keys = {}
 	local columns = columns or 1
-	local p = math.ceil(#rawkeys / columns)
 
 	local rk = {}
 	for _, k in ipairs(rawkeys) do if k[#k].description then table.insert(rk, k) end end
+	local p = math.ceil(#rk / columns)
 
 	-- dirty trick for raw sorting
 	local sp = {}
