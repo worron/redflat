@@ -102,6 +102,7 @@ function mail.new(args, style)
 
 	function object.update()
 		count = 0
+		-- TODO: add force notify
 		for _, cmail in ipairs(maillist) do
 			awful.spawn.easy_async(mail.check_function[cmail.checker](cmail), mail_count)
 		end

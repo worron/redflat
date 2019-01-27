@@ -19,7 +19,6 @@ local timestamp = {}
 timestamp.path = "/tmp/awesome-stamp"
 timestamp.timeout = 5
 timestamp.bin = "awesome-client"
-timestamp.lock = false
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
@@ -45,7 +44,7 @@ end
 -- check if it is first start
 function timestamp.is_startup()
 	local stamp = timestamp.get()
-	return (not stamp or (os.time() - stamp) > timestamp.timeout) and not timestamp.lock
+	return (not stamp or (os.time() - stamp) > timestamp.timeout)
 end
 
 -- Connect exit signal on module initialization
