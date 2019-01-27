@@ -28,9 +28,8 @@ local function default_style()
 	local style = {
 		lines          = {},
 		upbar          = { width = 40 },
-		lines_height   = 60,
 		digit_num      = 3,
-		upright_height = 100,
+		height         = { upright = 100, lines = 60 },
 		icon           = { image = nil, margin = { 0, 20, 0, 0 }, full = false },
 		labels         = {},
 		unit           = { { "MB", - 1 }, { "GB", 1024 } },
@@ -105,7 +104,7 @@ function multim.new(args, geometry, style)
 	--------------------------------------------------------------------------------
 	local lines = dcommon.pack.lines(#args.lines, lines_style)
 	local upright = dcommon.pack.upright(args.topbars.num, upbar_style)
-	lines.layout:set_forced_height(style.lines_height)
+	lines.layout:set_forced_height(style.height.lines)
 
 	if style.icon.image then
 		icon = svgbox(style.icon.image)
@@ -117,7 +116,7 @@ function multim.new(args, geometry, style)
 			icon and not style.icon.full and wibox.container.margin(icon, unpack(style.icon.margin)),
 			upright.layout,
 			nil,
-			forced_height = style.upright_height,
+			forced_height = style.height.upright,
 			layout = wibox.layout.align.horizontal
 		},
 		nil,
