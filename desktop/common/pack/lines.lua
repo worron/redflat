@@ -22,15 +22,12 @@ local barpack = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		label_style  = {},
-		text_style   = {},
-		show_text    = true,
-		show_label   = true,
-		show_tooltip = false,
+		label        = {},
+		text         = {},
+		show         = { text = true, label = true, tooltip = false },
 		progressbar  = {},
-		line_height  = 20,
-		text_gap     = 20,
-		label_gap    = 20,
+		line         = { height = 20 },
+		gap          = { text = 20, label = 20 },
 		tooltip      = {},
 		color        = {}
 	}
@@ -39,20 +36,14 @@ end
 
 
 -- Create a new barpack widget
--- @param style.names Table containing labels placed at the start of line
--- @param style.text Table containing labels at the end of line
--- @param style.line_height Height for all elements in line
--- @param style.progressbar Style variables for redflat progressbar
--- @param style.label_style Style variables for redflat textbox
--- @param style.text_style Style variables for redflat textbox
 -----------------------------------------------------------------------------------------------------------------------
 function barpack.new(num, style)
 
 	local pack = {}
 	local style = redutil.table.merge(default_style(), style or {})
 	local progressbar_style = redutil.table.merge(style.progressbar, { color = style.color })
-	local label_style = redutil.table.merge(style.label_style, { color = style.color.gray })
-	local text_style = redutil.table.merge(style.text_style, { color = style.color.gray })
+	local label_style = redutil.table.merge(style.label, { color = style.color.gray })
+	local text_style = redutil.table.merge(style.text, { color = style.color.gray })
 
 	-- Construct group of lines
 	--------------------------------------------------------------------------------
@@ -65,7 +56,7 @@ function barpack.new(num, style)
 
 		-- bar
 		local line_align = wibox.layout.align.horizontal()
-		line_align:set_forced_height(style.line_height)
+		line_align:set_forced_height(style.line.height)
 		lines[i].bar = dcommon.bar.plain(progressbar_style)
 		line_align:set_middle(lines[i].bar)
 
@@ -83,7 +74,7 @@ function barpack.new(num, style)
 		line_align:set_right(lines[i].text_margin)
 
 		-- tooltip
-		if style.show_tooltip then
+		if style.show.tooltip then
 			lines[i].tooltip = tooltip({ objects = { line_align } }, style.tooltip)
 		end
 
@@ -105,10 +96,10 @@ function barpack.new(num, style)
 	end
 
 	function pack:set_text(value, index)
-		if style.show_text then
+		if style.show.text then
 			lines[index].text:set_text(value)
 			lines[index].text:set_width(value and text_style.width or 0)
-			lines[index].text_margin:set_left(value and style.text_gap or 0)
+			lines[index].text_margin:set_left(value and style.gap.text or 0)
 		end
 
 		if lines[index].tooltip then
@@ -126,10 +117,10 @@ function barpack.new(num, style)
 
 	function pack:set_label(value, index)
 		lines[index]._label_txt = value
-		if style.show_label then
+		if style.show.label then
 			lines[index].label:set_text(value)
 			lines[index].label:set_width(value and label_style.width or 0)
-			lines[index].label_margin:set_right(value and style.label_gap or 0)
+			lines[index].label_margin:set_right(value and style.gap.label or 0)
 		end
 	end
 

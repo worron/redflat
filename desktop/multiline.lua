@@ -87,7 +87,7 @@ function dashpack.new(args, geometry, style)
 		pack:set_values(state[1] / maxm, i)
 		pack:set_label_color(text_color, i)
 
-		if style.lines.show_text or style.lines.show_tooltip then
+		if style.lines.show.text or style.lines.show.tooltip then
 			local txt = state.off and style.dislabel
 			            or redutil.text.dformat(state[2] or state[1], style.unit, style.digit_num)
 			pack:set_text(txt, i)
