@@ -28,7 +28,7 @@ local function default_style()
 	local style = {
 		lines          = {},
 		upbar          = { width = 40 },
-		digit_num      = 3,
+		digits         = 3,
 		height         = { upright = 100, lines = 60 },
 		icon           = { image = nil, margin = { 0, 20, 0, 0 }, full = false },
 		labels         = {},
@@ -54,7 +54,7 @@ local function set_info(value, args, upright, lines, icon, last_state, style)
 	-- set progressbar values and color
 	for i, line in ipairs(args.lines) do
 		lines:set_values(value.lines[i][1] / line.maxm, i)
-		lines:set_text(redutil.text.dformat(value.lines[i][2], line.unit or style.unit, style.digit_num), i)
+		lines:set_text(redutil.text.dformat(value.lines[i][2], line.unit or style.unit, style.digits), i)
 
 		if line.crit then
 			local cc = value.lines[i][1] > line.crit and style.color.main or style.color.gray

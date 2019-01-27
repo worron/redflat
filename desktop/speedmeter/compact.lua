@@ -33,7 +33,7 @@ local function default_style()
 		progressbar      = { chunk = { width = 10, gap = 5 }, height = 4 },
 		chart            = {},
 		height           = { chart = 50 },
-		digit_num        = 2,
+		digits           = 2,
 		unit             = { { "B", -1 }, { "KB", 1024 }, { "MB", 1024^2 }, { "GB", 1024^3 } },
 		color            = { main = "#b1222b", wibox = "#161616", gray = "#404040" }
 	}
@@ -143,7 +143,7 @@ function speedmeter.new(args, geometry, style)
 		for i = 1, 2 do
 			widg[i].chart:set_value(state[i])
 			widg[i].progressbar:set_value(state[i])
-			widg[i].text:set_text(redutil.text.dformat(state[i], style.unit, style.digit_num))
+			widg[i].text:set_text(redutil.text.dformat(state[i], style.unit, style.digits))
 
 			if widg[i].icon and args.crit then
 				local st = state[i] > args.crit[placement[i]]

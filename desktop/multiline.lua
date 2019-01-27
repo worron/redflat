@@ -29,7 +29,7 @@ local function default_style()
 	local style = {
 		icon      = { image = nil, margin = { 0, 0, 0, 0 } },
 		lines     = {},
-		digit_num = 3,
+		digits = 3,
 		dislabel  = "OFF",
 		unit      = { { "B", -1 }, { "KB", 1024 }, { "MB", 1024^2 }, { "GB", 1024^3 } },
 		color     = { main = "#b1222b", wibox = "#161616", gray = "#404040" }
@@ -89,7 +89,7 @@ function dashpack.new(args, geometry, style)
 
 		if style.lines.show.text or style.lines.show.tooltip then
 			local txt = state.off and style.dislabel
-			            or redutil.text.dformat(state[2] or state[1], style.unit, style.digit_num)
+			            or redutil.text.dformat(state[2] or state[1], style.unit, style.digits)
 			pack:set_text(txt, i)
 			pack:set_text_color(text_color, i)
 		end

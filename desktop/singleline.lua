@@ -27,7 +27,7 @@ local function default_style()
 	local style = {
 		lbox      = { draw = "by_left", width = 50 },
 		rbox      = { draw = "by_right", width = 50 },
-		digit_num = 3,
+		digits    = 3,
 		icon      = nil,
 		iwidth    = 120,
 		unit      = { { "B", -1 }, { "KB", 1024 }, { "MB", 1024^2 }, { "GB", 1024^3 } },
@@ -96,7 +96,7 @@ function sline.new(args, geometry, style)
 	--------------------------------------------------------------------------------
 	local function set_raw_state(state, crit, i)
 		local text_color = crit and state[1] > crit and style.color.main or style.color.gray
-		local txt = redutil.text.dformat(state[2] or state[1], style.unit, style.digit_num)
+		local txt = redutil.text.dformat(state[2] or state[1], style.unit, style.digits)
 
 		dwidget.item[i]:set_text(txt)
 		dwidget.item[i]:set_color(text_color)

@@ -31,7 +31,7 @@ local function default_style()
 	local style = {
 		widget    = doublebar.new,
 		timeout   = 5,
-		digit_num = 2
+		digits    = 2
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.net") or {})
 end
@@ -80,8 +80,8 @@ function net.new(args, style)
 
 			widg:set_value({ state[2]/args.speed.down, state[1]/args.speed.up })
 			tp:set_text(
-				"↓" .. redutil.text.dformat(state[2], unit, style.digit_num, " ")
-				.. "  ↑" .. redutil.text.dformat(state[1], unit, style.digit_num, " ")
+				"↓" .. redutil.text.dformat(state[2], unit, style.digits, " ")
+				.. "  ↑" .. redutil.text.dformat(state[1], unit, style.digits, " ")
 			)
 		end
 	)

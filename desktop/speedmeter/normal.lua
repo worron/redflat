@@ -32,7 +32,7 @@ local function default_style()
 		chart            = {},
 		barvalue_height  = 32,
 		fullchart_height = 78,
-		digit_num        = 2,
+		digits           = 2,
 		image_gap        = 20,
 		unit             = { { "B", -1 }, { "KB", 1024 }, { "MB", 1024^2 }, { "GB", 1024^3 } },
 		color            = { main = "#b1222b", wibox = "#161616", gray = "#404040" }
@@ -58,7 +58,7 @@ local function set_fullchart_info(objects, label, state, style)
 	for i, o in ipairs(objects) do
 		o.barvalue:set_value(state[i])
 		o.barvalue:set_text(
-			label .. style.label.separator .. redutil.text.dformat(state[i], style.unit, style.digit_num, " ")
+			label .. style.label.separator .. redutil.text.dformat(state[i], style.unit, style.digits, " ")
 		)
 		o.chart:set_value(state[i])
 	end
