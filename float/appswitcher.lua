@@ -31,13 +31,12 @@ local is_pixbuf_loaded = pcall(load_pixbuf)
 local dfparser = require("redflat.service.dfparser")
 local redutil = require("redflat.util")
 local redtip = require("redflat.float.hotkeys")
-local redtitle = require("redflat.titlebar")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
 local appswitcher = { clients_list = {}, index = 1, hotkeys = {}, svgsize = 256, keys = {} }
 
-local cache = { border_color = nil }
+local cache = {}
 local svgcache = {}
 local _empty_surface = redutil.base.placeholder({ txt = " " })
 
@@ -133,7 +132,7 @@ end
 --------------------------------------------------------------------------------
 local function clients_find(filter)
 	local clients = {}
-	for i, c in ipairs(client.get()) do
+	for _, c in ipairs(client.get()) do
 		if not (c.skip_taskbar or c.hidden or c.type == "splash" or c.type == "dock" or c.type == "desktop")
 		and filter(c, mouse.screen) then
 			table.insert(clients, c)
@@ -219,17 +218,6 @@ function appswitcher:init()
 		return string.format("%s %s", awful.util.escape(c.name) or "Untitled", tag_text)
 	end
 
-	-- Function to mark window (border color change)
-	--------------------------------------------------------------------------------
-	function self.winmark(c, mark)
-		if mark then
-			cache.border_color = c.border_color
-			c.border_color = style.color.main
-		else
-			c.border_color = cache.border_color
-		end
-	end
-
 	-- Function to correct wibox size for given namber of icons
 	--------------------------------------------------------------------------------
 	function self.size_correction(inum)
@@ -271,11 +259,11 @@ function appswitcher:init()
 
 	-- Fit
 	------------------------------------------------------------
-	function widg:fit(context, width, height) return width, height end
+	function widg:fit(_, width, height) return width, height end
 
 	-- Draw
 	------------------------------------------------------------
-	function widg.draw(widg, context, cr, width, height)
+	function widg.draw(_, _, cr, _, height)
 
 		-- calculate preview pattern size
 		local psize = {
@@ -402,7 +390,6 @@ function appswitcher:show(args)
 	if #clients == 0 then return end
 
 	self.clients_list = clients
-	self.cutted = redtitle.cut_all(clients)
 	cache.args = args
 	self.size_correction(#clients)
 	redutil.placement.centered(self.wibox, nil, mouse.screen.workarea)
@@ -410,7 +397,6 @@ function appswitcher:show(args)
 	awful.keygrabber.run(self.keygrabber)
 
 	self.index = awful.util.table.hasitem(self.clients_list, client.focus) or 1
-	self.winmark(self.clients_list[self.index], true)
 	self.titlebox:set_markup(self.title_generator(self.clients_list[self.index]))
 	if not noaction then self:switch(args) end
 	self.widget:emit_signal("widget::updated")
@@ -419,7 +405,7 @@ function appswitcher:show(args)
 
 	redtip:set_pack(
 		"Appswitcher", self.tip, self.keytip.column, self.keytip.geometry,
-		self.keytip.exit and  function() appswitcher:hide(true) end
+		self.keytip.exit and function() appswitcher:hide(true) end
 	)
 end
 
@@ -432,10 +418,8 @@ function appswitcher:hide(is_empty_call)
 	self.wibox.visible = false
 	redtip:remove_pack()
 	self.update_timer:stop()
-	redtitle.restore_all(self.cutted)
 	awful.keygrabber.stop(self.keygrabber)
 
-	self.winmark(self.clients_list[self.index], false)
 	if not is_empty_call then focus_and_raise(self.clients_list[self.index]) end
 end
 
@@ -443,7 +427,6 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function appswitcher:switch(args)
 	local args = args or {}
-	self.winmark(self.clients_list[self.index], false)
 
 	if args.index then
 		if self.clients_list[args.index] then self.index = args.index end
@@ -453,7 +436,6 @@ function appswitcher:switch(args)
 		self.index = iterate(self.clients_list, self.index, diff)
 	end
 
-	self.winmark(self.clients_list[self.index], true)
 	self.titlebox:set_markup(self.title_generator(self.clients_list[self.index]))
 	self.widget:emit_signal("widget::updated")
 end
