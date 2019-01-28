@@ -136,8 +136,8 @@ end
 function titlebar.show(c, position)
 	local model = titlebar.get_model(c, position)
 	if model and model.hidden then
-		model.tfunction(c, model.size)
 		model.hidden = false
+		model.tfunction(c, not model.cutted and model.size or 0)
 	end
 end
 
@@ -157,7 +157,7 @@ function titlebar.toggle(c, position)
 	local model = titlebar.get_model(c, position)
 	if not model then return end
 
-	model.tfunction(c, model.hidden and model.size or 0)
+	model.tfunction(c, model.hidden and not model.cutted and model.size or 0)
 	model.hidden = not model.hidden
 end
 
@@ -191,10 +191,10 @@ function titlebar.switch(c, position)
 	local layout = model.layouts[model.current]
 
 	model.base:set_widget(layout.layout)
-	if model.size ~= layout.size then
+	if not model.cutted and not model.hidden and model.size ~= layout.size then
 		model.tfunction(c, layout.size)
-		model.size = layout.size
 	end
+	model.size = layout.size
 end
 
 
@@ -208,10 +208,10 @@ function titlebar.cut_all(cl, position)
 	local cutted = {}
 	for _, c in ipairs(cl) do
 		local model = titlebar.get_model(c, position)
-		if model and not model.hidden and not model.cutted then
-			model.tfunction(c, 0)
+		if model and not model.cutted then
 			model.cutted = true
 			table.insert(cutted, c)
+			if not model.hidden then model.tfunction(c, 0) end
 		end
 	end
 	return cutted
@@ -223,9 +223,9 @@ function titlebar.restore_all(cl, position)
 	local cl = cl or titlebar.get_clients()
 	for _, c in ipairs(cl) do
 		local model = titlebar.get_model(c, position)
-		if model and not model.hidden then
-			model.tfunction(c, model.size)
+		if model.cutted then
 			model.cutted = false
+			if not model.hidden then model.tfunction(c, model.size) end
 		end
 	end
 end
