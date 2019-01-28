@@ -25,7 +25,7 @@ local svgbox = require("redflat.gauge.svgbox")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local titlebar = { mt = {}, widget = {} }
+local titlebar = { mt = {}, widget = {}, _index = 1, _num = 1 }
 titlebar.list = setmetatable({}, { __mode = 'k' })
 
 
@@ -170,6 +170,7 @@ function titlebar.add_layout(c, position, layout, size)
 	local size = size or model.style.size
 	local l = { layout = layout, size = size }
 	table.insert(model.layouts, l)
+	if #model.layouts > titlebar._num then titlebar._num = #model.layouts end
 
 	if not model.current then
 		model.base:set_widget(layout)
@@ -183,11 +184,16 @@ end
 
 -- Switch titlebar view model
 ------------------------------------------------------------
-function titlebar.switch(c, position)
+function titlebar.switch(c, position, index)
 	local model = titlebar.get_model(c, position)
 	if not model or #model.layouts == 1 then return end
 
-	model.current = (model.current < #model.layouts) and (model.current + 1) or 1
+	if index then
+		if not model.layouts[index] then return end
+		model.current = index
+	else
+		model.current = (model.current < #model.layouts) and (model.current + 1) or 1
+	end
 	local layout = model.layouts[model.current]
 
 	model.base:set_widget(layout.layout)
@@ -237,10 +243,10 @@ function titlebar.toggle_all(cl, position)
 	for _, c in pairs(cl) do titlebar.toggle(c, position) end
 end
 
-function titlebar.switch_all(cl, position)
-	local cl = cl or titlebar.get_clients()
-	for _, c in pairs(cl) do titlebar.switch(c, position) end
-end
+--function titlebar.switch_all(cl, position)
+--	local cl = cl or titlebar.get_clients()
+--	for _, c in pairs(cl) do titlebar.switch(c, position) end
+--end
 
 function titlebar.show_all(cl, position)
 	local cl = cl or titlebar.get_clients()
@@ -250,6 +256,19 @@ end
 function titlebar.hide_all(cl, position)
 	local cl = cl or titlebar.get_clients()
 	for _, c in pairs(cl) do titlebar.hide(c, position) end
+end
+
+-- Global layout switch
+------------------------------------------------------------
+function titlebar.global_switch(index)
+	titlebar._index = index or titlebar._index + 1
+	if titlebar._index > titlebar._num then titlebar._index = 1 end
+
+	for _, c in pairs(titlebar.get_clients()) do
+		for _, position in ipairs({ "left", "right", "top", "bottom" }) do
+			titlebar.switch(c, position, titlebar._index)
+		end
+	end
 end
 
 
