@@ -54,55 +54,48 @@ mail.check_function["curl_imap"] = function(args)
 
 	return curl_req
 end
--- Create a new mail widget
--- @param style Table containing colors and geometry parameters for all elemets
--- @param args.update_timeout Update interval
--- @param args.path Folder with mail scripts
--- @param args.scripts Table with scripts name
+
+
+-- Initialize mails structure
 -----------------------------------------------------------------------------------------------------------------------
-function mail.new(args, style)
+function mail:init(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local args = args or {}
-	local count
-	local object = {}
+	local count  = 0
+	local checks = 0
+	local force_notify = false
 	local update_timeout = args.update_timeout or 3600
 	local maillist = args.maillist or {}
-
 	local style = redutil.table.merge(default_style(), style or {})
 
-	-- Create widget
-	--------------------------------------------------------------------------------
-	object.widget = svgbox(style.icon)
-	object.widget:set_color(style.color.icon)
-	table.insert(mail.objects, object)
-
-	-- Set tooltip
-	--------------------------------------------------------------------------------
-	object.tp = tooltip({ objects = { object.widget } }, style.tooltip)
-	object.tp:set_text("0 new messages")
+	self.style = style
 
 	-- Update info function
 	--------------------------------------------------------------------------------
 	local function mail_count(output)
 		local c = tonumber(string.match(output, "%d+"))
+		checks = checks + 1
 
 		if c then
 			count = count + c
-			if style.need_notify and count > 0 then
+			if style.need_notify and (count > 0 or force_notify and checks == #maillist) then
 				rednotify:show(redutil.table.merge({ text = count .. " new messages" }, style.notify))
 			end
 		end
 
+		self.tp:set_text(count .. " new messages")
+
 		local color = count > 0 and style.color.main or style.color.icon
-		object.widget:set_color(color)
-		object.tp:set_text(count .. " new messages")
+		for _, widg in ipairs(mail.objects) do widg:set_color(color) end
 	end
 
-	function object.update()
-		count = 0
-		-- TODO: add force notify
+	self.check_updates = function(is_force)
+		count  = 0
+		checks = 0
+		force_notify = is_force
+
 		for _, cmail in ipairs(maillist) do
 			awful.spawn.easy_async(mail.check_function[cmail.checker](cmail), mail_count)
 		end
@@ -110,20 +103,46 @@ function mail.new(args, style)
 
 	-- Set update timer
 	--------------------------------------------------------------------------------
-	local t = timer({ timeout = update_timeout })
-	t:connect_signal("timeout", object.update)
-	t:start()
+	self.timer = timer({ timeout = update_timeout })
+	self.timer:connect_signal("timeout", function() self.check_updates() end)
+	self.timer:start()
 
-	if style.firstrun then t:emit_signal("timeout") end
+	if style.firstrun then self.timer:emit_signal("timeout") end
+end
+
+
+
+-- Create a new mail widget
+-----------------------------------------------------------------------------------------------------------------------
+function mail.new(style)
+
+	-- Initialize vars
+	--------------------------------------------------------------------------------
+	local style = redutil.table.merge(mail.style, style or {})
+
+	-- Create widget
+	--------------------------------------------------------------------------------
+	local widg = svgbox(style.icon)
+	widg:set_color(style.color.icon)
+	table.insert(mail.objects, widg)
+
+	-- Set tooltip
+	--------------------------------------------------------------------------------
+	if not mail.tp then
+		mail.tp = tooltip({ objects = { widg } }, style.tooltip)
+		mail.tp:set_text("0 new messages")
+	else
+		mail.tp:add_to_object(widg)
+	end
 
 	--------------------------------------------------------------------------------
-	return object.widget
+	return widg
 end
 
 -- Update mail info for every widget
 -----------------------------------------------------------------------------------------------------------------------
-function mail:update()
-	for _, o in ipairs(mail.objects) do o.update() end
+function mail:update(is_force)
+	self.check_updates(is_force)
 end
 
 -- Config metatable to call mail module as function
