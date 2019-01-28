@@ -83,10 +83,10 @@ function upgrades:init(args, style)
 	local args = args or {}
 	local update_timeout = args.update_timeout or 3600
 	local command = args.command or "echo 0"
-
+	local force_notify = false
 	local style = redutil.table.merge(default_style(), style or {})
 
-	self.force_notify = false
+
 	self.style = style
 	self.is_updates = false
 	self.config = awful.util.getdir("cache") .. "/upgrades"
@@ -218,7 +218,7 @@ function upgrades:init(args, style)
 		self.is_updates = tonumber(c) > 0
 		local is_alert = check_alert()
 
-		if style.need_notify and (is_alert or self.force_notify) then
+		if style.need_notify and (is_alert or force_notify) then
 			rednotify:show(redutil.table.merge({ text = c .. " updates available" }, style.notify))
 		end
 		self.titlebox:set_text(c .." UPDATES")
@@ -229,15 +229,13 @@ function upgrades:init(args, style)
 
 	-- Set update timer
 	--------------------------------------------------------------------------------
-	self.check_updates = function()
+	self.check_updates = function(is_force)
+		force_notify = is_force
 		awful.spawn.easy_async(command, update_count)
 	end
 
 	upgrades.timer = timer({ timeout = update_timeout })
-	upgrades.timer:connect_signal("timeout", function()
-		self.force_notify = false
-		self.check_updates()
-	end)
+	upgrades.timer:connect_signal("timeout", function() self.check_updates() end)
 	upgrades.timer:start()
 
 	if style.firstrun then upgrades.timer:emit_signal("timeout") end
@@ -256,7 +254,6 @@ function upgrades.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	--local object = {}
 	local style = redutil.table.merge(upgrades.style, style or {})
 
 	local widg = svgbox(style.icon)
@@ -322,8 +319,7 @@ end
 -- Update upgrades info for every widget
 -----------------------------------------------------------------------------------------------------------------------
 function upgrades:update(is_force)
-	self.force_notify = is_force
-	self.check_updates()
+	self.check_updates(is_force)
 end
 
 -- Config metatable to call upgrades module as function
