@@ -46,7 +46,7 @@ end
 
 local change_volume_default_args = {
 	down        = false,
-	step        = 655 * 5,
+	step        = math.floor(65536 / 100 * 5 + 0.5),
 	show_notify = false
 }
 
@@ -120,7 +120,7 @@ function pulse:update_volume()
 
 	if v then
 		local pv = string.match(v, "0x%x+")
-		if pv then volume = math.floor(tonumber(pv) * 100 / volmax) end
+		if pv then volume = math.floor(tonumber(pv) * 100 / volmax + 0.5) end
 	end
 
 	local mute = not (m and string.find(m, "no", -4))
