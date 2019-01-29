@@ -89,6 +89,30 @@ function system.qemu_image_size(args)
    return { img_info.use_p, img_info.size, off = img_info.size == 0 }
 end
 
+-- Traffic check
+-----------------------------------------------------------------------------------------------------------------------
+local function vnstat_format(v, u)
+	if not v or not u then return 0 end
+	local v = v:gsub(',', '.')
+	return    u == "B"   and tonumber(v)
+	       or u == "KiB" and v * 1024
+	       or u == "MiB" and v * 1024^2
+	       or u == "GiB" and v * 1024^3
+end
+
+function system.vnstat_check(args)
+	local line = redutil.read.output(string.format("vnstat %s | tail -n 3 | head -n 1", args))
+	local rx, ru, tx, tu, totalx, totalu = string.match(
+		line, "%s+(%d+,%d+)%s(%w+)%s+%|%s+(%d+,%d+)%s(%w+)%s+%|%s+(%d+,%d+)%s(%w+)%s+%|%s+.+"
+	)
+	local data = {
+		r = vnstat_format(rx, ru),
+		t = vnstat_format(tx, tu),
+		total = vnstat_format(totalx, totalu),
+	}
+
+   return { data.total }
+end
 
 -- Get network speed
 -----------------------------------------------------------------------------------------------------------------------
