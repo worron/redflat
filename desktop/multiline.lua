@@ -29,7 +29,8 @@ local function default_style()
 	local style = {
 		icon      = { image = nil, margin = { 0, 0, 0, 0 } },
 		lines     = {},
-		digits = 3,
+		margin    = { 0, 0, 0, 0 },
+		digits    = 3,
 		dislabel  = "OFF",
 		unit      = { { "B", -1 }, { "KB", 1024 }, { "MB", 1024^2 }, { "GB", 1024^3 } },
 		color     = { main = "#b1222b", wibox = "#161616", gray = "#404040" }
@@ -67,11 +68,11 @@ function dashpack.new(args, geometry, style)
 		dwidget.icon:set_color(style.color.gray)
 
 		local align = wibox.layout.align.horizontal()
-		align:set_middle(pack.layout)
+		align:set_middle(wibox.container.margin(pack.layout, unpack(style.margin)))
 		align:set_left(wibox.container.margin(dwidget.icon, unpack(style.icon.margin)))
 		dwidget.wibox:set_widget(align)
 	else
-		dwidget.wibox:set_widget(pack.layout)
+		dwidget.wibox:set_widget(wibox.container.margin(pack.layout, unpack(style.margin)))
 	end
 
 	for i, sensor in ipairs(args.sensors) do
