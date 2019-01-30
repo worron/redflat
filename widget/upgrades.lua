@@ -231,7 +231,7 @@ function upgrades:init(args, style)
 	--------------------------------------------------------------------------------
 	self.check_updates = function(is_force)
 		force_notify = is_force
-		awful.spawn.easy_async(command, update_count)
+		awful.spawn.easy_async_with_shell(command, update_count)
 	end
 
 	upgrades.timer = timer({ timeout = update_timeout })

@@ -32,7 +32,7 @@ local system = { thermal = {}, dformatted = {}, pformatted = {} }
 -----------------------------------------------------------------------------------------------------------------------
 function system.simple_async(command, pattern)
 	return function(setup)
-		awful.spawn.easy_async(command,
+		awful.spawn.easy_async_with_shell(command,
 			function(output)
 				local value = tonumber(string.match(output, pattern))
 				setup(value and { value } or { 0 })
@@ -105,7 +105,6 @@ function system.vnstat_check(args)
 	return function(setup)
 		awful.spawn.easy_async_with_shell(command,
 			function(output)
-				print(output)
 				local x, u = string.match(
 					output, "%s+%d+,%d+%s%w+%s+%|%s+%d+,%d+%s%w+%s+%|%s+(%d+,%d+)%s(%w+)%s+%|%s+.+"
 				)
@@ -476,8 +475,7 @@ function system.thermal.nvoptimus(setup)
 	if not nvidia_on then
 		setup({ 0, off = true })
 	else
-		--awful.spawn.easy_async("optirun -b none nvidia-settings -c :8 -q gpucoretemp -t | tail -1",
-		awful.spawn.easy_async("optirun -b none nvidia-settings -c :8 -q gpucoretemp -t",
+		awful.spawn.easy_async_with_shell("optirun -b none nvidia-settings -c :8 -q gpucoretemp -t | tail -1",
 			function(output)
 				local value = tonumber(string.match(output, "[^\n]+"))
 				setup({ value or 0, off = false })
