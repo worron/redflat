@@ -89,29 +89,31 @@ function system.qemu_image_size(args)
    return { img_info.use_p, img_info.size, off = img_info.size == 0 }
 end
 
--- Traffic check
+-- Traffic check with vnstat (async)
 -----------------------------------------------------------------------------------------------------------------------
-local function vnstat_format(v, u)
-	if not v or not u then return 0 end
-	local v = v:gsub(',', '.')
-	return    u == "B"   and tonumber(v)
-	       or u == "KiB" and v * 1024
-	       or u == "MiB" and v * 1024^2
-	       or u == "GiB" and v * 1024^3
+local function vnstat_format(value, unit)
+	if not value or not unit then return 0 end
+	local v = value:gsub(',', '.')
+	return    unit == "B"   and tonumber(v)
+	       or unit == "KiB" and v * 1024
+	       or unit == "MiB" and v * 1024^2
+	       or unit == "GiB" and v * 1024^3
 end
 
 function system.vnstat_check(args)
-	local line = redutil.read.output(string.format("vnstat %s | tail -n 3 | head -n 1", args))
-	local rx, ru, tx, tu, totalx, totalu = string.match(
-		line, "%s+(%d+,%d+)%s(%w+)%s+%|%s+(%d+,%d+)%s(%w+)%s+%|%s+(%d+,%d+)%s(%w+)%s+%|%s+.+"
-	)
-	local data = {
-		r = vnstat_format(rx, ru),
-		t = vnstat_format(tx, tu),
-		total = vnstat_format(totalx, totalu),
-	}
-
-   return { data.total }
+	local command = string.format("vnstat %s | tail -n 3 | head -n 1", args)
+	return function(setup)
+		awful.spawn.easy_async_with_shell(command,
+			function(output)
+				print(output)
+				local x, u = string.match(
+					output, "%s+%d+,%d+%s%w+%s+%|%s+%d+,%d+%s%w+%s+%|%s+(%d+,%d+)%s(%w+)%s+%|%s+.+"
+				)
+				local total = vnstat_format(x, u)
+				setup({ total })
+			end
+		)
+	end
 end
 
 -- Get network speed
