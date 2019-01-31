@@ -86,8 +86,7 @@ function tooltip.new(args, style)
 		function()
 			ttp:set_geometry()
 			if style.set_position then
-				-- TODO: add wibox as argument to 'set_position' function
-				ttp.wibox:geometry(style.set_position())
+				style.set_position(ttp.wibox)
 			else
 				awful.placement.under_mouse(ttp.wibox)
 			end

@@ -343,7 +343,7 @@ function top:show(srt)
 		self:update_list()
 
 		if self.style.set_position then
-			self.wibox:geometry(self.style.set_position())
+			self.style.set_position(self.wibox)
 		else
 			awful.placement.under_mouse(self.wibox)
 		end

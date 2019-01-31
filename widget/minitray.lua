@@ -106,7 +106,7 @@ function minitray:update_geometry()
 	self.wibox:geometry({ width = self.geometry.width or self.geometry.height * items })
 
 	if self.set_position then
-		self.wibox:geometry(self.set_position())
+		self.set_position(self.wibox)
 	else
 		awful.placement.under_mouse(self.wibox)
 	end

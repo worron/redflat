@@ -125,7 +125,7 @@ function notify:show(args)
 
 	-- TODO: add placement update if active screen changed
 	if not self.wibox.visible then
-		if self.style.set_position then self.wibox:geometry(self.style.set_position()) end
+		if self.style.set_position then self.style.set_position(self.wibox) end
 		redutil.placement.no_offscreen(self.wibox, self.style.screen_gap, mouse.screen.workarea)
 		self.wibox.visible = true
 	end
