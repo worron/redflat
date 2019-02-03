@@ -21,6 +21,7 @@ local beautiful = require("beautiful")
 local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
+local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -35,7 +36,8 @@ local function default_style()
 		font  = "Sans 12",
 		border_width = 2,
 		set_position = nil,
-		color        = { border = "#404040", text = "#aaaaaa", wibox = "#202020" }
+		color        = { border = "#404040", text = "#aaaaaa", wibox = "#202020" },
+		shape        = rectshape
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.tooltip") or {})
 end
@@ -63,6 +65,7 @@ function tooltip.new(args, style)
 	ttp.wibox.ontop = true
 	ttp.wibox.border_width = style.border_width
 	ttp.wibox.border_color = style.color.border
+	ttp.wibox.shape = style.shape
 	ttp.wibox:set_bg(style.color.wibox)
 	ttp.wibox:set_fg(style.color.text)
 

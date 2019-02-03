@@ -16,6 +16,7 @@ local timer = require("gears.timer")
 
 local redflat = require("redflat")
 local redutil = require("redflat.util")
+local rectshape = require("gears.shape").rectangle
 
 
 -- Initialize tables for module
@@ -42,7 +43,8 @@ local function default_style()
 		is_align      = false,
 		separator     = {},
 		color         = { border = "#575757", text = "#aaaaaa", main = "#b1222b", wibox = "#202020",
-		                  gray = "#575757" }
+		                  gray = "#575757" },
+		shape         = rectshape
 	}
 
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.hotkeys") or {})
@@ -193,7 +195,8 @@ function hotkeys:init()
 		ontop        = true,
 		bg           = style.color.wibox,
 		border_width = style.border_width,
-		border_color = style.color.border
+		border_color = style.color.border,
+		shape        = style.shape
 	})
 
 	self.wibox:geometry(style.geometry)

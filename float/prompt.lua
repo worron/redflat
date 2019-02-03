@@ -19,6 +19,7 @@ local wibox = require("wibox")
 
 local redutil = require("redflat.util")
 local decoration = require("redflat.float.decoration")
+local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -31,7 +32,8 @@ local function default_style()
 		geometry     = { width = 620, height = 120 },
 		margin       = { 20, 20, 40, 40 },
 		border_width = 2,
-		color        = { border = "#575757", wibox = "#202020" }
+		color        = { border = "#575757", wibox = "#202020" },
+		shape        = rectshape
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.prompt") or {})
 end
@@ -58,7 +60,8 @@ function floatprompt:init(args)
 		ontop        = true,
 		bg           = style.color.wibox,
 		border_width = style.border_width,
-		border_color = style.color.border
+		border_color = style.color.border,
+		shape        = style.shape
 	})
 
 	self.wibox:set_widget(wibox.container.margin(self.decorated_widget, unpack(style.margin)))

@@ -20,6 +20,7 @@ local redutil = require("redflat.util")
 local progressbar = require("redflat.gauge.graph.bar")
 local dashcontrol = require("redflat.gauge.graph.dash")
 local svgbox = require("redflat.gauge.svgbox")
+local rectshape = require("gears.shape").rectangle
 
 -- Initialize and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -80,7 +81,8 @@ local function default_style()
 			prev_tr = redutil.base.placeholder({ txt = "←" }),
 		},
 		color          = { border = "#575757", main = "#b1222b",
-		                   wibox = "#202020", gray = "#575757", icon = "#a0a0a0" }
+		                   wibox = "#202020", gray = "#575757", icon = "#a0a0a0" },
+		shape          = rectshape
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.player") or {})
 end
@@ -125,10 +127,10 @@ function player:init(args)
 	------------------------------------------------------------
 	self.box.title = wibox.widget.textbox("Title")
 	self.box.artist = wibox.widget.textbox("Artist")
-	for _, w in ipairs({ self.box.title, self.box.artist }) do
-		w:set_font(style.titlefont)
-		w:set_valign("top")
-	end
+	self.box.title:set_font(style.titlefont)
+	self.box.title:set_valign("top")
+	self.box.artist:set_font(style.artistfont)
+	self.box.artist:set_valign("top")
 
 	local text_area = wibox.layout.fixed.vertical()
 	text_area:add(wibox.container.constraint(self.box.title, "exact", nil, style.line_height))
@@ -223,7 +225,8 @@ function player:init(args)
 		ontop        = true,
 		bg           = style.color.wibox,
 		border_width = style.border_width,
-		border_color = style.color.border
+		border_color = style.color.border,
+		shape        = style.shape
 	})
 
 	self.wibox:set_widget(wibox.container.margin(area, unpack(style.border_margin)))

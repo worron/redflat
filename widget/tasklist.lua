@@ -34,6 +34,7 @@ local separator = require("redflat.gauge.separator")
 local redmenu = require("redflat.menu")
 local svgbox = require("redflat.gauge.svgbox")
 local dfparser = require("redflat.service.dfparser")
+local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -92,7 +93,8 @@ local function default_style()
 		timeout      = 0.5,
 		sl_highlight = false, -- single line highlight
 		color        = { border = "#575757", text = "#aaaaaa", main = "#b1222b", highlight = "#eeeeee",
-		                 wibox = "#202020", gray = "#575757", urgent = "#32882d" }
+		                 wibox = "#202020", gray = "#575757", urgent = "#32882d" },
+		shape        = rectshape
 
 	}
 	style.winmenu.menu = {
@@ -633,7 +635,8 @@ function redtasklist.tasktip:init(buttons, style)
 		type = "tooltip",
 		bg   = style.color.wibox,
 		border_width = style.border_width,
-		border_color = style.color.border
+		border_color = style.color.border,
+		shape        = style.shape
 	})
 
 	self.wibox.ontop = true
