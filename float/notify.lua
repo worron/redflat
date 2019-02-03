@@ -15,6 +15,7 @@ local timer = require("gears.timer")
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
 local progressbar = require("redflat.gauge.graph.bar")
+local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -35,7 +36,8 @@ local function default_style()
 		timeout         = 5,
 		icon            = nil,
 		progressbar     = {},
-		color           = { border = "#575757", icon = "#aaaaaa", wibox = "#202020" }
+		color           = { border = "#575757", icon = "#aaaaaa", wibox = "#202020" },
+		shape           = rectshape
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.notify") or {})
 end
@@ -71,7 +73,8 @@ function notify:init()
 		ontop        = true,
 		bg           = style.color.wibox,
 		border_width = style.border_width,
-		border_color = style.color.border
+		border_color = style.color.border,
+		shape        = style.shape
 	})
 
 	self.wibox:set_widget(wibox.container.margin(area, unpack(style.border_margin)))

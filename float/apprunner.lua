@@ -20,6 +20,7 @@ local dfparser = require("redflat.service.dfparser")
 local redutil = require("redflat.util")
 local decoration = require("redflat.float.decoration")
 local redtip = require("redflat.float.hotkeys")
+local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -70,7 +71,8 @@ local function default_style()
 		keytip           = { geometry = { width = 400, height = 300 } },
 		dimage           = redutil.base.placeholder(),
 		color            = { border = "#575757", text = "#aaaaaa", highlight = "#eeeeee", main = "#b1222b",
-		                     bg = "#161616", bg_second = "#181818", wibox = "#202020", icon = "a0a0a0" }
+		                     bg = "#161616", bg_second = "#181818", wibox = "#202020", icon = "a0a0a0" },
+		shape            = rectshape
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.apprunner") or {})
 end
@@ -300,7 +302,8 @@ function apprunner:init()
 		ontop        = true,
 		bg           = style.color.wibox,
 		border_width = style.border_width,
-		border_color = style.color.border
+		border_color = style.color.border,
+		shape        = style.shape
 	})
 
 	self.wibox:set_widget(area_layout)
