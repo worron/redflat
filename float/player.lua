@@ -125,10 +125,10 @@ function player:init(args)
 	------------------------------------------------------------
 	self.box.title = wibox.widget.textbox("Title")
 	self.box.artist = wibox.widget.textbox("Artist")
-	for _, w in ipairs({ self.box.title, self.box.artist }) do
-		w:set_font(style.titlefont)
-		w:set_valign("top")
-	end
+	self.box.title:set_font(style.titlefont)
+	self.box.title:set_valign("top")
+	self.box.artist:set_font(style.artistfont)
+	self.box.artist:set_valign("top")
 
 	local text_area = wibox.layout.fixed.vertical()
 	text_area:add(wibox.container.constraint(self.box.title, "exact", nil, style.line_height))
