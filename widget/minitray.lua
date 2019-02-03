@@ -23,6 +23,7 @@ local timer = require("gears.timer")
 local redutil = require("redflat.util")
 local dotcount = require("redflat.gauge.graph.dots")
 local tooltip = require("redflat.float.tooltip")
+local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables and wibox
 -----------------------------------------------------------------------------------------------------------------------
@@ -39,7 +40,8 @@ local function default_style()
 		border_width = 2,
 		double_wibox = false,
 		show_delay   = 0.05,
-		color        = { wibox = "#202020", border = "#575757" }
+		color        = { wibox = "#202020", border = "#575757" },
+		shape        = rectshape
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.minitray") or {})
 end
@@ -54,7 +56,8 @@ function minitray:init(style)
 		ontop        = true,
 		bg           = style.color.wibox,
 		border_width = style.border_width,
-		border_color = style.color.border
+		border_color = style.color.border,
+		shape        = style.shape
 	}
 
 	self.wibox = wibox(wargs)

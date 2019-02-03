@@ -18,6 +18,7 @@ local redflat = require("redflat")
 local redutil = require("redflat.util")
 local redtip = require("redflat.float.hotkeys")
 local rednotify = require("redflat.float.notify")
+local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -43,7 +44,8 @@ local function default_style()
 		font         = { font = "Sans", size = 22, face = 1, slant = 0 },
 		color        = { border = "#575757", wibox = "#00000000", bg1 = "#57575740", bg2 = "#57575720",
 		                 fbg1 = "#b1222b40", fbg2 = "#b1222b20", mark = "#575757", text = "#202020",
-		                 hbg1 = "#32882d40", hbg2 = "#32882d20" }
+		                 hbg1 = "#32882d40", hbg2 = "#32882d20" },
+		shape        = rectshape
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "service.navigator") or {})
 end
@@ -163,7 +165,8 @@ function navigator.make_decor(c)
 		ontop        = true,
 		bg           = style.color.wibox,
 		border_width = style.border_width,
-		border_color = style.color.borderk
+		border_color = style.color.borderk,
+		shape        = style.shape
 	})
 
 	object.client = c

@@ -15,6 +15,7 @@ local redutil = require("redflat.util")
 local system = require("redflat.system")
 local decoration = require("redflat.float.decoration")
 local redtip = require("redflat.float.hotkeys")
+local rectshape = require("gears.shape").rectangle
 
 
 -- Initialize tables for module
@@ -75,7 +76,8 @@ local function default_style()
 		title_font    = "Sans 14 bold",
 		unit          = { { "KB", -1 }, { "MB", 1024 }, { "GB", 1024^2 } },
 		color         = { border = "#575757", text = "#aaaaaa", highlight = "#eeeeee", main = "#b1222b",
-		                  bg = "#161616", bg_second = "#181818", wibox = "#202020" }
+		                  bg = "#161616", bg_second = "#181818", wibox = "#202020" },
+		shape         = rectshape
 
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.top") or {})
@@ -303,7 +305,8 @@ function top:init()
 		ontop        = true,
 		bg           = style.color.wibox,
 		border_width = style.border_width,
-		border_color = style.color.border
+		border_color = style.color.border,
+		shape        = style.shape
 	})
 
 	self.wibox:set_widget(list_layout)
