@@ -25,10 +25,8 @@ local calendar = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		maxed_marks = true,
 		label       = { gap = 12, font = { font = "Sans", size = 18, face = 1, slant = 0 }, sep = "-" },
 		mark        = { height = 20, width = 40, dx = 10, line = 4 },
-		pointer     = { height = 24, width = 8, gap = 8, dx = 8 },
 		color       = { main = "#b1222b", wibox = "#161616", gray = "#404040", bg = "#161616" }
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.calendar") or {})
@@ -63,12 +61,11 @@ local function daymarks(style)
 	------------------------------------------------------------
 	function widg:update_data()
 		local date = os.date('*t')
-		local first_week_day = os.date('%w', os.time { year = date.year, month = date.month, day = 1 })
+		local first_week_day = os.date('%w', os.time({ year = date.year, month = date.month, day = 1 }))
 
 		self._data.today = date.day
 		self._data.days = date.month == 2 and is_leap_year(date.year) and 29 or days_in_month[date.month]
 		self._data.weekend = { (7 - first_week_day) % 7, (8 - first_week_day) % 7 }
-		self._data.marks = style.maxed_marks and 31 or self._data.days
 		self._data.label = string.format("%.2d%s%.2d", date.day, style.label.sep, date.month)
 
 		self:emit_signal("widget::updated")
@@ -83,23 +80,13 @@ local function daymarks(style)
 	-- Draw
 	------------------------------------------------------------
 	function widg:draw(_, cr, width, height)
-		-- shift canvas if pointer bigger then mark
-		local dy = style.mark.height - style.pointer.height
-		local height = height
-		if dy < 0 then
-			cr:translate(0, -dy/2)
-			height = height + dy
-		end
 
 		-- main draw
-		local gap = (height - self._data.marks * style.mark.height) / (self._data.marks - 1)
-		local mark_dy = (style.pointer.height - style.mark.height) / 2
-		local pointer_x = width - style.mark.width - style.mark.dx
-		                  - style.pointer.width - style.pointer.dx - style.pointer.gap
-		local label_x = pointer_x - style.label.gap
+		local gap = (height - self._data.days * style.mark.height) / (self._data.days - 1)
+		local label_x = width - style.mark.width - style.mark.dx - style.label.gap
 		cr:set_line_width(style.mark.line)
 
-		for i = 1, self._data.marks do
+		for i = 1, self._data.days do
 			-- calendar marks
 			local id = i % 7
 			local is_weekend = id == self._data.weekend[1] or id == self._data.weekend[2]
@@ -111,28 +98,12 @@ local function daymarks(style)
 			cr:rel_line_to(-style.mark.dx, -style.mark.height / 2)
 			cr:rel_line_to(style.mark.dx, -style.mark.height / 2)
 			cr:close_path()
-
-			if i > self._data.days then
-				cr:stroke()
-			else
-				cr:fill()
-			end
+			cr:fill()
 
 			if i == self._data.today then
-				-- today mark
-				cr:set_source(color(style.color.main))
-				cr:move_to(pointer_x, (style.mark.height + gap) * (i - 1) - mark_dy)
-				cr:rel_line_to(style.pointer.width, 0)
-				cr:rel_line_to(style.pointer.dx, style.pointer.height / 2)
-				cr:rel_line_to(-style.pointer.dx, style.pointer.height / 2)
-				cr:rel_line_to(-style.pointer.width, 0)
-				cr:rel_line_to(style.pointer.dx, -style.pointer.height / 2)
-				cr:rel_line_to(-style.pointer.dx, -style.pointer.height / 2)
-				cr:close_path()
-				cr:fill()
-
 				-- today label
-				local coord_y = ((style.mark.height + gap) * (i - 1) - mark_dy) + style.pointer.height / 2
+				cr:set_source(color(style.color.main))
+				local coord_y = ((style.mark.height + gap) * (i - 1)) + style.mark.height / 2
 				redutil.cairo.set_font(cr, style.label.font)
 
 				local ext = cr:text_extents(self._data.label)
