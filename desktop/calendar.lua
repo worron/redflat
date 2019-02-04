@@ -25,9 +25,10 @@ local calendar = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		label       = { gap = 12, font = { font = "Sans", size = 18, face = 1, slant = 0 }, sep = "-" },
-		mark        = { height = 20, width = 40, dx = 10, line = 4 },
-		color       = { main = "#b1222b", wibox = "#161616", gray = "#404040", bg = "#161616" }
+		show_pointer = true,
+		label        = { gap = 12, font = { font = "Sans", size = 18, face = 1, slant = 0 }, sep = "-" },
+		mark         = { height = 20, width = 40, dx = 10, line = 4 },
+		color        = { main = "#b1222b", wibox = "#161616", gray = "#404040", bg = "#161616" }
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.calendar") or {})
 end
@@ -50,10 +51,13 @@ local function daymarks(style)
 	local widg = wibox.widget.base.make_widget()
 
 	widg._data = {
-		days = 31,
-		marks = 31,
-		today = 1,
-		label = "01-01",
+		gap     = 1,
+		label_x = 0,
+		pointer = { show = false, index = 1, label = "01-01" },
+		days    = 31,
+		marks   = 31,
+		today   = 1,
+		label   = "01-01",
 		weekend = { 6, 0 }
 	}
 
@@ -71,6 +75,16 @@ local function daymarks(style)
 		self:emit_signal("widget::updated")
 	end
 
+	function widg:update_pointer(show, index)
+		self._data.pointer.show = show
+		if index then self._data.pointer.index = index end
+
+		local date = os.date('*t')
+		self._data.pointer.label = string.format("%.2d%s%.2d", self._data.pointer.index, style.label.sep, date.month)
+
+		self:emit_signal("widget::updated")
+	end
+
 	-- Fit
 	------------------------------------------------------------
 	function widg:fit(_, width, height)
@@ -82,8 +96,8 @@ local function daymarks(style)
 	function widg:draw(_, cr, width, height)
 
 		-- main draw
-		local gap = (height - self._data.days * style.mark.height) / (self._data.days - 1)
-		local label_x = width - style.mark.width - style.mark.dx - style.label.gap
+		self._data.gap = (height - self._data.days * style.mark.height) / (self._data.days - 1)
+		self._data.label_x = width - style.mark.width - style.mark.dx - style.label.gap
 		cr:set_line_width(style.mark.line)
 
 		for i = 1, self._data.days do
@@ -92,7 +106,7 @@ local function daymarks(style)
 			local is_weekend = id == self._data.weekend[1] or id == self._data.weekend[2]
 
 			cr:set_source(color(is_weekend and style.color.main or style.color.gray))
-			cr:move_to(width, (style.mark.height + gap) * (i - 1))
+			cr:move_to(width, (style.mark.height + self._data.gap) * (i - 1))
 			cr:rel_line_to(0, style.mark.height)
 			cr:rel_line_to(-style.mark.width, 0)
 			cr:rel_line_to(-style.mark.dx, -style.mark.height / 2)
@@ -100,15 +114,17 @@ local function daymarks(style)
 			cr:close_path()
 			cr:fill()
 
-			if i == self._data.today then
-				-- today label
-				cr:set_source(color(style.color.main))
-				local coord_y = ((style.mark.height + gap) * (i - 1)) + style.mark.height / 2
+			-- data label
+			if i == self._data.today or (self._data.pointer.show and i == self._data.pointer.index) then
+				cr:set_source(color(i == self._data.today and style.color.main or style.color.gray))
+				local coord_y = ((style.mark.height + self._data.gap) * (i - 1)) + style.mark.height / 2
 				redutil.cairo.set_font(cr, style.label.font)
 
 				local ext = cr:text_extents(self._data.label)
-				cr:move_to(label_x - (ext.width + 2 * ext.x_bearing), coord_y - (ext.height/2 + ext.y_bearing))
-				cr:show_text(self._data.label)
+				cr:move_to(
+					self._data.label_x - (ext.width + 2 * ext.x_bearing), coord_y - (ext.height/2 + ext.y_bearing)
+				)
+				cr:show_text(i == self._data.today and self._data.label or self._data.pointer.label)
 			end
 		end
 	end
@@ -146,6 +162,30 @@ function calendar.new(args, geometry, style)
 	t:connect_signal("timeout", function () dwidget.calendar:update_data() end)
 	t:start()
 	t:emit_signal("timeout")
+
+	-- Drawing date label under mouse
+	--------------------------------------------------------------------------------
+	if style.show_pointer then
+		dwidget.wibox:connect_signal("mouse::move", function(_, x, y)
+			local show_poiter = false
+			local index
+
+			if x > dwidget.calendar._data.label_x then
+				for i = 1, dwidget.calendar._data.days do
+					local cy = y - (i - 1) * (dwidget.calendar._data.gap + style.mark.height)
+					if cy > 0 and cy < style.mark.height then
+						show_poiter = true
+						index = i
+						break
+					end
+				end
+			end
+
+			if dwidget.calendar._data.pointer.show ~= show_poiter then
+				dwidget.calendar:update_pointer(show_poiter, index)
+			end
+		end)
+	end
 
 	--------------------------------------------------------------------------------
 	return dwidget
