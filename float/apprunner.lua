@@ -48,6 +48,15 @@ apprunner.keys.action = {
 		{ "Mod4" }, "F1", function() redtip:show() end,
 		{ description = "Show hotkeys helper", group = "Action" }
 	},
+	-- fake keys used for hotkeys helper
+	{
+		{}, "Enter", nil,
+		{ description = "Activate item", group = "Action" }
+	},
+	{
+		{}, "Escape", nil,
+		{ description = "Close widget", group = "Action" }
+	},
 }
 
 apprunner.keys.all = awful.util.table.join(apprunner.keys.move, apprunner.keys.action)
@@ -246,7 +255,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 local function keypressed_callback(mod, key)
 	for _, k in ipairs(apprunner.keys.all) do
-		if redutil.key.match_prompt(k, mod, key) then k[3](); return true end
+		if redutil.key.match_prompt(k, mod, key) and k[3] then k[3](); return true end
 	end
 	return false
 end
