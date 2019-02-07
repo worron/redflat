@@ -40,7 +40,6 @@ end
 
 -- Create a new counter widget
 -- @param style Table containing colors and geometry parameters for all elemets
--- TODO: make auto calculation for column number
 -----------------------------------------------------------------------------------------------------------------------
 function counter.new(style)
 

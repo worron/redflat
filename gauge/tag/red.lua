@@ -174,7 +174,7 @@ function redtag.new(style)
 			cr:fill()
 
 			cr:set_source(color(style.color.icon))
-			redutil.cairo.textcentre.vertical(cr, style.counter.coord, tostring(#data.state.list))
+			redutil.cairo.textcentre.full(cr, style.counter.coord, tostring(#data.state.list))
 		end
 	end
 

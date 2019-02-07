@@ -744,7 +744,6 @@ function redtasklist.new(args, style)
 	tasklist.queue:connect_signal("timeout", function() update(cs); tasklist.queue:stop() end)
 
 	-- Signals setup
-	-- TODO: split signals for screens
 	--------------------------------------------------------------------------------
 	local client_signals = {
 		"property::urgent", "property::sticky", "property::minimized",

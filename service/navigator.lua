@@ -143,9 +143,9 @@ function navigator.make_paint(c)
 
 		cr:set_source(color(style.color.text))
 		redutil.cairo.set_font(cr, style.titlefont)
-		redutil.cairo.textcentre.vertical(cr, { width/2, height/2 - style.linegap / 2 }, index)
+		redutil.cairo.textcentre.full(cr, { width/2, height/2 - style.linegap / 2 }, index)
 		redutil.cairo.set_font(cr, style.font)
-		redutil.cairo.textcentre.vertical(cr, { width/2, height/2 + style.linegap / 2 }, g.width .. " x " .. g.height)
+		redutil.cairo.textcentre.full(cr, { width/2, height/2 + style.linegap / 2 }, g.width .. " x " .. g.height)
 	end
 
 	------------------------------------------------------------

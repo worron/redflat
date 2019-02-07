@@ -26,6 +26,7 @@ local separator = require("redflat.gauge.separator")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
+-- TODO: weak table for all multi panel widget
 local upgrades = { objects = {}, mt = {} }
 
 -- Generate default theme vars
