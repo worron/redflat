@@ -185,6 +185,10 @@ function calendar.new(args, geometry, style)
 				dwidget.calendar:update_pointer(show_poiter, index)
 			end
 		end)
+
+		dwidget.wibox:connect_signal("mouse::leave", function()
+			if dwidget.calendar._data.pointer.show then dwidget.calendar:update_pointer(false) end
+		end)
 	end
 
 	--------------------------------------------------------------------------------
