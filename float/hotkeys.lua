@@ -294,7 +294,7 @@ function hotkeys:highlight()
 
 	self.layout:reset()
 	for i, column in ipairs(tip) do
-		if not self.boxes[i] then -- TODO: weak table?
+		if not self.boxes[i] then
 			self.boxes[i] = wibox.widget.textbox()
 			self.boxes[i]:set_valign("top")
 			self.boxes[i]:set_font(self.style.font)

@@ -19,7 +19,7 @@ local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local notify = {}
+local notify = { last = {} }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
@@ -126,13 +126,13 @@ function notify:show(args)
 	if not self.wibox then self:init() end
 	self:set(args)
 
-	-- TODO: add placement update if active screen changed
-	if not self.wibox.visible then
+	if not self.wibox.visible or mouse.screen.index ~= self.last.screen then
 		if self.style.set_position then self.style.set_position(self.wibox) end
 		redutil.placement.no_offscreen(self.wibox, self.style.screen_gap, mouse.screen.workarea)
 		self.wibox.visible = true
 	end
 
+	self.last.screen = mouse.screen.index
 	self.hidetimer:again()
 end
 
