@@ -277,7 +277,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function upgrades:show()
 	if self.style.wibox.set_position then
-		self.style.set_position(self.wibox)
+		self.style.wibox.set_position(self.wibox)
 	else
 		redutil.placement.centered(self.wibox, nil, mouse.screen.workarea)
 	end
