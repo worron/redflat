@@ -6,6 +6,8 @@
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
+local unpack = unpack or table.unpack
+
 local beautiful = require("beautiful")
 local awful     = require("awful")
 local wibox     = require("wibox")
@@ -14,6 +16,7 @@ local rectshape = require("gears.shape").rectangle
 local redutil  = require("redflat.util")
 local redtitle = require("redflat.titlebar")
 local redtip   = require("redflat.float.hotkeys")
+local svgbox   = require("redflat.gauge.svgbox")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -24,15 +27,23 @@ local bartip = {}
 local function default_style()
 	local style = {
 		geometry      = { width = 400, height = 60 },
-		border_margin = { 10, 10, 10, 10 },
 		border_width  = 2,
 		font          = "Sans 14",
 		set_position  = nil,
 		names         = {},
 		keytip        = { geometry = { width = 600, height = 320 } },
 		shape         = rectshape,
+		margin        = { icon = { title = { 10, 10, 2, 2 }, state = { 10, 10, 2, 2 } } },
+		icon          = {
+			title    = redutil.base.placeholder({ txt = "[]" }),
+			active   = redutil.base.placeholder({ txt = "+" }),
+			absent   = redutil.base.placeholder({ txt = "!" }),
+			disabled = redutil.base.placeholder({ txt = "X" }),
+			hidden   = redutil.base.placeholder({ txt = "↓" }),
+			unknown  = redutil.base.placeholder({ txt = "?" }),
+		},
 		color         = { border = "#575757", text = "#aaaaaa", main = "#b1222b", wibox = "#202020",
-		                  gray = "#575757" },
+		                  gray = "#575757", icon = "#a0a0a0" },
 	}
 
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.bartip") or {})
@@ -97,14 +108,24 @@ function bartip:init()
 	--------------------------------------------------------------------------------
 	self.label = wibox.widget.textbox()
 	self.label:set_align("center")
-	self.wibox:set_widget(self.label)
-
 	self.label:set_font(style.font)
+
+	local title_icon = svgbox(self.style.icon.title)
+	title_icon:set_color(self.style.color.icon)
+
+	self.state_icon = svgbox()
+
+	--self.wibox:set_widget(self.label)
+	self.wibox:setup({
+		wibox.container.margin(title_icon, unpack(self.style.margin.icon.title)),
+		self.label,
+		wibox.container.margin(self.state_icon, unpack(self.style.margin.icon.state)),
+		layout = wibox.layout.align.horizontal
+	})
 
 	-- Keygrabber
 	--------------------------------------------------------------------------------
 	self.keygrabber = function(mod, key, event)
-		print(key)
 		if event == "release" then
 			for _, k in ipairs(self.keys.action) do
 				if redutil.key.match_grabber(k, mod, key) then k[3](); return end
@@ -125,27 +146,31 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 
 local function get_title_state(c)
-	if not c then return "" end
+	if not c then return "unknown" end
 
 	local model = redtitle.get_model(c)
-	local state = not model and "Disabled"
-	              or model.hidden and "Hidden"
-	              or model.cutted and "Cutted"
-	              or "Active"
+	local state = not model and "absent"
+	              or model.hidden and "disabled"
+	              or model.cutted and "hidden"
+	              or "active"
 
-	return state
+	return state, model and model.size or nil
 end
 
 -- Update
 --------------------------------------------------------------------------------
 function bartip:update()
 	local name = self.style.names[redtitle._index] or "Unknown"
-	local state = get_title_state(client.focus)
+	local state, size = get_title_state(client.focus)
+	local size_mark = size and string.format(" [%d]", size) or ""
 
 	self.label:set_markup(string.format(
-		'<span color="%s">%s</span> <span color="%s">[%s]</span>',
-		self.style.color.text, name, self.style.color.gray, state
+		'<span color="%s">%s</span><span color="%s">%s</span>',
+		self.style.color.text, name, self.style.color.gray, size_mark
 	))
+
+	self.state_icon:set_image(self.style.icon[state])
+	self.state_icon:set_color(state == "absent" and self.style.color.main or self.style.color.icon)
 end
 
 -- Show
