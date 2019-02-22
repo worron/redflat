@@ -130,7 +130,7 @@ function mail.new(style)
 	--------------------------------------------------------------------------------
 	if not mail.tp then
 		mail.tp = tooltip({ objects = { widg } }, style.tooltip)
-		mail.tp:set_text("0 new messages")
+		--mail.tp:set_text("0 new messages")
 	else
 		mail.tp:add_to_object(widg)
 	end
