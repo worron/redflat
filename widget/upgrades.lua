@@ -154,7 +154,7 @@ function upgrades:init(args, style)
 	--------------------------------------------------------------------------------
 
 	-- main image
-	local packbox = svgbox(style.wibox.icon.package, nil, style.color.icon)
+	self.packbox = svgbox(style.wibox.icon.package, nil, style.color.icon)
 
 	-- titlebar
 	self.titlebox = wibox.widget.textbox("0 UPDATES")
@@ -247,7 +247,7 @@ function upgrades:init(args, style)
 		{
 			nil,
 			{
-				nil, wibox.container.margin(packbox, unpack(style.wibox.margin.image)), nil,
+				nil, wibox.container.margin(self.packbox, unpack(style.wibox.margin.image)), nil,
 				expand = "outside",
 				layout = wibox.layout.align.horizontal
 			},
@@ -285,7 +285,8 @@ function upgrades:init(args, style)
 		if style.need_notify and (is_alert or force_notify) then
 			rednotify:show(redutil.table.merge({ text = c .. " updates available" }, style.notify))
 		end
-		self.titlebox:set_text(c .." UPDATES")
+		self.titlebox:set_text(c .. " UPDATES")
+		self.packbox:set_color(tonumber(c) > 0  and style.color.main or style.color.icon)
 
 		if self.tp then self.tp:set_text(c .. " updates") end
 		update_widget_colors()
