@@ -22,6 +22,7 @@ local tooltip = require("redflat.float.tooltip")
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
 local separator = require("redflat.gauge.separator")
+local redtip = require("redflat.float.hotkeys")
 
 
 -- Initialize tables for module
@@ -52,6 +53,7 @@ local function default_style()
 			margin = { close = { 0, 0, 0, 0 }, state = { 0, 0, 0, 0 }, title = { 0, 0, 0, 0 }, image = { 0, 0, 0, 0 } }
 		},
 		icon        = redutil.base.placeholder(),
+		keytip      = { geometry = { width = 400, height = 360 } },
 		notify      = {},
 		firstrun    = false,
 		need_notify = true,
@@ -74,6 +76,44 @@ tips[STATE.NORMAL] = "regular notifications"
 tips[STATE.DAILY]  = "postponed for a day"
 tips[STATE.WEEKLY] = "postponed for a week"
 tips[STATE.SILENT] = "notifications disabled"
+
+-- key bindings
+upgrades.keys = {}
+upgrades.keys.control = {
+	{
+		{}, "1", function() upgrades.set_mode(STATE.NORMAL) end,
+		{ description = "Regular notifications", group = "Notifications" }
+	},
+	{
+		{}, "2", function() upgrades.set_mode(STATE.DAILY) end,
+		{ description = "Postponed for a day", group = "Notifications" }
+	},
+	{
+		{}, "3", function() upgrades.set_mode(STATE.WEEKLY) end,
+		{ description = "Postponed for a week", group = "Notifications" }
+	},
+	{
+		{}, "4", function() upgrades.set_mode(STATE.SILENT) end,
+		{ description = "Notifications disabled", group = "Notifications" }
+	},
+}
+upgrades.keys.action = {
+	{
+		{}, "u", function() upgrades:update(true) end,
+		{ description = "Check updates", group = "Action" }
+	},
+	{
+		{}, "Escape", function() upgrades:hide() end,
+		{ description = "Close updates widget", group = "Action" }
+	},
+	{
+		{ "Mod4" }, "F1", function() redtip:show() end,
+		{ description = "Show hotkeys helper", group = "Action" }
+	},
+}
+
+upgrades.keys.all = awful.util.table.join(upgrades.keys.control, upgrades.keys.action)
+
 
 -- Initialize notify widbox
 -----------------------------------------------------------------------------------------------------------------------
@@ -155,17 +195,19 @@ function upgrades:init(args, style)
 	end
 
 	-- create control buttons
+	function self.set_mode(state)
+		if self.state ~= state then
+			self.state = state
+			self.time  = (state == STATE.DAILY or state == STATE.WEEKLY) and os.time() or 0
+			update_state()
+			update_widget_colors()
+		end
+	end
+
 	for state, k in pairs(STATE.keywords) do
 		statebox[k] = svgbox(style.wibox.icon[k:lower()], nil, style.color.gray)
 		statebox[k]:buttons(awful.util.table.join(
-			awful.button({}, 1, function()
-				if self.state ~= state then
-					self.state = state
-					self.time = (state == STATE.DAILY or state == STATE.WEEKLY) and os.time() or 0
-					update_state()
-					update_widget_colors()
-				end
-			end)
+			awful.button({}, 1, function() self.set_mode(state) end)
 		))
 
 		local area = wibox.layout.align.horizontal()
@@ -206,9 +248,19 @@ function upgrades:init(args, style)
 		layout = wibox.layout.align.vertical
 	})
 
+	-- Widget keygrabber
+	--------------------------------------------------------------------------------
+	self.keygrabber = function(mod, key, event)
+		if     event ~= "press" then return end
+		for _, k in ipairs(self.keys.all) do
+			if redutil.key.match_grabber(k, mod, key) then k[3](); return end
+		end
+	end
+
 	-- Start up setup
 	------------------------------------------------------------
 	self:load_state()
+	self:set_keys()
 	update_state()
 
 	-- Update info function
@@ -284,10 +336,14 @@ function upgrades:show()
 	redutil.placement.no_offscreen(self.wibox, self.style.screen_gap, screen[mouse.screen].workarea)
 
 	self.wibox.visible = true
+	awful.keygrabber.run(self.keygrabber)
+	redtip:set_pack("System updates", self.tip, self.style.keytip.column, self.style.keytip.geometry)
 end
 
 function upgrades:hide()
 	self.wibox.visible = false
+	awful.keygrabber.stop(self.keygrabber)
+	redtip:remove_pack()
 end
 
 function upgrades:toggle()
@@ -315,6 +371,18 @@ function upgrades:save_state()
 	local file = io.open(self.config, "w")
 	file:write(string.format("%d=%d", self.state, self.time))
 	file:close()
+end
+
+-- Set user hotkeys
+-----------------------------------------------------------------------------------------------------------------------
+function upgrades:set_keys(keys, layout)
+	local layout = layout or "all"
+	if keys then
+		self.keys[layout] = keys
+		if layout ~= "all" then self.keys.all = awful.util.table.join(self.keys.control, self.keys.action) end
+	end
+
+	self.tip = self.keys.all
 end
 
 -- Update upgrades info for every widget
