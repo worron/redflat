@@ -57,6 +57,13 @@ local function default_style()
 		notify      = {},
 		firstrun    = false,
 		need_notify = true,
+		tooltip     = {
+			base = {},
+			state = {
+				timeout = 3,
+				set_position = function(w) awful.placement.under_mouse(w) w.y = w.y - 30 end,
+			}
+		},
 		color       = { main = "#b1222b", icon = "#a0a0a0", wibox = "#202020", border = "#575757", gray = "#404040",
 		                urgent = "#32882d" }
 	}
@@ -155,10 +162,10 @@ function upgrades:init(args, style)
 	self.titlebox:set_align("center")
 
 	-- tip line
-	self.tipbox = wibox.widget.textbox()
-	self.tipbox:set_font(style.wibox.tip_font)
-	self.tipbox:set_align("center")
-	self.tipbox:set_forced_height(style.wibox.height.tip)
+	--self.tipbox = wibox.widget.textbox()
+	--self.tipbox:set_font(style.wibox.tip_font)
+	--self.tipbox:set_align("center")
+	--self.tipbox:set_forced_height(style.wibox.height.tip)
 
 	-- close button
 	local closebox = svgbox(style.wibox.icon.close, nil, style.color.icon)
@@ -177,7 +184,7 @@ function upgrades:init(args, style)
 		for k, box in pairs(statebox) do
 			box:set_color(STATE[k] == self.state and style.color.main or style.color.gray)
 		end
-		self.tipbox:set_markup(string.format('<span color="%s">%s</span>', style.color.gray, tips[self.state]))
+		--self.tipbox:set_markup(string.format('<span color="%s">%s</span>', style.color.gray, tips[self.state]))
 	end
 
 	local function check_alert()
@@ -206,6 +213,9 @@ function upgrades:init(args, style)
 
 	for state, k in pairs(STATE.keywords) do
 		statebox[k] = svgbox(style.wibox.icon[k:lower()], nil, style.color.gray)
+		local tp = tooltip({ objects = { statebox[k] } }, style.tooltip.state)
+		tp:set_text(tips[state])
+
 		statebox[k]:buttons(awful.util.table.join(
 			awful.button({}, 1, function() self.set_mode(state) end)
 		))
@@ -241,7 +251,8 @@ function upgrades:init(args, style)
 				expand = "outside",
 				layout = wibox.layout.align.horizontal
 			},
-			self.tipbox,
+			--self.tipbox,
+			nil,
 			layout = wibox.layout.align.vertical
 		},
 		wibox.container.margin(statearea, unpack(style.wibox.margin.state)),
@@ -316,7 +327,7 @@ function upgrades.new(style)
 	-- Set tooltip
 	--------------------------------------------------------------------------------
 	if not upgrades.tp then
-		upgrades.tp = tooltip({ objects = { widg } }, style.tooltip)
+		upgrades.tp = tooltip({ objects = { widg } }, style.tooltip.base)
 	else
 		upgrades.tp:add_to_object(widg)
 	end
