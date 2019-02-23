@@ -50,7 +50,7 @@ local function default_style()
 end
 
 -- key bindings
-bartip.keys = { close = { "Escape", "Super_L" } }
+bartip.keys = {}
 bartip.keys.bar = {
 	{
 		{ "Mod4" }, "b", function() redtitle.toggle(client.focus); bartip:update() end,
@@ -214,7 +214,6 @@ function bartip:set_keys(keys, layout)
 	end
 
 	self.tip = self.keys.all
-	--self.tip = awful.util.table.join(self.keys.all, self._fake_keys)
 end
 
 
