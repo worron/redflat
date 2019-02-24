@@ -25,15 +25,18 @@ local rectshape = require("gears.shape").rectangle
 local top = { keys = {} }
 
 -- key bindings
-top.keys.action = {
+top.keys.management = {
 	{
 		{}, "c", function() top:set_sort("cpu") end,
-		{ description = "Sort by CPU usage", group = "Action" }
+		{ description = "Sort by CPU usage", group = "Management" }
 	},
 	{
 		{}, "m", function() top:set_sort("mem") end,
-		{ description = "Sort by RAM usage", group = "Action" }
+		{ description = "Sort by RAM usage", group = "Management" }
 	},
+}
+
+top.keys.action = {
 	{
 		{}, "k", function() top.kill_selected() end,
 		{ description = "Kill process", group = "Action" }
@@ -48,12 +51,12 @@ top.keys.action = {
 	},
 }
 
-top.keys.all = awful.util.table.join({}, top.keys.action)
+top.keys.all = awful.util.table.join(top.keys.management, top.keys.action)
 
 top._fake_keys = {
 	{
 		{}, "N", nil,
-		{ description = "Select process by key", group = "Action",
+		{ description = "Select process by key", group = "Management",
 		  keyset = { "1", "2", "3", "4", "5", "6", "7", "8", "9" } }
 	},
 }
@@ -366,7 +369,7 @@ function top:set_keys(keys, layout)
 	local layout = layout or "all"
 	if keys then
 		self.keys[layout] = keys
-		if layout ~= "all" then self.keys.all = awful.util.table.join({}, self.keys.action) end
+		if layout ~= "all" then self.keys.all = awful.util.table.join(self.keys.management, self.keys.action) end
 	end
 
 	self.tip = awful.util.table.join(self.keys.all, self._fake_keys)
