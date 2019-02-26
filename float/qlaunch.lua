@@ -171,13 +171,13 @@ local function build_state_indicator(style)
 
 	-- Fit
 	------------------------------------------------------------
-	function widg:fit(context, width, height)
+	function widg:fit(_, width, height)
 		return data.width or width, data.height or height
 	end
 
 	-- Draw
 	------------------------------------------------------------
-	function widg:draw(context, cr, width, height)
+	function widg:draw(_, cr, width, height)
 		local n = #data.state
 		local x0 = (width - n * style.state.size - (n - 1) * style.state.gap) / 2
 		local y0 = (height - style.state.size) / 2
@@ -282,6 +282,7 @@ local function build_switcher(keys, style)
 			self.items[key].svgbox:set_image(icon)
 			if style.recoloring then self.items[key].svgbox:set_color(style.color.icon) end
 		end
+		self:set_state(store)
 	end
 
 	function widg:set_state(store)
@@ -296,7 +297,7 @@ local function build_switcher(keys, style)
 		self.selected = nil
 	end
 
-	function widg:check_key(store, key, mod)
+	function widg:check_key(key, mod)
 		if self.items[key] then
 			if self.selected then self.items[self.selected].background:set_bg(style.color.bg) end
 			self.items[key].background:set_bg(style.color.main)
@@ -360,7 +361,7 @@ function qlaunch:init(args, style)
 		for _, k in ipairs(self.keys.all) do
 			if redutil.key.match_grabber(k, mod, key) then k[3](); return end
 		end
-		self.switcher:check_key(self.store, key, mod)
+		self.switcher:check_key(key, mod)
 	end
 
 	-- Connect additional signals
@@ -445,8 +446,8 @@ function qlaunch:set_new_app(key, c)
 		redflat.float.notify:show(note)
 	end
 
-	self.switcher:update(self.store, self.icon_db)
 	self.switcher:reset()
+	self.switcher:update(self.store, self.icon_db)
 end
 
 -- Save information about last focused client in widget store
