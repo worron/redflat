@@ -54,7 +54,7 @@ function tooltip.new(args, style)
 
 	-- Construct tooltip window with wibox and textbox
 	--------------------------------------------------------------------------------
-	local ttp = { wibox = wibox({ type = "tooltip" }) }
+	local ttp = { wibox = wibox({ type = "tooltip" }), tip = nil }
 	local tb = wibox.widget.textbox()
 	ttp.widget = tb
 	ttp.wibox:set_widget(wibox.container.margin(tb, unpack(style.margin)))
@@ -110,12 +110,16 @@ function tooltip.new(args, style)
 	end
 
 	function ttp:set_text(text)
-		self.widget:set_text(text)
-		if self.wibox.visible then
-			self:set_geometry()
-			self.wibox.x = mouse.coords().x - self.wibox.width/2
-			awful.placement.no_offscreen(self.wibox)
-	   end
+		if self.tip ~= text then
+			self.widget:set_text(text)
+			self.tip = text
+
+			if self.wibox.visible then
+				self:set_geometry()
+				self.wibox.x = mouse.coords().x - self.wibox.width / 2
+				awful.placement.no_offscreen(self.wibox)
+			end
+		end
 	end
 
 	function ttp:add_to_object(object)
