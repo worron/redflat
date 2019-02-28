@@ -551,11 +551,12 @@ function system.transmission.parse(output)
 			end
 		else
 			-- get torrent info
-			local prog, status = string.match(line,
-				"%s+%d+%s+(%d+)%%%s+[%d%.]+%s%a+%s+.+%s+[%d%.]+%s+[%d%.]+%s+[%d%.]+%s+(%a+)"
+			local prog, status, name = string.match(line,
+				"%s+%d+%s+(%d+)%%%s+[%d%.]+%s%a+%s+.+%s+[%d%.]+%s+[%d%.]+%s+[%d%.]+%s+(%a+)%s+(.+)"
 			)
+
 			if prog and status then
-				table.insert(torrent.list, { prog = prog, status = status })
+				table.insert(torrent.list, { prog = prog, status = status, name = name })
 
 				if     status == "Seeding"     then torrent.seed.num = torrent.seed.num + 1
 				elseif status == "Downloading" then torrent.dnld.num = torrent.dnld.num + 1
@@ -571,7 +572,9 @@ function system.transmission.parse(output)
 	-- Format output special for redflat desktop widget
 	------------------------------------------------------------
 	local sorted_prog = {}
-	for _, t in ipairs(torrent.list) do table.insert(sorted_prog , t.prog) end
+	for _, t in ipairs(torrent.list) do
+		table.insert(sorted_prog, { value = t.prog, text = string.format("%d%% %s", t.prog, t.name) })
+	end
 
 	return {
 		bars = sorted_prog,
@@ -663,8 +666,11 @@ end
 -- CPU and memory usage formatted special for desktop widget
 --------------------------------------------------------------------------------
 function system.dformatted.cpumem(storage)
-	local mem   = system.memory_info()
-	local cores = system.cpu_usage(storage).core
+	local mem = system.memory_info()
+	local cores = {}
+	for i, v in ipairs(system.cpu_usage(storage).core) do
+		table.insert(cores, { value = v, text = string.format("CORE%d %s%%", i - 1, v) })
+	end
 
 	return {
 		bars = cores,

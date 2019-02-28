@@ -44,12 +44,18 @@ function barpack.new(num, style)
 	pack.layout:set_middle(flex_horizontal)
 
 	-- setup functions
-	function pack:set_values(values, n)
+	function pack:set_values(values, n, tip)
 		if n then
-			if crn[n] then crn[n]:set_value(values) end
+			if crn[n] then
+				crn[n]:set_value(values)
+				if tip then crn[n]:set_tip(tip) end
+			end
 		else
 			for i, v in ipairs(values) do
-				if crn[i] then crn[i]:set_value(v) end
+				if crn[i] then
+					crn[i]:set_value(v)
+					if tip then crn[n]:set_tip(tip) end
+				end
 			end
 		end
 	end

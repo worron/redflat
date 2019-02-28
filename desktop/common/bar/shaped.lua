@@ -13,6 +13,7 @@ local color = require("gears.color")
 local beautiful = require("beautiful")
 
 local redutil = require("redflat.util")
+local tooltip = require("redflat.float.tooltip")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -27,6 +28,8 @@ local function default_style()
 		width     = nil,
 		height    = nil,
 		autoscale = false,
+		show      = { tooltip = false },
+		tooltip   = {},
 		shape     = "corner",
 		color     = { main = "#b1222b", gray = "#404040" }
 	}
@@ -83,6 +86,12 @@ function progressbar.new(style)
 	--------------------------------------------------------------------------------
 	local shapewidg = wibox.widget.base.make_widget()
 
+	-- tooltip
+	if style.show.tooltip then
+		shapewidg._tp = tooltip({ objects = { shapewidg } }, style.tooltip)
+	end
+
+	-- setup
 	function shapewidg:set_value(x)
 		if style.autoscale then
 			if x > maxm then maxm = x end
@@ -91,6 +100,10 @@ function progressbar.new(style)
 		if cx > 1 then cx = 1 end
 		data.value = cx
 		self:emit_signal("widget::updated")
+	end
+
+	function shapewidg:set_tip(txt)
+		if self._tp then self._tp:set_text(txt) end
 	end
 
 	function shapewidg:fit(_, width, height)
