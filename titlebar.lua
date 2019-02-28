@@ -394,19 +394,25 @@ end
 
 -- Client name indicator
 ------------------------------------------------------------
-function titlebar.label(c, style)
+function titlebar.label(c, style, is_highlighted)
 	local style = redutil.table.merge(default_style, style or {})
 	local w = wibox.widget.textbox()
 	w:set_font(style.font)
 	w:set_align("center")
+	w._current_color = style.color.text
 
 	local function update()
 		local txt = awful.util.escape(c.name or "Unknown")
-		w:set_markup(string.format('<span color="%s">%s</span>', style.color.text, txt))
+		w:set_markup(string.format('<span color="%s">%s</span>', w._current_color, txt))
 	end
 	c:connect_signal("property::name", update)
-	update()
 
+	if is_highlighted then
+		c:connect_signal("focus", function() w._current_color = style.color.main; update() end)
+		c:connect_signal("unfocus", function() w._current_color = style.color.text; update()end)
+	end
+
+	update()
 	return w
 end
 
