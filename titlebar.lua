@@ -280,25 +280,21 @@ titlebar.button = {}
 -- Client mark blank
 ------------------------------------------------------------
 function titlebar.mark.base(_, style)
-	local style = redutil.table.merge(default_mark_style, style or {})
---	local sigpack = sigpack or {}
-
-	-- local data
-	local data = {
-		color = style.color.gray
-	}
 
 	-- build widget
 	local widg = wibox.widget.base.make_widget()
+	widg._data = { color = style.color.gray }
+	widg._style = redutil.table.merge(default_mark_style, style or {})
 
+	-- widget setup
 	function widg:fit(_, _, width, height)
 		return width, height
 	end
 
 	function widg:draw(_, cr, width, height)
-		local d = math.tan(style.angle) * height
+		local d = math.tan(self._style.angle) * height
 
-		cr:set_source(color(data.color))
+		cr:set_source(color(self._data.color))
 		cr:move_to(0, height)
 		cr:rel_line_to(d, - height)
 		cr:rel_line_to(width - d, 0)
@@ -310,7 +306,7 @@ function titlebar.mark.base(_, style)
 
 	-- user function
 	function widg:set_active(active)
-		data.color = active and style.color.main or style.color.gray
+		self._data.color = active and style.color.main or style.color.gray
 		self:emit_signal("widget::updated")
 	end
 
@@ -344,10 +340,9 @@ function titlebar.button.base(icon, style, is_inactive)
 	local style = redutil.table.merge(default_button_style, style or {})
 
 	-- widget
-	local widg = svgbox()
+	local widg = svgbox(style.list[icon] or style.list.unknown)
 	widg._current_color = style.color.icon
 	widg.is_under_mouse = false
-	widg:set_image(style.list[icon] or style.list.unknown)
 
 	-- state
 	function widg:set_active(active)
@@ -366,6 +361,7 @@ function titlebar.button.base(icon, style, is_inactive)
 		widg:connect_signal("mouse::leave", function() update(false) end)
 	end
 
+	widg:set_active(false)
 	return widg
 end
 
