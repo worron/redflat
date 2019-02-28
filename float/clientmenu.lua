@@ -336,7 +336,7 @@ function clientmenu:init(style)
 			{ "Move to tag", { items = movemenu_items, theme = style.tagmenu } },
 			{ "Add to tag",  { items = addmenu_items,  theme = style.tagmenu } },
 			menusep,
-			{ widget = stateline }
+			{ widget = stateline, focus = true }
 		}
 	})
 

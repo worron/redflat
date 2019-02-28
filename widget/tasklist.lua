@@ -573,7 +573,7 @@ function redtasklist.winmenu:init(style)
 			{ "Minimize",    minimize, nil, style.icon.minimize or style.icon.unknown },
 			{ "Close",       close,    nil, style.icon.close or style.icon.unknown },
 			menusep,
-			{ widget = stateline }
+			{ widget = stateline, focus = true }
 		}
 	})
 
