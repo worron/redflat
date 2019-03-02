@@ -33,7 +33,8 @@ local function default_style()
 		geometry     = { width = 620, height = 120 },
 		margin       = { 20, 20, 40, 40 },
 		border_width = 2,
-		color        = { border = "#575757", wibox = "#202020", naughty = "#32882d" },
+		naughty      = {},
+		color        = { border = "#575757", wibox = "#202020" },
 		shape        = rectshape
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.prompt") or {})
@@ -83,10 +84,8 @@ function floatprompt:run()
 		exe_callback = function(input)
 			local result = awful.spawn(input)
 			if type(result) == "string" then
-				naughty.notify({
-					preset = naughty.config.presets.critical, title = "Prompt", text = result,
-					border_color = self.style.color.naughty
-				})
+				local notify_args = redutil.table.merge({ title = "Prompt", text = result }, self.style.naughty)
+				naughty.notify(notify_args)
 			end
 		end,
 		history_path = awful.util.getdir("cache") .. "/history",

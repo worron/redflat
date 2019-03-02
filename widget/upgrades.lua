@@ -170,7 +170,7 @@ function upgrades:init(args, style)
 	-- close button
 	local closebox = svgbox(style.wibox.icon.close, nil, style.color.icon)
 	closebox:buttons(awful.util.table.join(awful.button({}, 1, function() self:hide() end)))
-	closebox:connect_signal("mouse::enter", function() closebox:set_color(style.color.urgent) end)
+	closebox:connect_signal("mouse::enter", function() closebox:set_color(style.color.main) end)
 	closebox:connect_signal("mouse::leave", function() closebox:set_color(style.color.icon) end)
 
 	-- Control buttons
