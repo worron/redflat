@@ -274,6 +274,11 @@ function upgrades:init(args, style)
 	self:set_keys()
 	update_state()
 
+	-- Set tooltip
+	--------------------------------------------------------------------------------
+	self.tp = tooltip(nil, style.tooltip.base)
+	self.tp:set_text("?")
+
 	-- Update info function
 	--------------------------------------------------------------------------------
 	local function update_count(output)
@@ -325,13 +330,7 @@ function upgrades.new(style)
 	widg:set_color(style.color.icon)
 	table.insert(upgrades.objects, widg)
 
-	-- Set tooltip
-	--------------------------------------------------------------------------------
-	if not upgrades.tp then
-		upgrades.tp = tooltip({ objects = { widg } }, style.tooltip.base)
-	else
-		upgrades.tp:add_to_object(widg)
-	end
+	upgrades.tp:add_to_object(widg)
 
 	--------------------------------------------------------------------------------
 	return widg
