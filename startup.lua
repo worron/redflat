@@ -15,7 +15,7 @@ local redutil = require("redflat.util")
 local startup = {}
 
 startup.path = "/tmp/awesome-exit-reason"
-startup.bin  = "awesome-client"
+--startup.bin  = "awesome-client"
 
 local REASON = { RESTART = "restart", EXIT =  "exit" }
 
@@ -29,13 +29,12 @@ function startup.stamp(reason_restart)
 	file:close()
 end
 
--- check if it is first start
-function startup.is_startup()
-	local reason = redutil.read.file(startup.path)
-	return not reason or reason == REASON.EXIT
-end
-
 function startup:activate()
+	-- check if it is first start
+	local reason = redutil.read.file(startup.path)
+	self.is_startup = not reason or reason == REASON.EXIT
+
+	-- save reason on exit
 	awesome.connect_signal("exit",
 	   function(is_restart) startup.stamp(is_restart and REASON.RESTART or REASON.EXIT) end
 	)
