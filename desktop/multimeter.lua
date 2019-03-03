@@ -38,7 +38,6 @@ local function default_style()
 	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.multimeter") or {})
 end
 
-local default_geometry = { width = 200, height = 100, x = 100, y = 100 }
 local default_args = {
 	topbars = { num = 1, maxm = 1},
 	lines   = { maxm = 1 },
@@ -81,7 +80,7 @@ end
 
 -- Create a new widget
 -----------------------------------------------------------------------------------------------------------------------
-function multim.new(args, geometry, style)
+function multim.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
@@ -90,16 +89,13 @@ function multim.new(args, geometry, style)
 	local last_state
 
 	local args = redutil.table.merge(default_args, args or {})
-	local geometry = redutil.table.merge(default_geometry, geometry or {})
+	--local geometry = redutil.table.merge(default_geometry, geometry or {})
 	local style = redutil.table.merge(default_style(), style or {})
 
 	local lines_style = redutil.table.merge(style.lines, { progressbar = { color = style.color } })
 	local upbar_style = redutil.table.merge(style.upbar, { color = style.color })
 
-	-- Create wibox
-	--------------------------------------------------------------------------------
-	dwidget.wibox = wibox({ type = "desktop", visible = true, bg = style.color.wibox })
-	dwidget.wibox:geometry(geometry)
+	dwidget.style = style
 
 	-- Construct layouts
 	--------------------------------------------------------------------------------
@@ -112,7 +108,7 @@ function multim.new(args, geometry, style)
 		icon:set_color(style.color.gray)
 	end
 
-	local area = wibox.widget({
+	dwidget.area = wibox.widget({
 		{
 			icon and not style.icon.full and wibox.container.margin(icon, unpack(style.icon.margin)),
 			upright.layout,
@@ -126,15 +122,13 @@ function multim.new(args, geometry, style)
 	})
 
 	if icon and style.icon.full then
-		area = wibox.widget({
+		dwidget.area = wibox.widget({
 			wibox.container.margin(icon, unpack(style.icon.margin)),
-			area,
+			dwidget.area,
 			nil,
 			layout = wibox.layout.align.horizontal
 		})
 	end
-
-	dwidget.wibox:set_widget(area)
 
 	for i, label in ipairs(style.labels) do
 		lines:set_label(label, i)

@@ -33,7 +33,6 @@ local function default_style()
 	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.calendar") or {})
 end
 
-local default_geometry = { width = 120, height = 720, x = 0, y = 0 }
 local days_in_month = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
 
 -- Support functions
@@ -136,25 +135,21 @@ end
 
 -- Create a new widget
 -----------------------------------------------------------------------------------------------------------------------
-function calendar.new(args, geometry, style)
+function calendar.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local dwidget = {}
 	local args = args or {}
-	local geometry = redutil.table.merge(default_geometry, geometry or {})
 	local style = redutil.table.merge(default_style(), style or {})
 	local timeout = args.timeout or 300
 
-	-- Create wibox
-	--------------------------------------------------------------------------------
-	dwidget.wibox = wibox({ type = "desktop", visible = true, bg = style.color.wibox })
-	dwidget.wibox:geometry(geometry)
+	dwidget.style = style
 
 	-- Create calendar widget
 	--------------------------------------------------------------------------------
 	dwidget.calendar = daymarks(style)
-	dwidget.wibox:set_widget(dwidget.calendar)
+	dwidget.area = wibox.container.margin(dwidget.calendar)
 
 	-- Set update timer
 	--------------------------------------------------------------------------------
@@ -165,31 +160,32 @@ function calendar.new(args, geometry, style)
 
 	-- Drawing date label under mouse
 	--------------------------------------------------------------------------------
-	if style.show_pointer then
-		dwidget.wibox:connect_signal("mouse::move", function(_, x, y)
-			local show_poiter = false
-			local index
-
-			if x > dwidget.calendar._data.label_x then
-				for i = 1, dwidget.calendar._data.days do
-					local cy = y - (i - 1) * (dwidget.calendar._data.gap + style.mark.height)
-					if cy > 0 and cy < style.mark.height then
-						show_poiter = true
-						index = i
-						break
-					end
-				end
-			end
-
-			if dwidget.calendar._data.pointer.show ~= show_poiter then
-				dwidget.calendar:update_pointer(show_poiter, index)
-			end
-		end)
-
-		dwidget.wibox:connect_signal("mouse::leave", function()
-			if dwidget.calendar._data.pointer.show then dwidget.calendar:update_pointer(false) end
-		end)
-	end
+	-- TODO: fix this
+	--if style.show_pointer then
+	--	dwidget.area:connect_signal("mouse::move", function(_, x, y)
+	--		local show_poiter = false
+	--		local index
+	--
+	--		if x > dwidget.calendar._data.label_x then
+	--			for i = 1, dwidget.calendar._data.days do
+	--				local cy = y - (i - 1) * (dwidget.calendar._data.gap + style.mark.height)
+	--				if cy > 0 and cy < style.mark.height then
+	--					show_poiter = true
+	--					index = i
+	--					break
+	--				end
+	--			end
+	--		end
+	--
+	--		if dwidget.calendar._data.pointer.show ~= show_poiter then
+	--			dwidget.calendar:update_pointer(show_poiter, index)
+	--		end
+	--	end)
+	--
+	--	dwidget.area:connect_signal("mouse::leave", function()
+	--		if dwidget.calendar._data.pointer.show then dwidget.calendar:update_pointer(false) end
+	--	end)
+	--end
 
 	--------------------------------------------------------------------------------
 	return dwidget

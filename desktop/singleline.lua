@@ -36,30 +36,25 @@ local function default_style()
 	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.singleline") or {})
 end
 
-local default_geometry = { width = 200, height = 100, x = 100, y = 100 }
 local default_args = { timeout = 60, sensors = {} }
 
 -- Create a new widget
 -----------------------------------------------------------------------------------------------------------------------
-function sline.new(args, geometry, style)
+function sline.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local dwidget = {}
 	local args = redutil.table.merge(default_args, args or {})
-	local geometry = redutil.table.merge(default_geometry, geometry or {})
 	local style = redutil.table.merge(default_style(), style or {})
 
-	-- Create wibox
-	--------------------------------------------------------------------------------
-	dwidget.wibox = wibox({ type = "desktop", visible = true, bg = style.color.wibox })
-	dwidget.wibox:geometry(geometry)
+	dwidget.style = style
 
-	-- initialize layouts
+	-- Initialize layouts
+	--------------------------------------------------------------------------------
 	dwidget.item = {}
 	dwidget.icon = {}
-	dwidget.layout = wibox.layout.align.horizontal()
-	dwidget.wibox:set_widget(dwidget.layout)
+	dwidget.area = wibox.layout.align.horizontal()
 
 	local mid = wibox.layout.flex.horizontal()
 
@@ -82,7 +77,7 @@ function sline.new(args, geometry, style)
 		})
 
 		if i == 1 then
-			dwidget.layout:set_left(boxlayout)
+			dwidget.area:set_left(boxlayout)
 		else
 			local space = wibox.layout.align.horizontal()
 			space:set_right(boxlayout)
@@ -90,7 +85,7 @@ function sline.new(args, geometry, style)
 		end
 	end
 
-	dwidget.layout:set_middle(mid)
+	dwidget.area:set_middle(mid)
 
 	-- Update info function
 	--------------------------------------------------------------------------------

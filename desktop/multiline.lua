@@ -38,25 +38,20 @@ local function default_style()
 	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.multiline") or {})
 end
 
-local default_geometry = { width = 200, height = 100, x = 100, y = 100 }
 local default_args = { timeout = 60, sensors = {} }
 
 -- Create a new widget
 -----------------------------------------------------------------------------------------------------------------------
-function dashpack.new(args, geometry, style)
+function dashpack.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local dwidget = {}
 	local args = redutil.table.merge(default_args, args or {})
-	local geometry = redutil.table.merge(default_geometry, geometry or {})
 	local style = redutil.table.merge(default_style(), style or {})
 	local alert_data = { counter = 0, state = false }
 
-	-- Create wibox
-	--------------------------------------------------------------------------------
-	dwidget.wibox = wibox({ type = "desktop", visible = true, bg = style.color.wibox })
-	dwidget.wibox:geometry(geometry)
+	dwidget.style = style
 
 	-- initialize progressbar lines
 	local lines_style = redutil.table.merge(style.lines, { color = style.color })
@@ -67,12 +62,11 @@ function dashpack.new(args, geometry, style)
 		dwidget.icon = svgbox(style.icon.image)
 		dwidget.icon:set_color(style.color.gray)
 
-		local align = wibox.layout.align.horizontal()
-		align:set_middle(wibox.container.margin(pack.layout, unpack(style.margin)))
-		align:set_left(wibox.container.margin(dwidget.icon, unpack(style.icon.margin)))
-		dwidget.wibox:set_widget(align)
+		dwidget.area = wibox.layout.align.horizontal()
+		dwidget.area:set_middle(wibox.container.margin(pack.layout, unpack(style.margin)))
+		dwidget.area:set_left(wibox.container.margin(dwidget.icon, unpack(style.icon.margin)))
 	else
-		dwidget.wibox:set_widget(wibox.container.margin(pack.layout, unpack(style.margin)))
+		dwidget.area = wibox.container.margin(pack.layout, unpack(style.margin))
 	end
 
 	for i, sensor in ipairs(args.sensors) do

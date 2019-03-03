@@ -48,7 +48,6 @@ local default_args = {
 	meter_function = system.net_speed
 }
 
-local default_geometry = { width = 200, height = 100, x = 100, y = 100 }
 local default_maxspeed = { up = 10 * 1024, down = 10 * 1024 }
 
 
@@ -138,7 +137,7 @@ end
 
 -- Create a new speed meter widget
 -----------------------------------------------------------------------------------------------------------------------
-function speedmeter.new(args, geometry, style)
+function speedmeter.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
@@ -147,7 +146,6 @@ function speedmeter.new(args, geometry, style)
 	local last = {}
 
 	local args = redutil.table.merge(default_args, args or {})
-	local geometry = redutil.table.merge(default_geometry, geometry or {})
 	local style = redutil.table.merge(default_style(), style or {})
 	local maxspeed = redutil.table.merge(default_maxspeed, args.maxspeed or {})
 
@@ -157,17 +155,14 @@ function speedmeter.new(args, geometry, style)
 		chart = redutil.table.merge(style.chart, { autoscale = args.autoscale, color = style.color.gray })
 	}
 
-	-- Create wibox
-	--------------------------------------------------------------------------------
-	dwidget.wibox = wibox({ type = "desktop", visible = true, bg = style.color.wibox })
-	dwidget.wibox:geometry(geometry)
+	dwidget.style = style
 
 	-- Construct indicators
 	--------------------------------------------------------------------------------
 	local up_widget, up_layout, up_icon = speed_line(style.images[1], maxspeed.up, elements_style, style)
 	local down_widget, down_layout, down_icon = speed_line(style.images[2], maxspeed.down, elements_style, style)
 
-	dwidget.wibox:setup({
+	dwidget.area = wibox.widget({
 		up_layout, nil, down_layout,
 		layout = wibox.layout.align.vertical
 	})
