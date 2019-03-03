@@ -13,6 +13,7 @@ local tonumber = tonumber
 local awful = require("awful")
 local beautiful = require("beautiful")
 local timer = require("gears.timer")
+local naughty = require("naughty")
 
 local rednotify = require("redflat.float.notify")
 local tooltip = require("redflat.float.tooltip")
@@ -72,6 +73,11 @@ function mail:init(args, style)
 
 	self.style = style
 
+	-- Set tooltip
+	--------------------------------------------------------------------------------
+	self.tp = tooltip(nil, style.tooltip)
+	self.tp:set_text("?")
+
 	-- Update info function
 	--------------------------------------------------------------------------------
 	local function mail_count(output)
@@ -116,6 +122,11 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function mail.new(style)
 
+	if not mail.style then
+		naughty.notify({ title = "Warning!", text = "Mail widget doesn't configured" })
+		mail:init({})
+	end
+
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local style = redutil.table.merge(mail.style, style or {})
@@ -128,12 +139,7 @@ function mail.new(style)
 
 	-- Set tooltip
 	--------------------------------------------------------------------------------
-	if not mail.tp then
-		mail.tp = tooltip({ objects = { widg } }, style.tooltip)
-		--mail.tp:set_text("0 new messages")
-	else
-		mail.tp:add_to_object(widg)
-	end
+	mail.tp:add_to_object(widg)
 
 	--------------------------------------------------------------------------------
 	return widg
