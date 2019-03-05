@@ -34,7 +34,6 @@ local separator = require("redflat.gauge.separator")
 local redmenu = require("redflat.menu")
 local svgbox = require("redflat.gauge.svgbox")
 local dfparser = require("redflat.service.dfparser")
-local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -94,7 +93,7 @@ local function default_style()
 		sl_highlight = false, -- single line highlight
 		color        = { border = "#575757", text = "#aaaaaa", main = "#b1222b", highlight = "#eeeeee",
 		                 wibox = "#202020", gray = "#575757", urgent = "#32882d" },
-		shape        = rectshape
+		shape        = nil
 
 	}
 	style.winmenu.menu = {

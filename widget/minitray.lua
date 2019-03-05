@@ -22,7 +22,6 @@ local beautiful = require("beautiful")
 local redutil = require("redflat.util")
 local dotcount = require("redflat.gauge.graph.dots")
 local tooltip = require("redflat.float.tooltip")
-local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables and wibox
 -----------------------------------------------------------------------------------------------------------------------
@@ -38,7 +37,7 @@ local function default_style()
 		screen_gap   = 0,
 		border_width = 2,
 		color        = { wibox = "#202020", border = "#575757" },
-		shape        = rectshape
+		shape        = nil
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.minitray") or {})
 end

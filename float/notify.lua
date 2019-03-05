@@ -15,7 +15,6 @@ local timer = require("gears.timer")
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
 local progressbar = require("redflat.gauge.graph.bar")
-local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -37,7 +36,7 @@ local function default_style()
 		icon            = nil,
 		progressbar     = {},
 		color           = { border = "#575757", icon = "#aaaaaa", wibox = "#202020" },
-		shape           = rectshape
+		shape           = nil
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.notify") or {})
 end

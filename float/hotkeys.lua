@@ -16,7 +16,6 @@ local timer = require("gears.timer")
 
 local redflat = require("redflat")
 local redutil = require("redflat.util")
-local rectshape = require("gears.shape").rectangle
 
 
 -- Initialize tables for module
@@ -44,7 +43,7 @@ local function default_style()
 		separator     = {},
 		color         = { border = "#575757", text = "#aaaaaa", main = "#b1222b", wibox = "#202020",
 		                  gray = "#575757" },
-		shape         = rectshape
+		shape         = nil
 	}
 
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.hotkeys") or {})

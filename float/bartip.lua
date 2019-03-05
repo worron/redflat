@@ -11,7 +11,6 @@ local unpack = unpack or table.unpack
 local beautiful = require("beautiful")
 local awful     = require("awful")
 local wibox     = require("wibox")
-local rectshape = require("gears.shape").rectangle
 
 local redutil  = require("redflat.util")
 local redtitle = require("redflat.titlebar")
@@ -32,7 +31,7 @@ local function default_style()
 		set_position  = nil,
 		names         = {},
 		keytip        = { geometry = { width = 600, height = 320 } },
-		shape         = rectshape,
+		shape         = nil,
 		margin        = { icon = { title = { 10, 10, 2, 2 }, state = { 10, 10, 2, 2 } } },
 		icon          = {
 			title    = redutil.base.placeholder({ txt = "[]" }),

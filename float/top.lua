@@ -17,7 +17,6 @@ local redutil = require("redflat.util")
 local system = require("redflat.system")
 local decoration = require("redflat.float.decoration")
 local redtip = require("redflat.float.hotkeys")
-local rectshape = require("gears.shape").rectangle
 
 
 -- Initialize tables for module
@@ -82,7 +81,7 @@ local function default_style()
 		unit          = { { "KB", -1 }, { "MB", 1024 }, { "GB", 1024^2 } },
 		color         = { border = "#575757", text = "#aaaaaa", highlight = "#eeeeee", main = "#b1222b",
 		                  bg = "#161616", bg_second = "#181818", wibox = "#202020" },
-		shape         = rectshape
+		shape         = nil
 
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.top") or {})

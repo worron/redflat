@@ -20,7 +20,6 @@ local naughty = require("naughty")
 
 local redutil = require("redflat.util")
 local decoration = require("redflat.float.decoration")
-local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -35,7 +34,7 @@ local function default_style()
 		border_width = 2,
 		naughty      = {},
 		color        = { border = "#575757", wibox = "#202020" },
-		shape        = rectshape
+		shape        = nil
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.prompt") or {})
 end

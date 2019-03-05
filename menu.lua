@@ -37,7 +37,6 @@ local unpack = unpack or table.unpack
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
 local redtip = require("redflat.float.hotkeys")
-local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -67,7 +66,7 @@ local function default_theme()
 		color        = { border = "#575757", text = "#aaaaaa", highlight = "#eeeeee",
 		                 main = "#b1222b", wibox = "#202020",
 		                 submenu_icon = nil, right_icon = nil, left_icon = nil },
-		shape        = rectshape
+		shape        = nil
 	}
 	return redutil.table.merge(style, beautiful.menu or {})
 end

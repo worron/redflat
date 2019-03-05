@@ -20,7 +20,6 @@ local redutil = require("redflat.util")
 local progressbar = require("redflat.gauge.graph.bar")
 local dashcontrol = require("redflat.gauge.graph.dash")
 local svgbox = require("redflat.gauge.svgbox")
-local rectshape = require("gears.shape").rectangle
 
 -- Initialize and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -82,7 +81,7 @@ local function default_style()
 		},
 		color          = { border = "#575757", main = "#b1222b",
 		                   wibox = "#202020", gray = "#575757", icon = "#a0a0a0" },
-		shape          = rectshape
+		shape          = nil
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.player") or {})
 end

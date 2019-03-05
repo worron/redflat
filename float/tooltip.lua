@@ -21,7 +21,6 @@ local beautiful = require("beautiful")
 local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
-local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -37,7 +36,7 @@ local function default_style()
 		border_width = 2,
 		set_position = nil,
 		color        = { border = "#404040", text = "#aaaaaa", wibox = "#202020" },
-		shape        = rectshape
+		shape        = nil
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.tooltip") or {})
 end

@@ -41,6 +41,7 @@ local function default_style()
 			tip_font     = "Sans 10",
 			set_position = nil,
 			separator    = {},
+			shape        = nil,
 			icon         = {
 				package = redutil.base.placeholder(),
 				close   = redutil.base.placeholder({ txt = "X" }),
@@ -144,6 +145,7 @@ function upgrades:init(args, style)
 	self.wibox = wibox({
 		ontop        = true,
 		bg           = style.color.wibox,
+		shape        = style.shape,
 		border_width = style.wibox.border_width,
 		border_color = style.color.border
 	})
