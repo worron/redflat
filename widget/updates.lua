@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------------------------------------------------
---                                             RedFlat upgrades widget                                               --
+--                                              RedFlat updates widget                                               --
 -----------------------------------------------------------------------------------------------------------------------
 -- Show if system updates available using apt-get
 -----------------------------------------------------------------------------------------------------------------------
@@ -28,7 +28,7 @@ local redtip = require("redflat.float.hotkeys")
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
 -- TODO: weak table for all multi panel widget
-local upgrades = { objects = {}, mt = {} }
+local updates = { objects = {}, mt = {} }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
@@ -68,7 +68,7 @@ local function default_style()
 		color       = { main = "#b1222b", icon = "#a0a0a0", wibox = "#202020", border = "#575757", gray = "#404040",
 		                urgent = "#32882d" }
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.upgrades") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.updates") or {})
 end
 
 
@@ -86,32 +86,32 @@ tips[STATE.WEEKLY] = "postponed for a week"
 tips[STATE.SILENT] = "notifications disabled"
 
 -- key bindings
-upgrades.keys = {}
-upgrades.keys.control = {
+updates.keys = {}
+updates.keys.control = {
 	{
-		{}, "1", function() upgrades.set_mode(STATE.NORMAL) end,
+		{}, "1", function() updates.set_mode(STATE.NORMAL) end,
 		{ description = "Regular notifications", group = "Notifications" }
 	},
 	{
-		{}, "2", function() upgrades.set_mode(STATE.DAILY) end,
+		{}, "2", function() updates.set_mode(STATE.DAILY) end,
 		{ description = "Postponed for a day", group = "Notifications" }
 	},
 	{
-		{}, "3", function() upgrades.set_mode(STATE.WEEKLY) end,
+		{}, "3", function() updates.set_mode(STATE.WEEKLY) end,
 		{ description = "Postponed for a week", group = "Notifications" }
 	},
 	{
-		{}, "4", function() upgrades.set_mode(STATE.SILENT) end,
+		{}, "4", function() updates.set_mode(STATE.SILENT) end,
 		{ description = "Notifications disabled", group = "Notifications" }
 	},
 }
-upgrades.keys.action = {
+updates.keys.action = {
 	{
-		{}, "u", function() upgrades:update(true) end,
+		{}, "u", function() updates:update(true) end,
 		{ description = "Check updates", group = "Action" }
 	},
 	{
-		{}, "Escape", function() upgrades:hide() end,
+		{}, "Escape", function() updates:hide() end,
 		{ description = "Close updates widget", group = "Action" }
 	},
 	{
@@ -120,12 +120,12 @@ upgrades.keys.action = {
 	},
 }
 
-upgrades.keys.all = awful.util.table.join(upgrades.keys.control, upgrades.keys.action)
+updates.keys.all = awful.util.table.join(updates.keys.control, updates.keys.action)
 
 
 -- Initialize notify widbox
 -----------------------------------------------------------------------------------------------------------------------
-function upgrades:init(args, style)
+function updates:init(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
@@ -138,9 +138,9 @@ function upgrades:init(args, style)
 
 	self.style = style
 	self.is_updates = false
-	self.config = awful.util.getdir("cache") .. "/upgrades"
+	self.config = awful.util.getdir("cache") .. "/updates"
 
-	-- Create floating wibox for upgrades widget
+	-- Create floating wibox for updates widget
 	--------------------------------------------------------------------------------
 	self.wibox = wibox({
 		ontop        = true,
@@ -200,7 +200,7 @@ function upgrades:init(args, style)
 	local function update_widget_colors()
 		local is_alert = check_alert()
 		local color = is_alert and style.color.main or style.color.icon
-		for _, w in ipairs(upgrades.objects) do w:set_color(color) end
+		for _, w in ipairs(updates.objects) do w:set_color(color) end
 	end
 
 	-- create control buttons
@@ -306,41 +306,41 @@ function upgrades:init(args, style)
 		awful.spawn.easy_async_with_shell(command, update_count)
 	end
 
-	upgrades.timer = timer({ timeout = update_timeout })
-	upgrades.timer:connect_signal("timeout", function() self.check_updates() end)
-	upgrades.timer:start()
+	updates.timer = timer({ timeout = update_timeout })
+	updates.timer:connect_signal("timeout", function() self.check_updates() end)
+	updates.timer:start()
 
-	if style.firstrun then upgrades.timer:emit_signal("timeout") end
+	if style.firstrun then updates.timer:emit_signal("timeout") end
 
 	-- Connect additional signals
 	------------------------------------------------------------
 	awesome.connect_signal("exit", function() self:save_state() end)
 end
 
--- Create a new upgrades widget
+-- Create a new updates widget
 -- @param style Table containing colors and geometry parameters for all elemets
 -----------------------------------------------------------------------------------------------------------------------
-function upgrades.new(style)
+function updates.new(style)
 
-	if not upgrades.wibox then upgrades:init({}) end
+	if not updates.wibox then updates:init({}) end
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(upgrades.style, style or {})
+	local style = redutil.table.merge(updates.style, style or {})
 
 	local widg = svgbox(style.icon)
 	widg:set_color(style.color.icon)
-	table.insert(upgrades.objects, widg)
+	table.insert(updates.objects, widg)
 
-	upgrades.tp:add_to_object(widg)
+	updates.tp:add_to_object(widg)
 
 	--------------------------------------------------------------------------------
 	return widg
 end
 
--- Show/hide upgrades wibox
+-- Show/hide updates wibox
 -----------------------------------------------------------------------------------------------------------------------
-function upgrades:show()
+function updates:show()
 	if self.style.wibox.set_position then
 		self.style.wibox.set_position(self.wibox)
 	else
@@ -353,13 +353,13 @@ function upgrades:show()
 	redtip:set_pack("System updates", self.tip, self.style.keytip.column, self.style.keytip.geometry)
 end
 
-function upgrades:hide()
+function updates:hide()
 	self.wibox.visible = false
 	awful.keygrabber.stop(self.keygrabber)
 	redtip:remove_pack()
 end
 
-function upgrades:toggle()
+function updates:toggle()
 	if self.wibox.visible then
 		self:hide()
 	else
@@ -369,7 +369,7 @@ end
 
 -- Save/restore state between sessions
 -----------------------------------------------------------------------------------------------------------------------
-function upgrades:load_state()
+function updates:load_state()
 	local info = redutil.read.file(self.config)
 	if info then
 		local state, time = string.match(info, "(%d)=(%d+)")
@@ -380,7 +380,7 @@ function upgrades:load_state()
 	end
 end
 
-function upgrades:save_state()
+function updates:save_state()
 	local file = io.open(self.config, "w")
 	file:write(string.format("%d=%d", self.state, self.time))
 	file:close()
@@ -388,7 +388,7 @@ end
 
 -- Set user hotkeys
 -----------------------------------------------------------------------------------------------------------------------
-function upgrades:set_keys(keys, layout)
+function updates:set_keys(keys, layout)
 	local layout = layout or "all"
 	if keys then
 		self.keys[layout] = keys
@@ -398,16 +398,16 @@ function upgrades:set_keys(keys, layout)
 	self.tip = self.keys.all
 end
 
--- Update upgrades info for every widget
+-- Update updates info for every widget
 -----------------------------------------------------------------------------------------------------------------------
-function upgrades:update(is_force)
+function updates:update(is_force)
 	self.check_updates(is_force)
 end
 
--- Config metatable to call upgrades module as function
+-- Config metatable to call updates module as function
 -----------------------------------------------------------------------------------------------------------------------
-function upgrades.mt:__call(...)
-	return upgrades.new(...)
+function updates.mt:__call(...)
+	return updates.new(...)
 end
 
-return setmetatable(upgrades, upgrades.mt)
+return setmetatable(updates, updates.mt)
