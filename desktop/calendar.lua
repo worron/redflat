@@ -71,7 +71,7 @@ local function daymarks(style)
 		self._data.weekend = { (7 - first_week_day) % 7, (8 - first_week_day) % 7 }
 		self._data.label = string.format("%.2d%s%.2d", date.day, style.label.sep, date.month)
 
-		self:emit_signal("widget::updated")
+		self:emit_signal("widget::redraw_needed")
 	end
 
 	function widg:update_pointer(show, index)
@@ -81,7 +81,7 @@ local function daymarks(style)
 		local date = os.date('*t')
 		self._data.pointer.label = string.format("%.2d%s%.2d", self._data.pointer.index, style.label.sep, date.month)
 
-		self:emit_signal("widget::updated")
+		self:emit_signal("widget::redraw_needed")
 	end
 
 	-- Fit

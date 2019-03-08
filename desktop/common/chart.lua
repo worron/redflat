@@ -64,7 +64,7 @@ function chart.new(style)
 		if barnum then
 			count = count % barnum + 1
 			data.values[count] = x
-			self:emit_signal("widget::updated")
+			self:emit_signal("widget::redraw_needed")
 		end
 	end
 

@@ -75,8 +75,8 @@ function progressbar.new(style)
 		local cx = x / maxm
 		if cx > 1 then cx = 1 end
 
-		widg._data.value = cx
-		local num = math.ceil(widg._data.chunks * widg._data.value)
+		self._data.value = cx
+		local num = math.ceil(self._data.chunks * self._data.value)
 
 		if num ~= self._data.cnum then
 			self:emit_signal("widget::redraw_needed")
@@ -95,7 +95,7 @@ function progressbar.new(style)
 		-- progressbar
 		self._data.chunks = math.floor((width + stg) / (stw + stg))
 		self._data.gap = stg + (width - (self._data.chunks - 1) * (stw + stg) - stw) / (self._data.chunks - 1)
-		self._data.cnum = math.ceil(self._data.chunks * widg._data.value)
+		self._data.cnum = math.ceil(self._data.chunks * self._data.value)
 
 		draw_progressbar(cr, stw, height, self._data.gap, 1, self._data.cnum, style.color.main)
 		draw_progressbar(cr, stw, height, self._data.gap, self._data.cnum + 1, self._data.chunks, style.color.gray)
