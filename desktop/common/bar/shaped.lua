@@ -77,14 +77,13 @@ function progressbar.new(style)
 	local style = redutil.table.merge(default_style(), style or {})
 	local maxm = style.maxm
 
-	-- updating values
-	local data = {
-		value = 0
-	}
+	--style aliases
+	local stn = style.chunk.num
 
 	-- Create custom widget
 	--------------------------------------------------------------------------------
 	local shapewidg = wibox.widget.base.make_widget()
+	shapewidg._data = { value = 0, cnum = 0 }
 
 	-- tooltip
 	if style.show.tooltip then
@@ -96,10 +95,16 @@ function progressbar.new(style)
 		if style.autoscale then
 			if x > maxm then maxm = x end
 		end
+
 		local cx = x / maxm
 		if cx > 1 then cx = 1 end
-		data.value = cx
-		self:emit_signal("widget::updated")
+
+		self._data.value = cx
+		local num = math.ceil(stn * self._data.value)
+
+		if num ~= self._data.cnum then
+			self:emit_signal("widget::redraw_needed")
+		end
 	end
 
 	function shapewidg:set_tip(txt)
@@ -113,16 +118,16 @@ function progressbar.new(style)
 	-- Draw function
 	------------------------------------------------------------
 	function shapewidg:draw(_, cr, width, height)
-		local point = math.ceil(style.chunk.num * data.value)
+		self._data.cnum = math.ceil(stn * self._data.value)
+
 		if style.shape == "plain" then
-			local line_gap = style.chunk.line + (height - style.chunk.line * style.chunk.num)/(style.chunk.num - 1)
-			draw_line(cr, width, height, line_gap, 1, point, style.color.main, style)
-			draw_line(cr, width, height, line_gap, point + 1, style.chunk.num, style.color.gray, style)
+			local line_gap = style.chunk.line + (height - style.chunk.line * stn)/(stn - 1)
+			draw_line(cr, width, height, line_gap, 1, self._data.cnum, style.color.main, style)
+			draw_line(cr, width, height, line_gap, self._data.cnum + 1, stn, style.color.gray, style)
 		elseif style.shape == "corner" then
-			local corner_gap = (height - (style.chunk.num - 1) * style.chunk.line - style.chunk.height)
-			                   / (style.chunk.num - 1)
-			draw_corner(cr, width, height, corner_gap, 1, point, style.color.main, style)
-			draw_corner(cr, width, height, corner_gap, point + 1, style.chunk.num, style.color.gray, style)
+			local corner_gap = (height - (stn - 1) * style.chunk.line - style.chunk.height) / (stn - 1)
+			draw_corner(cr, width, height, corner_gap, 1, self._data.cnum, style.color.main, style)
+			draw_corner(cr, width, height, corner_gap, self._data.cnum + 1, stn, style.color.gray, style)
 		end
 	end
 
