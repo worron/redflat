@@ -65,33 +65,47 @@ end
 ------------------------------------------------------------
 function desktop.build.static(objects, buttons)
 	for _, object in ipairs(objects) do
-		-- make individual wibox for each widget
 		object.wibox = wibox({ type = "desktop", visible = true, bg = object.body.style.color.wibox })
 		object.wibox:geometry(object.geometry)
 		object.wibox:set_widget(object.body.area)
 
-		if buttons then object.wibox:buttons(buttons) end
+		if buttons then object.body.area:buttons(buttons) end
 	end
 end
 
 function desktop.build.dynamic(objects, s, bgimage, buttons)
 	local s = s or mouse.screen
 	local bg = awful.util.file_readable(bgimage or "") and bgimage or nil
+	local last = { visible = true }
 
-	-- manual layout
-	local dlayout = wibox.layout.manual()
-	for _, object in ipairs(objects) do dlayout:add_at(object.body.area, object.geometry) end
-	if buttons then dlayout:buttons(buttons) end
-
-	-- shared desktop wibox
+	-- desktop bg wibox
 	local dwibox = wibox({ type = "desktop", visible = true, bg = "#00000000", bgimage = bg })
 	dwibox:geometry(s.workarea)
-	dwibox:set_widget(dlayout)
+	dwibox:setup({
+		buttons = buttons,
+		layout = wibox.layout.align.horizontal
+	})
+
+	-- individual wiboxes (perfomance wisely)
+	for _, object in ipairs(objects) do
+		local clr = object.body.style and object.body.style.color and object.body.style.color.wibox or nil
+
+		object.wibox = wibox({ type = "desktop", visible = true, bg = clr })
+		object.wibox:geometry(object.geometry)
+		object.wibox:set_widget(object.body.area)
+
+		if buttons then object.body.area:buttons(buttons) end
+	end
 
 	-- show widgets only for empty desktop
 	local function update_desktop()
 		local clients = s:get_clients()
-		dwibox.visible = #clients == 0
+		local visible = #clients == 0
+		if visible ~= last.visible then
+			last.visible = visible
+			dwibox.visible = visible
+			for _, object in ipairs(objects) do object.wibox.visible = visible end
+		end
 	end
 
 	-- better way to check visible clients?
