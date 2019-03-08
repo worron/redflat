@@ -114,25 +114,25 @@ function svgbox.new(image, resize_allowed, newcolor)
 		self._image = image
 		self.is_svg = is_svg(image_name)
 
-		self:emit_signal("widget::updated")
+		self:emit_signal("widget::redraw_needed")
 		return true
 	end
 
 	function widg:set_color(new_color)
 		if self.color ~= new_color then
 			self.color = new_color
-			self:emit_signal("widget::updated")
+			self:emit_signal("widget::redraw_needed")
 		end
 	end
 
 	function widg:set_resize(allowed)
 		self.resize_allowed = allowed
-		self:emit_signal("widget::updated")
+		self:emit_signal("widget::redraw_needed")
 	end
 
 	function widg:set_vector_resize(allowed)
 		self.vector_resize_allowed = allowed
-		self:emit_signal("widget::updated")
+		self:emit_signal("widget::redraw_needed")
 	end
 
 	-- Fit
