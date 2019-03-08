@@ -59,14 +59,13 @@ function progressbar.new(style)
 	local style = redutil.table.merge(default_style(), style or {})
 	local maxm = style.maxm
 
-	-- updating values
-	local data = {
-		value = 0
-	}
-
+	--style aliases
+	local stg, stw = style.chunk.gap, style.chunk.width
+	
 	-- Create custom widget
 	--------------------------------------------------------------------------------
 	local widg = wibox.widget.base.make_widget()
+	widg._data = { value = 0, chunks = 1, gap = 1, cnum = 0 }
 
 	function widg:set_value(x)
 		if style.autoscale then
@@ -75,26 +74,31 @@ function progressbar.new(style)
 
 		local cx = x / maxm
 		if cx > 1 then cx = 1 end
-		data.value = cx
-		self:emit_signal("widget::updated")
+
+		widg._data.value = cx
+		local num = math.ceil(widg._data.chunks * widg._data.value)
+
+		if num ~= self._data.cnum then
+			self:emit_signal("widget::redraw_needed")
+		end
 	end
 
 	function widg:fit(_, width, height)
-		return style.width or width, style.height or height
+		local w = style.width and math.min(style.width, width) or width
+		local h = style.height and math.min(style.height, height) or height
+		return w, h
 	end
 
 	-- Draw function
 	------------------------------------------------------------
 	function widg:draw(_, cr, width, height)
-
 		-- progressbar
-		local barnum = math.floor((width + style.chunk.gap) / (style.chunk.width + style.chunk.gap))
-		local real_gap = style.chunk.gap + (width - (barnum - 1) * (style.chunk.width + style.chunk.gap)
-		                 - style.chunk.width) / (barnum - 1)
-		local point = math.ceil(barnum * data.value)
+		self._data.chunks = math.floor((width + stg) / (stw + stg))
+		self._data.gap = stg + (width - (self._data.chunks - 1) * (stw + stg) - stw) / (self._data.chunks - 1)
+		self._data.cnum = math.ceil(self._data.chunks * widg._data.value)
 
-		draw_progressbar(cr, style.chunk.width, height, real_gap, 1, point, style.color.main)
-		draw_progressbar(cr, style.chunk.width, height, real_gap, point + 1, barnum, style.color.gray)
+		draw_progressbar(cr, stw, height, self._data.gap, 1, self._data.cnum, style.color.main)
+		draw_progressbar(cr, stw, height, self._data.gap, self._data.cnum + 1, self._data.chunks, style.color.gray)
 	end
 	--------------------------------------------------------------------------------
 
