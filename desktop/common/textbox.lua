@@ -96,47 +96,53 @@ function textbox.new(txt, style)
 	local style = redutil.table.merge(default_style(), style or {})
 --	local textdraw = align[style.draw] or align.by_left
 
-	-- updating values
-	local data = {
+	-- Create custom widget
+	--------------------------------------------------------------------------------
+	local textwidg = wibox.widget.base.make_widget()
+	textwidg._data = {
 		text = txt or "",
 		width = style.width,
 		color = style.color
 	}
 
-	-- Create custom widget
-	--------------------------------------------------------------------------------
-	local textwidg = wibox.widget.base.make_widget()
-
 	-- User functions
 	------------------------------------------------------------
 	function textwidg:set_text(text)
-		data.text = text
-		self:emit_signal("widget::updated")
+		if textwidg._data.text ~= text then
+			textwidg._data.text = text
+			self:emit_signal("widget::redraw_needed")
+		end
 	end
 
 	function textwidg:set_color(color)
-		data.color = color
-		self:emit_signal("widget::updated")
+		if textwidg._data.color ~= color then
+			textwidg._data.color = color
+			self:emit_signal("widget::redraw_needed")
+		end
 	end
 
 	function textwidg:set_width(width)
-		data.width = width
-		self:emit_signal("widget::updated")
+		if textwidg._data.width ~= width then
+			textwidg._data.width = width
+			self:emit_signal("widget::redraw_needed")
+		end
 	end
 
 	-- Fit
 	------------------------------------------------------------
 	function textwidg:fit(_, width, height)
-		return data.width or width, style.height or height
+		local w = textwidg._data.width and math.min(textwidg._data.width, width) or width
+		local h = style.height and math.min(style.height, height) or height
+		return w, h
 	end
 
 	-- Draw
 	------------------------------------------------------------
 	function textwidg:draw(_, cr, width, height)
-		cr:set_source(color(data.color))
+		cr:set_source(color(textwidg._data.color))
 		redutil.cairo.set_font(cr, style.font)
 
-		align[style.draw](cr, width, height, data.text, style)
+		align[style.draw](cr, width, height, textwidg._data.text, style)
 	end
 
 	--------------------------------------------------------------------------------
