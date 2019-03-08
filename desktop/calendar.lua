@@ -158,44 +158,35 @@ function calendar.new(args, style)
 	t:start()
 	t:emit_signal("timeout")
 
-	-- Set mousegrabber
-	--------------------------------------------------------------------------------
-	dwidget.mousegrabber = function(args)
-		if not dwidget.geometry then dwidget.geometry = mouse.current_widget_geometry end
-
-		local x, y = args.x - dwidget.geometry.x, args.y - dwidget.geometry.y
-		local show_poiter = false
-		local index
-
-		if x > dwidget.calendar._data.label_x then
-			for i = 1, dwidget.calendar._data.days do
-				local cy = y - (i - 1) * (dwidget.calendar._data.gap + style.mark.height)
-				if cy > 0 and cy < style.mark.height then
-					show_poiter = true
-					index = i
-					break
-				end
-			end
-		end
-
-		if dwidget.calendar._data.pointer.show ~= show_poiter then
-			dwidget.calendar:update_pointer(show_poiter, index)
-		end
-
-		return args.x > dwidget.geometry.x and args.x < (dwidget.geometry.x + dwidget.geometry.width - 1)
-		       and args.y > dwidget.geometry.y and args.y < (dwidget.geometry.y + dwidget.geometry.height - 1)
-	end
-
 	-- Drawing date label under mouse
 	--------------------------------------------------------------------------------
-	if style.show_pointer then
-		dwidget.area:connect_signal("mouse::enter", function()
-			mousegrabber.run(dwidget.mousegrabber, "left_ptr")
-		end)
+	function dwidget:activate_wibox(wbox)
+		if style.show_pointer then
+			wbox:connect_signal("mouse::move", function(_, x, y)
+				local show_poiter = false
+				local index
 
-		dwidget.area:connect_signal("mouse::leave", function()
-			if dwidget.calendar._data.pointer.show then dwidget.calendar:update_pointer(false) end
-		end)
+				if x > self.calendar._data.label_x then
+					for i = 1, self.calendar._data.days do
+						local cy = y - (i - 1) * (self.calendar._data.gap + style.mark.height)
+						if cy > 0 and cy < style.mark.height then
+							show_poiter = true
+							index = i
+							break
+						end
+					end
+				end
+
+				if self.calendar._data.pointer.show ~= show_poiter then
+					self.calendar:update_pointer(show_poiter, index)
+				end
+			end)
+
+			wbox:connect_signal("mouse::leave", function()
+				print("hello")
+				if self.calendar._data.pointer.show then self.calendar:update_pointer(false) end
+			end)
+		end
 	end
 
 	--------------------------------------------------------------------------------
