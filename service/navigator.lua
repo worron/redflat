@@ -66,7 +66,7 @@ function navigator.make_paint(c)
 	local style = navigator.style
 	local widg = wibox.widget.base.make_widget()
 
-	local data = {
+	widg._data = {
 		client = c,
 		alert = false,
 	}
@@ -74,13 +74,17 @@ function navigator.make_paint(c)
 	-- User functions
 	------------------------------------------------------------
 	function widg:set_client(c)
-		data.client = c
-		self:emit_signal("widget::updated")
+		if widg._data.client ~= c then
+			widg._data.client = c
+			self:emit_signal("widget::redraw_needed")
+		end
 	end
 
 	function widg:set_alert(value)
-		data.alert = value
-		self:emit_signal("widget::updated")
+		if widg._data.alert ~= value then
+			widg._data.alert = value
+			self:emit_signal("widget::redraw_needed")
+		end
 	end
 
 	-- Fit
@@ -93,16 +97,16 @@ function navigator.make_paint(c)
 	------------------------------------------------------------
 	function widg:draw(_, cr, width, height)
 
-		if not data.client then return end
+		if not widg._data.client then return end
 
 		-- background
 		local bg1, bg2
 		local num = math.ceil((width + height) / style.gradstep)
 
-		if data.alert then
+		if widg._data.alert then
 			bg1, bg2 = style.color.hbg1, style.color.hbg2
 		else
-			local is_focused = data.client == client.focus
+			local is_focused = widg._data.client == client.focus
 			bg1 = is_focused and style.color.fbg1 or style.color.bg1
 			bg2 = is_focused and style.color.fbg2 or style.color.bg2
 		end
@@ -137,8 +141,8 @@ function navigator.make_paint(c)
 		cr:fill()
 
 		-- label
-		local index = navigator.style.num[awful.util.table.hasitem(navigator.cls, data.client)]
-		local g = redutil.client.fullgeometry(data.client)
+		local index = navigator.style.num[awful.util.table.hasitem(navigator.cls, widg._data.client)]
+		local g = redutil.client.fullgeometry(widg._data.client)
 
 		cr:set_source(color(style.color.text))
 		redutil.cairo.set_font(cr, style.titlefont)
@@ -174,7 +178,7 @@ function navigator.make_decor(c)
 	-- User functions
 	------------------------------------------------------------
 	object.update =  {
-		focus = function() object.widget:emit_signal("widget::updated") end,
+		focus = function() object.widget:emit_signal("widget::redraw_needed") end,
 		close = function() navigator:restart() end,
 		geometry = function() redutil.client.fullgeometry(object.wibox, redutil.client.fullgeometry(object.client)) end
 	}

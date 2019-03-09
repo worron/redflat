@@ -165,7 +165,7 @@ local function build_state_indicator(style)
 		for _, c in ipairs(clist) do
 			table.insert(data.state, { focused = client.focus == c, urgent = c.urgent, minimized = c.minimized })
 		end
-		self:emit_signal("widget::updated")
+		self:emit_signal("widget::redraw_needed")
 	end
 
 	-- Fit

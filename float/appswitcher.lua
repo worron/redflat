@@ -360,7 +360,7 @@ function appswitcher:init()
 	-- Set preview icons update timer
 	--------------------------------------------------------------------------------
 	self.update_timer = timer({ timeout = style.update_timeout })
-	self.update_timer:connect_signal("timeout", function() self.widget:emit_signal("widget::updated") end)
+	self.update_timer:connect_signal("timeout", function() self.widget:emit_signal("widget::redraw_needed") end)
 
 	-- Restart switcher if any client was closed
 	--------------------------------------------------------------------------------
@@ -401,7 +401,7 @@ function appswitcher:show(args)
 	self.index = awful.util.table.hasitem(self.clients_list, client.focus) or 1
 	self.titlebox:set_markup(self.title_generator(self.clients_list[self.index]))
 	if not noaction then self:switch(args) end
-	self.widget:emit_signal("widget::updated")
+	self.widget:emit_signal("widget::redraw_needed")
 
 	self.wibox.visible = true
 
@@ -439,7 +439,7 @@ function appswitcher:switch(args)
 	end
 
 	self.titlebox:set_markup(self.title_generator(self.clients_list[self.index]))
-	self.widget:emit_signal("widget::updated")
+	self.widget:emit_signal("widget::redraw_needed")
 end
 
 -- Set user hotkeys
