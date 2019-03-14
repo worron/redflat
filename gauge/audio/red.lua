@@ -8,6 +8,8 @@
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
 local string = string
+local math = math
+
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 
@@ -24,6 +26,7 @@ local audio = { mt = {} }
 local function default_style()
 	local style = {
 		icon  = { volume = redutil.base.placeholder(), mute = redutil.base.placeholder() },
+		step  = 0.05,
 		color = { main = "#b1222b", icon = "#a0a0a0", mute = "#404040" }
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.audio.red") or {})
@@ -55,6 +58,7 @@ function audio.new(style)
 	-- Create widget
 	--------------------------------------------------------------------------------
 	local widg = wibox.container.background(icon.ready)
+	widg._data = { level = 0 }
 
 	-- User functions
 	------------------------------------------------------------
@@ -62,8 +66,13 @@ function audio.new(style)
 		if x > 1 then x = 1 end
 
 		if self.widget._image then
-			local h = self.widget._image.height
-			icon.ready:set_color(pattern_string(h, x, style.color.main, style.color.icon))
+			local level = math.floor(x / style.step) * style.step
+
+			if level ~= self._data.level then
+				self._data.level = level
+				local h = self.widget._image.height
+				icon.ready:set_color(pattern_string(h, level, style.color.main, style.color.icon))
+			end
 		end
 	end
 
