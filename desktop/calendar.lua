@@ -183,7 +183,6 @@ function calendar.new(args, style)
 			end)
 
 			wbox:connect_signal("mouse::leave", function()
-				print("hello")
 				if self.calendar._data.pointer.show then self.calendar:update_pointer(false) end
 			end)
 		end

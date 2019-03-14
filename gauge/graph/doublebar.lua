@@ -1,6 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------------
 --                                            RedFlat doublebar widget                                               --
 -----------------------------------------------------------------------------------------------------------------------
+-- TODO: remove this widget in favor of double icon or rework as dashed bars
 -- Gauge wigget with two vertical progressbar
 -----------------------------------------------------------------------------------------------------------------------
 
@@ -49,7 +50,7 @@ function doublebar.new(style)
 	------------------------------------------------------------
 	function widg:set_value(value)
 		data.value = { value[1] < 1 and value[1] or 1, value[2] < 1 and value[2] or 1 }
-		self:emit_signal("widget::updated")
+		self:emit_signal("widget::redraw_needed")
 		return self
 	end
 

@@ -35,20 +35,20 @@ function progressbar.new(style)
 	--------------------------------------------------------------------------------
 	local style = redutil.table.merge(default_style(), style or {})
 
-	-- updating values
-	local data = {
-		value = 0
-	}
 
 	-- Create custom widget
 	--------------------------------------------------------------------------------
 	local widg = wibox.widget.base.make_widget()
+	widg._data = { value = 0 }
 
 	-- User functions
 	------------------------------------------------------------
 	function widg:set_value(x)
-		data.value = x < 1 and x or 1
-		self:emit_signal("widget::updated")
+		local value = x < 1 and x or 1
+		if self._data.value ~= value then
+			self._data.value = value
+			self:emit_signal("widget::redraw_needed")
+		end
 	end
 
 	-- Fit
@@ -64,7 +64,7 @@ function progressbar.new(style)
 		cr:rectangle(0, 0, width, height)
 		cr:fill()
 		cr:set_source(color(style.color.main))
-		cr:rectangle(0, 0, data.value * width, height)
+		cr:rectangle(0, 0, self._data.value * width, height)
 		cr:fill()
 	end
 
