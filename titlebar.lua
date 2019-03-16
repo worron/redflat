@@ -307,7 +307,7 @@ function titlebar.mark.base(_, style)
 	-- user function
 	function widg:set_active(active)
 		self._data.color = active and style.color.main or style.color.gray
-		self:emit_signal("widget::updated")
+		self:emit_signal("widget::redraw_needed")
 	end
 
 	-- widget width setup
@@ -348,7 +348,7 @@ function titlebar.button.base(icon, style, is_inactive)
 	function widg:set_active(active)
 		widg._current_color = active and style.color.main or style.color.icon
 		widg:set_color(widg.is_under_mouse and style.color.urgent or widg._current_color)
-		--self:emit_signal("widget::updated")
+		--self:emit_signal("widget::redraw_needed")
 	end
 
 	local function update(is_under_mouse)

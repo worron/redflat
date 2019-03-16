@@ -54,12 +54,12 @@ function rubytag.new(style)
 	------------------------------------------------------------
 	function widg:set_state(state)
 		data.state = state
-		self:emit_signal("widget::updated")
+		self:emit_signal("widget::redraw_needed")
 	end
 
 	function widg:set_width(width)
 		data.width = width
-		self:emit_signal("widget::updated")
+		self:emit_signal("widget::redraw_needed")
 	end
 
 	-- Fit
