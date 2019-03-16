@@ -38,43 +38,37 @@ function dashmon.new(style)
 	--------------------------------------------------------------------------------
 	local style = redutil.table.merge(default_style(), style or {})
 
-	-- updating values
-	local data = {
-		value = 0,
-		width = style.width,
-		color = style.color.main,
-	}
-
 	-- Create custom widget
 	--------------------------------------------------------------------------------
 	local widg = wibox.widget.base.make_widget()
+	widg._data = { color = style.color.main, level = 0, alert = false }
+
+	if style.width then widg:set_forced_width(style.width) end
 
 	-- User functions
 	------------------------------------------------------------
 	function widg:set_value(x)
-		data.value = x < 1 and x or 1
-		self:emit_signal("widget::updated")
-	end
+		local value = x < 1 and x or 1
+		local level = math.ceil(style.line.num * value)
 
-	function widg:set_width(width)
-		data.width = width
-		self:emit_signal("widget::updated")
+		if level ~= self._data.level then
+			self._data.level = level
+			self:emit_signal("widget::redraw_needed")
+		end
 	end
 
 	function widg:set_alert(alert)
-		data.color = alert and style.color.urgent or style.color.main
-		self:emit_signal("widget::updated")
+		if alert ~= self._data.alert then
+			self._data.alert = alert
+			self._data.color = alert and style.color.urgent or style.color.main
+			self:emit_signal("widget::redraw_needed")
+		end
 	end
 
 	-- Fit
 	------------------------------------------------------------
 	function widg:fit(_, width, height)
-		if data.width then
-			return data.width, height
-		else
-			local size = math.min(width, height)
-			return size, size
-		end
+		return width, height
 	end
 
 	-- Draw
@@ -83,10 +77,9 @@ function dashmon.new(style)
 
 		local gap = (height - style.line.height * style.line.num) / (style.line.num - 1)
 		local dy = style.line.height + gap
-		local p = math.ceil(style.line.num * data.value)
 
 		for i = 1, style.line.num do
-			cr:set_source(color(i <= p and data.color or style.color.gray))
+			cr:set_source(color(i <= self._data.level and self._data.color or style.color.gray))
 			cr:rectangle(0, height - (i - 1) * dy, width, - style.line.height)
 			cr:fill()
 		end
