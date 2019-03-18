@@ -52,6 +52,10 @@ qlaunch.keys.action = {
 		{ description = "Clear selected key", group = "Action" }
 	},
 	{
+		{}, "r", function() qlaunch:load_config(true) end,
+		{ description = "Reload config from disk", group = "Action" }
+	},
+	{
 		{ "Mod4" }, "F1", function() redtip:show() end,
 		{ description = "Show hotkeys helper", group = "Action" }
 	},
@@ -329,9 +333,10 @@ function qlaunch:init(args, style)
 
 	local style = redutil.table.merge(default_style(), style or {})
 	self.style = style
+	self.default_switcher_keys = keys
 	self.icon_db = redflat.service.dfparser.icon_list(style.parser)
 
-	self:load_config(keys)
+	self:load_config()
 
 	-- Wibox
 	------------------------------------------------------------
@@ -463,14 +468,19 @@ end
 
 -- Application list save/load
 --------------------------------------------------------------------------------
-function qlaunch:load_config(default_keys)
+function qlaunch:load_config(need_reset)
 	if is_file_exists(self.style.configfile) then
 		for line in io.lines(self.style.configfile) do
 			local key, app, run = string.match(line, "key=(.+);app=(.*);run=(.*);")
 			self.store[key] = { app = app, run = run }
 		end
 	else
-		self.store = default_keys
+		self.store = self.default_switcher_keys
+	end
+
+	if need_reset then
+		self.switcher:reset()
+		self.switcher:update(self.store, self.icon_db)
 	end
 end
 
