@@ -252,7 +252,7 @@ end
 -- Initialize window menu widget
 -----------------------------------------------------------------------------------------------------------------------
 function clientmenu:init(style)
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 	self.hide_check = function(action)
 		if style.hide_action[action] then self.menu:hide() end
@@ -302,9 +302,9 @@ function clientmenu:init(style)
 	local stateboxes = state_line_construct(state_icons, stateline_horizontal, style)
 
 	-- update function for state icons
-	local function stateboxes_update(c, state_icons, stateboxes)
-		for i, v in ipairs(state_icons) do
-			stateboxes[i]:set_color(v.indicator(c) and style.color.main or style.color.gray)
+	local function stateboxes_update(c, icons, boxes)
+		for i, v in ipairs(icons) do
+			boxes[i]:set_color(v.indicator(c) and style.color.main or style.color.gray)
 		end
 	end
 

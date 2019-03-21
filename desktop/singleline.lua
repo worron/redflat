@@ -45,8 +45,8 @@ function sline.new(args, style)
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local dwidget = {}
-	local args = redutil.table.merge(default_args, args or {})
-	local style = redutil.table.merge(default_style(), style or {})
+	args = redutil.table.merge(default_args, args or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 	dwidget.style = style
 

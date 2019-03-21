@@ -12,7 +12,7 @@ local setmetatable = setmetatable
 local os = os
 local textbox = require("wibox.widget.textbox")
 local beautiful = require("beautiful")
-local timer = require("gears.timer")
+local gears = require("gears")
 
 local tooltip = require("redflat.float.tooltip")
 local redutil = require("redflat.util")
@@ -41,10 +41,10 @@ function textclock.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local args = args or {}
+	args = args or {}
 	local timeformat = args.timeformat or " %a %b %d, %H:%M "
 	local timeout = args.timeout or 60
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 	-- Create widget
 	--------------------------------------------------------------------------------
@@ -58,7 +58,7 @@ function textclock.new(args, style)
 
 	-- Set update timer
 	--------------------------------------------------------------------------------
-	local timer = timer({ timeout = timeout })
+	local timer = gears.timer({ timeout = timeout })
 	timer:connect_signal("timeout",
 		function()
 			widg:set_markup('<span color="' .. style.color.text .. '">' .. os.date(timeformat) .. "</span>")

@@ -39,7 +39,7 @@ end
 function keybd:init(layouts, style)
 
 	-- initialize vars
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 	self.layouts = layouts or {}
 	self.style = style
 	self.objects = {}
@@ -111,7 +111,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function keybd.new(style)
 
-	local style = style or {}
+	style = style or {}
 	if not keybd.menu then keybd:init({}) end
 
 	local widg = svgbox(style.icon or keybd.style.icon)

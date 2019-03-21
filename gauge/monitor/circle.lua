@@ -40,7 +40,7 @@ function cirmon.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 	local cs = -TPI / 4
 
 	-- Create custom widget

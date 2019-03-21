@@ -37,7 +37,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function decor.button(textbox, action, style)
 
-	local style = redutil.table.merge(button_style(), style or {})
+	style = redutil.table.merge(button_style(), style or {})
 
 	-- Widget and layouts
 	--------------------------------------------------------------------------------
@@ -76,7 +76,7 @@ end
 -- Input text field
 -----------------------------------------------------------------------------------------------------------------------
 function decor.textfield(textbox, style)
-	local style = redutil.table.merge(field_style(), style or {})
+	style = redutil.table.merge(field_style(), style or {})
 	local field = wibox.container.background(textbox, style.color.bg)
 	local bord1 = wibox.container.background(wibox.container.margin(field, 1, 1, 1, 1), style.color.shadow1)
 	local bord2 = wibox.container.background(wibox.container.margin(bord1, 1, 1, 1, 1), style.color.shadow2)

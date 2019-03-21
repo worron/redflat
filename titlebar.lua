@@ -70,7 +70,7 @@ end
 -- Get titlebar model
 ------------------------------------------------------------
 function titlebar.get_model(c, position)
-	local position = position or "top"
+	position = position or "top"
 	return titlebar.list[c] and titlebar.list[c][position] or nil
 end
 
@@ -87,7 +87,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function titlebar.new(c, style)
 	if not titlebar.list[c] then titlebar.list[c] = {} end
-	local style = redutil.table.merge(default_style, style or {})
+	style = redutil.table.merge(default_style, style or {})
 
 	-- Make sure that there is never more than one titlebar for any given client
 	local ret
@@ -167,7 +167,7 @@ function titlebar.add_layout(c, position, layout, size)
 	local model = titlebar.get_model(c, position)
 	if not model then return end
 
-	local size = size or model.style.size
+	size = size or model.style.size
 	local l = { layout = layout, size = size }
 	table.insert(model.layouts, l)
 	if #model.layouts > titlebar._num then titlebar._num = #model.layouts end
@@ -210,7 +210,7 @@ end
 -- Temporary hide client titlebar
 ------------------------------------------------------------
 function titlebar.cut_all(cl, position)
-	local cl = cl or titlebar.get_clients()
+	cl = cl or titlebar.get_clients()
 	local cutted = {}
 	for _, c in ipairs(cl) do
 		local model = titlebar.get_model(c, position)
@@ -226,7 +226,7 @@ end
 -- Restore client titlebar if it was cutted
 ------------------------------------------------------------
 function titlebar.restore_all(cl, position)
-	local cl = cl or titlebar.get_clients()
+	cl = cl or titlebar.get_clients()
 	for _, c in ipairs(cl) do
 		local model = titlebar.get_model(c, position)
 		if model.cutted then
@@ -239,22 +239,22 @@ end
 -- Mass actions
 ------------------------------------------------------------
 function titlebar.toggle_all(cl, position)
-	local cl = cl or titlebar.get_clients()
+	cl = cl or titlebar.get_clients()
 	for _, c in pairs(cl) do titlebar.toggle(c, position) end
 end
 
 --function titlebar.switch_all(cl, position)
---	local cl = cl or titlebar.get_clients()
+--	cl = cl or titlebar.get_clients()
 --	for _, c in pairs(cl) do titlebar.switch(c, position) end
 --end
 
 function titlebar.show_all(cl, position)
-	local cl = cl or titlebar.get_clients()
+	cl = cl or titlebar.get_clients()
 	for _, c in pairs(cl) do titlebar.show(c, position) end
 end
 
 function titlebar.hide_all(cl, position)
-	local cl = cl or titlebar.get_clients()
+	cl = cl or titlebar.get_clients()
 	for _, c in pairs(cl) do titlebar.hide(c, position) end
 end
 
@@ -337,7 +337,7 @@ end
 -- Client button blank
 ------------------------------------------------------------
 function titlebar.button.base(icon, style, is_inactive)
-	local style = redutil.table.merge(default_button_style, style or {})
+	style = redutil.table.merge(default_button_style, style or {})
 
 	-- widget
 	local widg = svgbox(style.list[icon] or style.list.unknown)
@@ -395,7 +395,7 @@ end
 -- Client name indicator
 ------------------------------------------------------------
 function titlebar.label(c, style, is_highlighted)
-	local style = redutil.table.merge(default_style, style or {})
+	style = redutil.table.merge(default_style, style or {})
 	local w = wibox.widget.textbox()
 	w:set_font(style.font)
 	w:set_align("center")

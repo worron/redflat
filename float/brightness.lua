@@ -34,7 +34,7 @@ end
 -- Change with xbacklight
 ------------------------------------------------------------
 function brightness:change_with_xbacklight(args)
-	local args = redutil.table.merge(defaults, args or {})
+	args = redutil.table.merge(defaults, args or {})
 
 	local command = string.format("xbacklight %s %d", args.down and "-dec" or "-inc", args.step)
 	awful.spawn.easy_async(command, self.info_with_xbacklight)

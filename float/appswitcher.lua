@@ -224,7 +224,7 @@ function appswitcher:init()
 	--------------------------------------------------------------------------------
 	function self.size_correction(inum)
 		local w, h
-		local inum = math.max(inum, style.min_icon_number)
+		inum = math.max(inum, style.min_icon_number)
 		local expen_h = (inum - 1) * style.preview_gap + style.preview_margin[1] + style.preview_margin[2]
 		                + style.border_margin[1] + style.border_margin[2]
 		local expen_v = style.label_height + style.preview_margin[3] + style.preview_margin[4] + style.title_height
@@ -283,7 +283,7 @@ function appswitcher:init()
 		for i = 1, #self.clients_list do
 
 			-- support vars
-			local sc, tr, surface, pixbuf
+			local sc, tr, surface, pixbuf_
 			local c = self.clients_list[i]
 
 			-- create surface and calculate scale and translate factors
@@ -300,10 +300,10 @@ function appswitcher:init()
 				end
 			else
 				-- surface = gears.surface(icon_db[string.lower(c.class)] or c.icon)
-				surface, pixbuf = get_icon_visual(icon_db, c, self.svgsize)
+				surface, pixbuf_ = get_icon_visual(icon_db, c, self.svgsize)
 
 				-- sc = style.icon_size / surface.width * iscf
-				sc = style.icon_size / (surface and surface.width or pixbuf.width) * iscf
+				sc = style.icon_size / (surface and surface.width or pixbuf_.width) * iscf
 				tr = {(psize.width - style.icon_size * iscf) / 2, (psize.height - style.icon_size * iscf) / 2}
 			end
 
@@ -320,8 +320,8 @@ function appswitcher:init()
 			cr:translate(unpack(tr))
 			cr:scale(sc, sc)
 
-			if pixbuf then
-				cr:set_source_pixbuf(pixbuf, 0, 0)
+			if pixbuf_ then
+				cr:set_source_pixbuf(pixbuf_, 0, 0)
 			else
 				cr:set_source_surface(surface, 0, 0)
 			end
@@ -378,7 +378,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function appswitcher:show(args)
 
-	local args = args or {}
+	args = args or {}
 	local filter = args.filter
 	local noaction = args.noaction
 
@@ -428,7 +428,7 @@ end
 -- Toggle appswitcher widget
 -----------------------------------------------------------------------------------------------------------------------
 function appswitcher:switch(args)
-	local args = args or {}
+	args = args or {}
 
 	if args.index then
 		if self.clients_list[args.index] then self.index = args.index end
@@ -445,7 +445,7 @@ end
 -- Set user hotkeys
 -----------------------------------------------------------------------------------------------------------------------
 function appswitcher:set_keys(keys, layout)
-	local layout = layout or "all"
+	layout = layout or "all"
 	if keys then
 		self.keys[layout] = keys
 		if layout ~= "all" then self.keys.all = awful.util.table.join(self.keys.move, self.keys.action) end

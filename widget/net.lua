@@ -49,9 +49,9 @@ function net.new(args, style)
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local storage = {}
-	local args = redutil.table.merge(default_args, args or {})
 	local unit = {{  "B", 1 }, { "KB", 1024 }, { "MB", 1024^2 }, { "GB", 1024^3 }}
-	local style = redutil.table.merge(default_style(), style or {})
+	args = redutil.table.merge(default_args, args or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 	-- Create monitor widget
 	--------------------------------------------------------------------------------

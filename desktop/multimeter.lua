@@ -88,9 +88,9 @@ function multim.new(args, style)
 	local icon
 	local last_state
 
-	local args = redutil.table.merge(default_args, args or {})
+	args = redutil.table.merge(default_args, args or {})
 	--local geometry = redutil.table.merge(default_geometry, geometry or {})
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 	local lines_style = redutil.table.merge(style.lines, { progressbar = { color = style.color } })
 	local upbar_style = redutil.table.merge(style.upbar, { color = style.color })

@@ -93,7 +93,7 @@ function player:init(args)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local args = args or {}
+	args = args or {}
 	local _player = args.name or "vlc"
 	local style = default_style()
 	local show_album = false

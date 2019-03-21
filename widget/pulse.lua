@@ -53,7 +53,7 @@ local change_volume_default_args = {
 function pulse:change_volume(args)
 
 	-- initialize vars
-	local args = redutil.table.merge(change_volume_default_args, args or {})
+	args = redutil.table.merge(change_volume_default_args, args or {})
 	local type_ = args.type or self.def_type
 	local sink = args.sink or self.def_sink
 	local diff = args.down and -args.step or args.step
@@ -99,7 +99,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function pulse:mute(args)
 
-	local args = args or {}
+	args = args or {}
 	local type_ = args.type or self.def_type
 	local sink = args.sink or self.def_sink
 	if not type_ or not sink then return end
@@ -119,7 +119,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function pulse:update_volume(args)
 
-	local args = args or {}
+	args = args or {}
 	local type_ = args.type or self.def_type
 	local sink = args.sink or self.def_sink
 	if not type_ or not sink then return end
@@ -152,7 +152,7 @@ end
 -- Update default pulse sink
 -----------------------------------------------------------------------------------------------------------------------
 function pulse:get_default_sink(args)
-	local args = args or {}
+	args = args or {}
 	local type_ = args.type or "sink"
 
 	if not self.def_type then self.def_type = type_ end
@@ -173,10 +173,10 @@ function pulse.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 	pulse.notify = style.notify
 
-	local args = args or {}
+	args = args or {}
 	local timeout = args.timeout or 5
 	local autoupdate = args.autoupdate or false
 

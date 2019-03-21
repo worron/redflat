@@ -328,10 +328,10 @@ function qlaunch:init(args, style)
 
 	-- Init vars
 	------------------------------------------------------------
-	local args = args or {}
+	args = args or {}
 	local keys = args.keys or switcher_keys
 
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 	self.style = style
 	self.default_switcher_keys = keys
 	self.icon_db = redflat.service.dfparser.icon_list(style.parser)
@@ -495,7 +495,7 @@ end
 -- Set user hotkeys
 -----------------------------------------------------------------------------------------------------------------------
 function qlaunch:set_keys(keys, layout)
-	local layout = layout or "all"
+	layout = layout or "all"
 	if keys then
 		self.keys[layout] = keys
 		if layout ~= "all" then self.keys.all = awful.util.table.join({}, self.keys.action) end

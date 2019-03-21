@@ -74,8 +74,8 @@ end
 
 local STATE = setmetatable(
 	{ keywords = { "NORMAL", "DAILY", "WEEKLY", "SILENT" } },
-	{ __index = function(table, key)
-		return awful.util.table.hasitem(table.keywords, key) or rawget(table, key)
+	{ __index = function(table_, key)
+		return awful.util.table.hasitem(table_.keywords, key) or rawget(table_, key)
 	end }
 )
 
@@ -129,11 +129,11 @@ function updates:init(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local args = args or {}
+	args = args or {}
 	local update_timeout = args.update_timeout or 3600
 	local command = args.command or "echo 0"
 	local force_notify = false
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 
 	self.style = style
@@ -326,7 +326,7 @@ function updates.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(updates.style, style or {})
+	style = redutil.table.merge(updates.style, style or {})
 
 	local widg = svgbox(style.icon)
 	widg:set_color(style.color.icon)
@@ -389,7 +389,7 @@ end
 -- Set user hotkeys
 -----------------------------------------------------------------------------------------------------------------------
 function updates:set_keys(keys, layout)
-	local layout = layout or "all"
+	layout = layout or "all"
 	if keys then
 		self.keys[layout] = keys
 		if layout ~= "all" then self.keys.all = awful.util.table.join(self.keys.control, self.keys.action) end

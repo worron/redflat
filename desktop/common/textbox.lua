@@ -93,7 +93,7 @@ function textbox.new(txt, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 --	local textdraw = align[style.draw] or align.by_left
 
 	-- Create custom widget
@@ -114,9 +114,9 @@ function textbox.new(txt, style)
 		end
 	end
 
-	function textwidg:set_color(color)
-		if self._data.color ~= color then
-			self._data.color = color
+	function textwidg:set_color(value)
+		if self._data.color ~= value then
+			self._data.color = value
 			self:emit_signal("widget::redraw_needed")
 		end
 	end

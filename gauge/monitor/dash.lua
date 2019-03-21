@@ -36,7 +36,7 @@ function dashmon.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 	-- Create custom widget
 	--------------------------------------------------------------------------------

@@ -63,13 +63,13 @@ function mail:init(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local args = args or {}
+	args = args or {}
 	local count  = 0
 	local checks = 0
 	local force_notify = false
 	local update_timeout = args.update_timeout or 3600
 	local maillist = args.maillist or {}
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 	self.style = style
 
@@ -129,7 +129,7 @@ function mail.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(mail.style, style or {})
+	style = redutil.table.merge(mail.style, style or {})
 
 	-- Create widget
 	--------------------------------------------------------------------------------

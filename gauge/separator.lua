@@ -35,7 +35,7 @@ local function separator_base(horizontal, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 	if not style.margin then
 		style.margin = horizontal and style.marginh or style.marginv
 	end

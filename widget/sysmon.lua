@@ -35,8 +35,8 @@ function sysmon.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local args = args or {}
-	local style = redutil.table.merge(default_style(), style or {})
+	args = args or {}
+	style = redutil.table.merge(default_style(), style or {})
 
 	-- Create monitor widget
 	--------------------------------------------------------------------------------

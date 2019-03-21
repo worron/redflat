@@ -140,8 +140,8 @@ function calendar.new(args, style)
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local dwidget = {}
-	local args = args or {}
-	local style = redutil.table.merge(default_style(), style or {})
+	args = args or {}
+	style = redutil.table.merge(default_style(), style or {})
 	local timeout = args.timeout or 300
 
 	dwidget.style = style

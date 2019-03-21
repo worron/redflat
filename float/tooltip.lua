@@ -47,9 +47,9 @@ function tooltip.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local args = args or {}
+	args = args or {}
 	local objects = args.objects or {}
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 	-- Construct tooltip window with wibox and textbox
 	--------------------------------------------------------------------------------

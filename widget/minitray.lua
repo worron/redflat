@@ -134,8 +134,8 @@ function minitray.new(_, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
---	local args = args or {} -- usesless now, leave it be for backward compatibility and future cases
-	local style = redutil.table.merge(default_style(), style or {})
+--	args = args or {} -- usesless now, leave it be for backward compatibility and future cases
+	style = redutil.table.merge(default_style(), style or {})
 
 	-- Initialize minitray window
 	--------------------------------------------------------------------------------

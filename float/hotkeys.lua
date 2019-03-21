@@ -72,7 +72,7 @@ end
 
 local function parse(rawkeys, columns)
 	local keys = {}
-	local columns = columns or 1
+	columns = columns or 1
 
 	local rk = {}
 	for _, k in ipairs(rawkeys) do if k[#k].description then table.insert(rk, k) end end
@@ -156,7 +156,7 @@ local function build_tip(pack, style, keypressed)
 				-- key with mods
 				if #key.mod > 0 then
 					local fm = {}
-					for i, v in ipairs(key.mod) do fm[i] = string.format('<b>%s</b>', v) end
+					for ki, v in ipairs(key.mod) do fm[ki] = string.format('<b>%s</b>', v) end
 					table.insert(fm, line)
 					line = table.concat(fm, string.format('<span color="%s">+</span>', style.color.gray))
 				end

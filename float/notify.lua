@@ -82,7 +82,7 @@ function notify:init()
 	-- Set info function
 	--------------------------------------------------------------------------------
 	function self:set(args)
-		local args = args or {}
+		args = args or {}
 		align_vertical:reset()
 
 		if args.value then

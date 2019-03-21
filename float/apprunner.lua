@@ -121,7 +121,7 @@ local function construct_item(style)
 	-- Item functions
 	------------------------------------------------------------
 	function item:set(args)
-		local args = args or {}
+		args = args or {}
 
 		local name_text = awful.util.escape(args.Name) or ""
 		item.name:set_markup(name_text)
@@ -353,7 +353,7 @@ end
 -- Set user hotkeys
 -----------------------------------------------------------------------------------------------------------------------
 function apprunner:set_keys(keys, layout)
-	local layout = layout or "all"
+	layout = layout or "all"
 	if keys then
 		self.keys[layout] = keys
 		if layout ~= "all" then self.keys.all = awful.util.table.join(self.keys.move, self.keys.action) end

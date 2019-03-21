@@ -95,7 +95,7 @@ function svgbox.new(image, resize_allowed, newcolor)
 	-- User functions
 	------------------------------------------------------------
 	function widg:set_image(image_name)
-		local image
+		local loaded_image
 
 		if type(image_name) == "string" then
 			local success, result = pcall(surface.load, image_name)
@@ -104,14 +104,14 @@ function svgbox.new(image, resize_allowed, newcolor)
 				return false
 			end
 			self.image_name = image_name
-			image = result
+			loaded_image = result
 		else
-			image = surface.load(image_name)
+			loaded_image = surface.load(image_name)
 		end
 
-		if image and (image.height <= 0 or image.width <= 0) then return false end
+		if loaded_image and (loaded_image.height <= 0 or loaded_image.width <= 0) then return false end
 
-		self._image = image
+		self._image = loaded_image
 		self.is_svg = is_svg(image_name)
 
 		self:emit_signal("widget::redraw_needed")
@@ -168,8 +168,8 @@ function svgbox.new(image, resize_allowed, newcolor)
 		if need_scale(self, width, height) then
 			if self.is_svg and self.vector_resize_allowed and is_pixbuf_loaded then
 				-- for vector image
-				local pixbuf = pixbuf_from_svg(self.image_name, math.floor(w * aspect), math.floor(h * aspect))
-				cr:set_source_pixbuf(pixbuf, 0, 0)
+				local pixbuf_ = pixbuf_from_svg(self.image_name, math.floor(w * aspect), math.floor(h * aspect))
+				cr:set_source_pixbuf(pixbuf_, 0, 0)
 			else
 				-- for raster image
 				cr:scale(aspect, aspect)

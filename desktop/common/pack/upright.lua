@@ -24,7 +24,7 @@ local barpack = { mt = {} }
 function barpack.new(num, style)
 
 	local pack = {}
-	local style = style or {}
+	style = style or {}
 
 	-- construct group of bar indicators
 	pack.layout = wibox.layout.align.horizontal()

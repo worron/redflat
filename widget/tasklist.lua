@@ -113,7 +113,7 @@ end
 --------------------------------------------------------------------------------
 local function get_state(c_group, style)
 
-	local style = style or {}
+	style = style or {}
 	local names = style.appnames or {}
 	local chars = style.char_digit
 
@@ -533,9 +533,9 @@ function redtasklist.winmenu:init(style)
 	local stateboxes = state_line_construct(state_icons, stateline_horizontal, style)
 
 	-- update function for state icons
-	local function stateboxes_update(c, state_icons, stateboxes)
-		for i, v in ipairs(state_icons) do
-			stateboxes[i]:set_color(v.indicator(c) and style.color.main or style.color.gray)
+	local function stateboxes_update(c, icons, boxes)
+		for i, v in ipairs(icons) do
+			boxes[i]:set_color(v.indicator(c) and style.color.main or style.color.gray)
 		end
 	end
 
@@ -704,7 +704,7 @@ function redtasklist.new(args, style)
 	local cs = args.screen
 	local filter = args.filter or redtasklist.filter.currenttags
 
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 	if style.custom_icon then style.icons = dfparser.icon_list(style.parser) end
 	if style.task.width  then style.width = style.task.width end
 
@@ -782,7 +782,7 @@ end
 
 -- focus/minimize
 function redtasklist.action.select(args)
-	local args = args or {}
+	args = args or {}
 	local state = get_state(args.group)
 
 	if state.focus then
@@ -799,13 +799,13 @@ end
 
 -- close all in group
 function redtasklist.action.close(args)
-	local args = args or {}
+	args = args or {}
 	for i, c in ipairs(args.group) do c:kill() end
 end
 
 -- show/close winmenu
 function redtasklist.action.menu(args)
-	local args = args or {}
+	args = args or {}
 	redtasklist.winmenu:show(args.group, args.gap)
 end
 

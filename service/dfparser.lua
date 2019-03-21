@@ -81,13 +81,13 @@ local function all_icon_path(style)
 	if not style.custom_only then table.insert(icon_theme_paths, '/usr/share/icons/hicolor/') end
 
 	-- seach only svg icons if need
-	local all_icon_sizes = style.scalable_only and { 'scalable' } or all_icon_sizes
+	local current_icon_sizes = style.scalable_only and { 'scalable' } or all_icon_sizes
 
 	-- form all avalible icon dirs
 	local icon_path = {}
 
 	for _, icon_theme_directory in ipairs(icon_theme_paths) do
-		for _, size in ipairs(all_icon_sizes) do
+		for _, size in ipairs(current_icon_sizes) do
 			for _, folder in ipairs(all_icon_folders) do
 				table.insert(icon_path, icon_theme_directory .. size .. "/" .. folder .. '/')
 			end
@@ -113,7 +113,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function dfparser.lookup_icon(icon_file, style)
 
-	local style = redutil.table.merge(default_style().icons, style or {})
+	style = redutil.table.merge(default_style().icons, style or {})
 
 	local df_icon
 	if style.df_icon and awful.util.file_readable(style.df_icon) then
@@ -287,7 +287,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function dfparser.menu(style)
 
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 	-- Categories list
 	--------------------------------------------------------------------------------
@@ -365,7 +365,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function dfparser.icon_list(style)
 
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 	local list = {}
 
 	for _, path in ipairs(style.desktop_file_dirs) do
@@ -390,7 +390,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function dfparser.program_list(style)
 
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 	local prog_list = {}
 
 	for _, path in ipairs(style.desktop_file_dirs) do

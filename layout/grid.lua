@@ -166,7 +166,7 @@ local function update_rail(c) grid.data.rail = get_rail(c) end
 
 -- Calculate cell geometry
 ------------------------------------------------------------
-local function cell(wa, cellnum)
+local function make_cell(wa, cellnum)
 	local cell = {
 		x = wa.width  / cellnum.x,
 		y = wa.height / cellnum.y
@@ -221,7 +221,7 @@ function grid.move_to(dir, is_rail, k)
 	end
 
 	local g = redutil.client.fullgeometry(c, g)
-	local k = k or 1
+	k = k or 1
 
 	if dir == "left" then
 		if is_rail then
@@ -372,7 +372,7 @@ function grid.arrange(p)
 
 	-- calculate cell
 	-- fix useless gap correction?
-	grid.data.cell = cell({ width = wa.width + 2 * p.useless_gap, height = wa.height + 2 * p.useless_gap }, cellnum)
+	grid.data.cell = make_cell({ width = wa.width + 2 * p.useless_gap, height = wa.height + 2 * p.useless_gap }, cellnum)
 
 	-- nothing to tile here
 	if #cls == 0 then return end
@@ -458,7 +458,7 @@ end
 -- Redflat navigator support functions
 -----------------------------------------------------------------------------------------------------------------------
 function grid:set_keys(keys, layout)
-	local layout = layout or "all"
+	layout = layout or "all"
 	if keys then
 		self.keys[layout] = keys
 		if layout ~= "all" then grid.keys.all = awful.util.table.join(grid.keys.move, grid.keys.resize) end

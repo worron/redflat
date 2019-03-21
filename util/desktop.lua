@@ -8,8 +8,8 @@ local desktop = { build = {} }
 -- Functions
 -----------------------------------------------------------------------------------------------------------------------
 local function sum(t, n)
+	n = n or #t
 	local s = 0
-	local n = n or #t
 	for i = 1, n do s = s + t[i] end
 	return s
 end
@@ -74,7 +74,7 @@ function desktop.build.static(objects, buttons)
 end
 
 function desktop.build.dynamic(objects, s, bgimage, buttons)
-	local s = s or mouse.screen
+	s = s or mouse.screen
 	local bg = awful.util.file_readable(bgimage or "") and bgimage or nil
 	local last = { visible = true }
 

@@ -44,7 +44,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function floatprompt:init(args)
 
-	local args = args or {}
+	args = args or {}
 	local style = default_style()
 	self.style = style
 

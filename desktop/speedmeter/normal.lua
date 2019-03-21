@@ -99,8 +99,8 @@ end
 local function fullchart(label_style, progressbar_style, chart_style, barvalue_height, maxm)
 
 	local widg = {}
-	local chart_style = redutil.table.merge(chart_style, { maxm = maxm })
-	local progressbar_style = redutil.table.merge(progressbar_style, { maxm = maxm })
+	chart_style = redutil.table.merge(chart_style, { maxm = maxm })
+	progressbar_style = redutil.table.merge(progressbar_style, { maxm = maxm })
 
 	-- construct layout with indicators
 	widg.barvalue = barvalue(progressbar_style, label_style)
@@ -145,8 +145,8 @@ function speedmeter.new(args, style)
 	local storage = {}
 	local last = {}
 
-	local args = redutil.table.merge(default_args, args or {})
-	local style = redutil.table.merge(default_style(), style or {})
+	args = redutil.table.merge(default_args, args or {})
+	style = redutil.table.merge(default_style(), style or {})
 	local maxspeed = redutil.table.merge(default_maxspeed, args.maxspeed or {})
 
 	local elements_style = {

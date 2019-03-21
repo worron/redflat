@@ -112,7 +112,7 @@ function taglist.new(args, style)
 	local hint = args.hint or make_tip
 	local pack = args.pack or base_pack
 
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 	-- Set tooltip
 	--------------------------------------------------------------------------------

@@ -45,7 +45,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function system.fs_info(args)
 	local fs_info = {}
-	local args = args or "/"
+	args = args or "/"
 
 	-- Get data from df
 	------------------------------------------------------------
@@ -80,8 +80,8 @@ function system.qemu_image_size(args)
 	------------------------------------------------------------
 	local size, k = string.match(line, "disk%ssize:%s([%.%d]+)(%w)")
 	img_info.size = q_format(size, k)
-	local vsize, k = string.match(line, "virtual%ssize:%s([%.%d]+)(%w)")
-	img_info.virtual_size = q_format(vsize, k)
+	local vsize, vk = string.match(line, "virtual%ssize:%s([%.%d]+)(%w)")
+	img_info.virtual_size = q_format(vsize, vk)
 	img_info.use_p = img_info.virtual_size > 0 and math.floor(img_info.size / img_info.virtual_size * 100) or 0
 
 	-- Format output special for redflat desktop widget
@@ -440,7 +440,7 @@ end
 --local sensors_store
 --
 --function system.thermal.sensors_core(args)
---	local args = args or {}
+--	args = args or {}
 --	local index = args.index or 0
 --
 --	if args.main then sensors_store = redutil.read.output("sensors | grep Core") end
@@ -455,7 +455,7 @@ end
 -- Using hddtemp
 ------------------------------------------------------------
 function system.thermal.hddtemp(args)
-	local args = args or {}
+	args = args or {}
 	local port = args.port or "7634"
 	local disk = args.disk or "/dev/sda"
 
@@ -604,7 +604,7 @@ end
 -- Get processes list and cpu and memory usage for every process
 -- !!! Fixes is needed !!!
 -----------------------------------------------------------------------------------------------------------------------
-local storage = {}
+local proc_storage = {}
 
 function system.proc_info(cpu_storage)
 	local process = {}
@@ -647,10 +647,10 @@ function system.proc_info(cpu_storage)
 
 			-- calculate cpu usage for process
 			local proc_time = proc_stat[13] + proc_stat[14]
-			local pcpu = (proc_time - (storage[pid] or 0)) / cpu_diff
+			local pcpu = (proc_time - (proc_storage[pid] or 0)) / cpu_diff
 
 			-- save current cpu time for future
-			storage[pid] = proc_time
+			proc_storage[pid] = proc_time
 
 			-- save results
 			table.insert(process, { pid = pid, name = name, mem = mem, pcpu = pcpu })
@@ -681,7 +681,7 @@ end
 -- CPU usage formatted special for panel widget
 --------------------------------------------------------------------------------
 function system.pformatted.cpu(crit)
-	local crit = crit or 75
+	crit = crit or 75
 	local storage = { cpu_total = {}, cpu_active = {} }
 
 	return function()
@@ -697,7 +697,7 @@ end
 -- Memory usage formatted special for panel widget
 --------------------------------------------------------------------------------
 function system.pformatted.mem(crit)
-	local crit = crit or 75
+	crit = crit or 75
 
 	return function()
 		local usage = system.memory_info().usep
@@ -712,7 +712,7 @@ end
 -- Battery state formatted special for panel widget
 --------------------------------------------------------------------------------
 function system.pformatted.bat(crit)
-	local crit = crit or 15
+	crit = crit or 15
 
 	return function(arg)
 		local state = system.battery(arg)

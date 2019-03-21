@@ -107,8 +107,8 @@ function speedmeter.new(args, style)
 	local storage = {}
 	local last_state = { false, false }
 
-	local args = redutil.table.merge(default_args, args or {})
-	local style = redutil.table.merge(default_style(), style or {})
+	args = redutil.table.merge(default_args, args or {})
+	style = redutil.table.merge(default_style(), style or {})
 	local maxspeed = redutil.table.merge(default_maxspeed, args.maxspeed or {})
 
 	style.chart = redutil.table.merge(style.chart, { autoscale = args.autoscale, color = style.color.gray })

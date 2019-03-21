@@ -39,12 +39,12 @@ function textset.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local args = args or {}
+	args = args or {}
 	--local funcarg = args.arg or {}
 	--local timeout = args.timeout or { 60 }
 	--local actions = args.actions or {}
 	--local async = args.async or {}
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 	-- Create widget
 	--------------------------------------------------------------------------------

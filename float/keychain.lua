@@ -53,7 +53,7 @@ local function build_label(item)
 end
 
 local function build_tip(store, item, prefix)
-	local prefix = prefix or build_label(item)
+	prefix = prefix or build_label(item)
 	for _, k in ipairs(item[3]) do
 		local p = prefix .. " " .. build_label(k)
 		if type(k[3]) == "table" then
@@ -97,7 +97,7 @@ function keychain:init(style)
 	self.parents = {}
 	self.sequence = ""
 
-	local style = redflat.util.table.merge(default_style(), style or {})
+	style = redflat.util.table.merge(default_style(), style or {})
 	self.style = style
 
 	-- Wibox

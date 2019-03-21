@@ -34,7 +34,7 @@ end
 -- Create cairo surface from text (useful for themed icons replacement)
 --------------------------------------------------------------------------------
 function base.placeholder(args)
-	local args = args or {}
+	args = args or {}
 	local tb = wibox.widget({
 		markup = args.txt or "?",
 		align  = "center",

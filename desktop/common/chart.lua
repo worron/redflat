@@ -44,7 +44,7 @@ function chart.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 	local count = 0
 	local barnum
 	local current_maxm = style.maxm

@@ -73,9 +73,9 @@ function navigator.make_paint(c)
 
 	-- User functions
 	------------------------------------------------------------
-	function widg:set_client(c)
-		if widg._data.client ~= c then
-			widg._data.client = c
+	function widg:set_client(client_)
+		if widg._data.client ~= client_ then
+			widg._data.client = client_
 			self:emit_signal("widget::redraw_needed")
 		end
 	end
@@ -183,9 +183,9 @@ function navigator.make_decor(c)
 		geometry = function() redutil.client.fullgeometry(object.wibox, redutil.client.fullgeometry(object.client)) end
 	}
 
-	function object:set_client(c)
-		object.client = c
-		object.widget:set_client(c)
+	function object:set_client(client_)
+		object.client = client_
+		object.widget:set_client(client_)
 		redutil.client.fullgeometry(object.wibox, redutil.client.fullgeometry(object.client))
 
 		object.client:connect_signal("focus", object.update.focus)

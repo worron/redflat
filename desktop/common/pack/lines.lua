@@ -40,7 +40,7 @@ end
 function barpack.new(num, style)
 
 	local pack = {}
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 	local progressbar_style = redutil.table.merge(style.progressbar, { color = style.color })
 	local label_style = redutil.table.merge(style.label, { color = style.color.gray })
 	local text_style = redutil.table.merge(style.text, { color = style.color.gray })
