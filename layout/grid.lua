@@ -220,7 +220,7 @@ function grid.move_to(dir, is_rail, k)
 		update_rail(c)
 	end
 
-	local g = redutil.client.fullgeometry(c, g)
+	local g = redutil.client.fullgeometry(c)
 	k = k or 1
 
 	if dir == "left" then

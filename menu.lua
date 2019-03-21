@@ -113,8 +113,7 @@ local function set_coords(_menu, screen_idx, m_coords)
 	local screen_w = s_geometry.x + s_geometry.width
 	local screen_h = s_geometry.y + s_geometry.height
 
-	local x = _menu.wibox.x
-	local y = _menu.wibox.y
+	local x, y
 	local b = _menu.wibox.border_width
 	local w = _menu.wibox.width + 2 * _menu.wibox.border_width
 	local h = _menu.wibox.height + 2 * _menu.wibox.border_width

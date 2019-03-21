@@ -135,7 +135,7 @@ function dfparser.lookup_icon(icon_file, style)
 	end
 
 	-- Find all possible locations to search
- 	local icon_path = all_icon_path(style)
+	local icon_path = all_icon_path(style)
 
 	-- Icon searching
 	for _, directory in ipairs(icon_path) do
@@ -326,9 +326,8 @@ function dfparser.menu(style)
 	-- Sort menu items by category and create submenu
 	--------------------------------------------------------------------------------
 	local appmenu = {}
-	local catmenu = {}
 	for _, menu_category in ipairs(categories) do
-		catmenu = {}
+		local catmenu = {}
 
 		for i = #prog_list, 1, -1 do
 			if prog_list[i].categories then
@@ -346,13 +345,13 @@ function dfparser.menu(style)
 	-- Collect all items without category to "Other" submenu
 	--------------------------------------------------------------------------------
 	if #prog_list > 0 then
-		catmenu = {}
+		local catmenu = {}
 
 		for _, prog in ipairs(prog_list) do
 			table.insert(catmenu, { prog.Name, prog.cmdline, prog.icon_path })
 		end
 
-		table.insert(appmenu, { "Other", catmenu, dfparser.lookup_icon("applications-other", icon_args) })
+		table.insert(appmenu, { "Other", catmenu, dfparser.lookup_icon("applications-other") })
 	end
 
 	return appmenu

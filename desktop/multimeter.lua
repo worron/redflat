@@ -47,7 +47,7 @@ local default_args = {
 
 -- Support functions
 -----------------------------------------------------------------------------------------------------------------------
-local function set_info(value, args, upright, lines, icon, last_state, style)
+local function set_info(value, args, upright, lines, icon, last, style)
 	local upright_alert = value.alert
 
 	-- set progressbar values and color
@@ -71,9 +71,9 @@ local function set_info(value, args, upright, lines, icon, last_state, style)
 	end
 
 	-- colorize icon if needed
-	if style.icon.image and upright_alert ~= last_state then
+	if style.icon.image and upright_alert ~= last.alert then
 		icon:set_color(upright_alert and style.color.main or style.color.gray)
-		last_state = upright_alert
+		last.alert = upright_alert
 	end
 end
 
@@ -86,7 +86,7 @@ function multim.new(args, style)
 	--------------------------------------------------------------------------------
 	local dwidget = {}
 	local icon
-	local last_state
+	local last = { alert = false }
 
 	args = redutil.table.merge(default_args, args or {})
 	--local geometry = redutil.table.merge(default_geometry, geometry or {})
@@ -137,12 +137,12 @@ function multim.new(args, style)
 	-- Update info function
 	--------------------------------------------------------------------------------
 	local function raw_set(state)
-		set_info(state, args, upright, lines, icon, last_state, style)
+		set_info(state, args, upright, lines, icon, last, style)
 	end
 
 	local function update_plain()
 		local state = args.meter.func(args.meter.args)
-		set_info(state, args, upright, lines, icon, last_state, style)
+		set_info(state, args, upright, lines, icon, last, style)
 	end
 
 	local update = args.meter.async and function() args.meter.async(raw_set, args.meter.args) end or update_plain

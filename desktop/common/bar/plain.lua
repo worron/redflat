@@ -61,7 +61,7 @@ function progressbar.new(style)
 
 	--style aliases
 	local stg, stw = style.chunk.gap, style.chunk.width
-	
+
 	-- Create custom widget
 	--------------------------------------------------------------------------------
 	local widg = wibox.widget.base.make_widget()
