@@ -239,7 +239,7 @@ common.grabbers = {}
 
 -- Base grabbers
 --------------------------------------------------------------------------------
-common.grabbers.base = function(mod, key, event)
+common.grabbers.base = function(mod, key)
 	for _, k in ipairs(common.keys.base) do
 		if redutil.key.match_grabber(k, mod, key) then k[3](); return true end
 	end
@@ -267,25 +267,25 @@ common.grabbers.base = function(mod, key, event)
 	end
 end
 
-common.grabbers.swap = function(mod, key, event)
+common.grabbers.swap = function(mod, key)
 	for _, k in ipairs(common.keys.swap) do
 		if redutil.key.match_grabber(k, mod, key) then k[3](); return true end
 	end
 end
 
-common.grabbers.tile = function(mod, key, event)
+common.grabbers.tile = function(mod, key)
 	for _, k in ipairs(common.keys.tile) do
 		if redutil.key.match_grabber(k, mod, key) then k[3](); return true end
 	end
 end
 
-common.grabbers.corner = function(mod, key, event)
+common.grabbers.corner = function(mod, key)
 	for _, k in ipairs(common.keys.corner) do
 		if redutil.key.match_grabber(k, mod, key) then k[3](); return true end
 	end
 end
 
-common.grabbers.magnifier = function(mod, key, event)
+common.grabbers.magnifier = function(mod, key)
 	for _, k in ipairs(common.keys.magnifier) do
 		if redutil.key.match_grabber(k, mod, key) then k[3](); return true end
 	end

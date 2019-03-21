@@ -145,7 +145,7 @@ local function get_rail(c)
 	local rail = { x = { wa.x, wa.x + wa.width }, y = { wa.y, wa.y + wa.height } }
 	table.remove(cls, hasitem(cls, c))
 
-	for i, v in ipairs(cls) do
+	for _, v in ipairs(cls) do
 		local lg = redutil.client.fullgeometry(v)
 		local xr = lg.x + lg.width
 		local yb = lg.y + lg.height
@@ -346,7 +346,7 @@ end
 
 -- Keygrabber
 -----------------------------------------------------------------------------------------------------------------------
-grid.maingrabber = function(mod, key, event)
+grid.maingrabber = function(mod, key)
 	for _, k in ipairs(grid.keys.all) do
 		if redutil.key.match_grabber(k, mod, key) then k[3](); return true end
 	end
@@ -378,7 +378,7 @@ function grid.arrange(p)
 	if #cls == 0 then return end
 
 	-- tile
-	for i, c in ipairs(cls) do
+	for _, c in ipairs(cls) do
 		local g = redutil.client.fullgeometry(c)
 
 		g = fit_cell(g, grid.data.cell)
@@ -389,7 +389,7 @@ end
 
 -- Mouse moving function
 -----------------------------------------------------------------------------------------------------------------------
-function grid.move_handler(c, context, hints)
+function grid.move_handler(c, _, hints)
 	local g = redutil.client.fullgeometry(c)
 	local hg = { x = hints.x, y = hints.y, width = g.width, height = g.height }
 	if is_diff(hg, g, grid.data.cell) then
@@ -400,7 +400,7 @@ end
 
 -- Mouse resizing function
 -----------------------------------------------------------------------------------------------------------------------
-function grid.mouse_resize_handler(c, corner, x, y)
+function grid.mouse_resize_handler(c, corner)
 	local g = redutil.client.fullgeometry(c)
 	local cg = g
 
@@ -408,7 +408,7 @@ function grid.mouse_resize_handler(c, corner, x, y)
 
 	mousegrabber.run(
 		function (_mouse)
-			 for k, v in ipairs(_mouse.buttons) do
+			 for _, v in ipairs(_mouse.buttons) do
 				if v then
 					local ng
 					if corner == "bottom_right" then

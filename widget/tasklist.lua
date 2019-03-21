@@ -276,7 +276,7 @@ end
 local function visible_clients(filter, screen)
 	local clients = {}
 
-	for i, c in ipairs(client.get()) do
+	for _, c in ipairs(client.get()) do
 		local hidden = c.skip_taskbar or c.hidden or c.type == "splash" or c.type == "dock" or c.type == "desktop"
 
 		if not hidden and filter(c, screen) then
@@ -761,7 +761,7 @@ function redtasklist.new(args, style)
 	-- force hide pop-up widgets if any client was closed
 	-- because last vars may be no actual anymore
 	client.connect_signal("unmanage",
-		function(c)
+		function()
 			tasklist_update()
 			redtasklist.tasktip.wibox.visible = false
 			redtasklist.winmenu.menu:hide()
@@ -800,7 +800,7 @@ end
 -- close all in group
 function redtasklist.action.close(args)
 	args = args or {}
-	for i, c in ipairs(args.group) do c:kill() end
+	for _, c in ipairs(args.group) do c:kill() end
 end
 
 -- show/close winmenu
@@ -810,12 +810,12 @@ function redtasklist.action.menu(args)
 end
 
 -- switch to next task
-function redtasklist.action.switch_next(args)
+function redtasklist.action.switch_next()
 	switch_focus(last.screen_clients[mouse.screen])
 end
 
 -- switch to previous task
-function redtasklist.action.switch_prev(args)
+function redtasklist.action.switch_prev()
 	switch_focus(last.screen_clients[mouse.screen], true)
 end
 
@@ -827,7 +827,7 @@ end
 
 -- To include all clients
 --------------------------------------------------------------------------------
-function redtasklist.filter.allscreen(c, screen)
+function redtasklist.filter.allscreen()
 	return true
 end
 
@@ -845,7 +845,7 @@ function redtasklist.filter.currenttags(c, screen)
 
 	local tags = screen.tags
 
-	for k, t in ipairs(tags) do
+	for _, t in ipairs(tags) do
 		if t.selected then
 			local ctags = c:tags()
 
@@ -867,7 +867,7 @@ function redtasklist.filter.minimizedcurrenttags(c, screen)
 
 	local tags = screen.tags
 
-	for k, t in ipairs(tags) do
+	for _, t in ipairs(tags) do
 		if t.selected then
 			local ctags = c:tags()
 

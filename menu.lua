@@ -170,11 +170,11 @@ function menu.action.exec(_menu, sel)
 	if sel > 0 then _menu:exec(sel, { exec = true }) end
 end
 
-function menu.action.back(_menu, sel)
+function menu.action.back(_menu)
 	_menu:hide()
 end
 
-function menu.action.close(_menu, sel)
+function menu.action.close(_menu)
 	menu.get_root(_menu):hide()
 end
 
@@ -615,10 +615,10 @@ function menu.new(args, parent)
 
 	-- Create items
 	------------------------------------------------------------
-	for i, v in ipairs(args) do _menu:add(v) end
+	for _, v in ipairs(args) do _menu:add(v) end
 
 	if args.items then
-		for i, v in ipairs(args.items) do _menu:add(v) end
+		for _, v in ipairs(args.items) do _menu:add(v) end
 	end
 
 	_menu._keygrabber = function (...)
