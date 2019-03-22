@@ -11,7 +11,7 @@ local beautiful = require("beautiful")
 local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
-local doublebar = require("redflat.gauge.graph.doublebar")
+local monitor = require("redflat.gauge.icon.double")
 local tooltip = require("redflat.float.tooltip")
 local system = require("redflat.system")
 
@@ -29,7 +29,7 @@ local default_args = {
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		widget    = doublebar.new,
+		widget    = monitor.new,
 		timeout   = 5,
 		digits    = 2
 	}
