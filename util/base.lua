@@ -1,5 +1,7 @@
 -- RedFlat util submodule
 
+local cairo = require("lgi").cairo
+local gears = require("gears")
 local wibox = require("wibox")
 local surface = require("gears.surface")
 
@@ -43,6 +45,18 @@ function base.placeholder(args)
 	})
 
 	return surface.widget_to_surface(tb, args.width or 24, args.height or 24)
+end
+
+-- Create rectangle cairo surface image
+--------------------------------------------------------------------------------
+function base.image(width, height, geometry, color)
+	local image = cairo.ImageSurface.create(cairo.Format.ARGB32, width, height)
+	local cr = cairo.Context(image)
+	cr:set_source(gears.color(color or "#000000"))
+	cr:rectangle(geometry.x, geometry.y, geometry.width, geometry.height)
+	cr:fill()
+
+	return image
 end
 
 
