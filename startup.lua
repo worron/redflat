@@ -12,7 +12,7 @@ local redutil = require("redflat.util")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local startup = {}
+local startup = { locked = false }
 
 startup.path = "/tmp/awesome-exit-reason"
 --startup.bin  = "awesome-client"
@@ -32,7 +32,7 @@ end
 function startup:activate()
 	-- check if it is first start
 	local reason = redutil.read.file(startup.path)
-	self.is_startup = not reason or reason == REASON.EXIT
+	self.is_startup = not reason or reason == REASON.EXIT and not self.locked
 
 	-- save reason on exit
 	awesome.connect_signal("exit",
