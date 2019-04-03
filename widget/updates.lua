@@ -23,7 +23,7 @@ local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
 local separator = require("redflat.gauge.separator")
 local redtip = require("redflat.float.hotkeys")
-
+local startup = require("redflat.startup")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -310,7 +310,7 @@ function updates:init(args, style)
 	updates.timer:connect_signal("timeout", function() self.check_updates() end)
 	updates.timer:start()
 
-	if style.firstrun then updates.timer:emit_signal("timeout") end
+	if style.firstrun and startup.is_startup then updates.timer:emit_signal("timeout") end
 
 	-- Connect additional signals
 	------------------------------------------------------------

@@ -19,6 +19,7 @@ local rednotify = require("redflat.float.notify")
 local tooltip = require("redflat.float.tooltip")
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
+local startup = require("redflat.startup")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -113,7 +114,7 @@ function mail:init(args, style)
 	self.timer:connect_signal("timeout", function() self.check_updates() end)
 	self.timer:start()
 
-	if style.firstrun then self.timer:emit_signal("timeout") end
+	if style.firstrun and startup.is_startup then self.timer:emit_signal("timeout") end
 end
 
 
