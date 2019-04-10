@@ -99,7 +99,7 @@ function notify:init()
 		end
 
 		image:set_image(args.icon ~= nil and args.icon or style.icon)
-		image:set_color(style.color.icon)
+		image:set_color(args.color or style.color.icon)
 	end
 
 	-- Set autohide timer
