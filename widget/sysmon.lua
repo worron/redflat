@@ -24,7 +24,7 @@ local function default_style()
 	local style = {
 		timeout = 5,
 		width   = nil,
-		widget = monitor.new
+		widget  = monitor.new
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.sysmon") or {})
 end
@@ -44,21 +44,21 @@ function sysmon.new(args, style)
 
 	-- Set tooltip
 	--------------------------------------------------------------------------------
-	local tp = tooltip({ objects = { widg } }, style.tooltip)
+	widg._tp = tooltip({ objects = { widg } }, style.tooltip)
 
 	-- Set update timer
 	--------------------------------------------------------------------------------
-	local t = timer({ timeout = style.timeout })
-	t:connect_signal("timeout",
-		function()
-			local state = args.func(args.arg)
-			widg:set_value(state.value)
-			widg:set_alert(state.alert)
-			tp:set_text(state.text)
-		end
-	)
-	t:start()
-	t:emit_signal("timeout")
+	widg._update = function()
+		local state = args.func(args.arg)
+		widg:set_value(state.value)
+		widg:set_alert(state.alert)
+		widg._tp:set_text(state.text)
+	end
+
+	widg._timer = timer({ timeout = style.timeout })
+	widg._timer:connect_signal("timeout", function() widg._update() end)
+	widg._timer:start()
+	widg._timer:emit_signal("timeout")
 
 	--------------------------------------------------------------------------------
 	return widg
