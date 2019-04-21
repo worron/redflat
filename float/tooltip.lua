@@ -2,7 +2,7 @@
 --                                                  RedFlat tooltip                                                  --
 -----------------------------------------------------------------------------------------------------------------------
 -- Slightly modded awful tooltip
--- style.margin were added
+-- padding added
 -- Proper placement on every text update
 -----------------------------------------------------------------------------------------------------------------------
 -- Some code was taken from
@@ -14,7 +14,6 @@
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
 local ipairs = ipairs
-local unpack = unpack or table.unpack
 local wibox = require("wibox")
 local awful = require("awful")
 local beautiful = require("beautiful")
@@ -30,7 +29,7 @@ local tooltip = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		margin       = { 5, 5, 3, 3 },
+		padding      = { vertical = 3, horizontal = 5 },
 		timeout      = 1,
 		font  = "Sans 12",
 		border_width = 2,
@@ -55,8 +54,10 @@ function tooltip.new(args, style)
 	--------------------------------------------------------------------------------
 	local ttp = { wibox = wibox({ type = "tooltip" }), tip = nil }
 	local tb = wibox.widget.textbox()
+	tb:set_align("center")
+
 	ttp.widget = tb
-	ttp.wibox:set_widget(wibox.container.margin(tb, unpack(style.margin)))
+	ttp.wibox:set_widget(tb)
 	tb:set_font(style.font)
 
 	-- configure wibox properties
@@ -70,13 +71,16 @@ function tooltip.new(args, style)
 
 	-- Tooltip size configurator
 	--------------------------------------------------------------------------------
-	 function ttp:set_geometry()
-		local geom = self.wibox:geometry()
-		local n_w, n_h = self.widget:get_preferred_size()
-		if geom.width ~= n_w or geom.height ~= n_h then
+	function ttp:set_geometry()
+		local wibox_sizes = self.wibox:geometry()
+		local w, h = self.widget:get_preferred_size()
+		local requsted_width = w + 2*style.padding.horizontal
+		local requsted_height = h + 2*style.padding.vertical
+
+		if wibox_sizes.width ~= requsted_width or wibox_sizes.height ~= requsted_height then
 			self.wibox:geometry({
-				width = n_w + style.margin[1] + style.margin[2],
-				height = n_h + style.margin[3] + style.margin[4]
+				width = requsted_width,
+				height = requsted_height
 			})
 		end
 	end
