@@ -32,7 +32,7 @@ end
 function startup:activate()
 	-- check if it is first start
 	local reason = redutil.read.file(startup.path)
-	self.is_startup = not reason or reason == REASON.EXIT and not self.locked
+	self.is_startup = (not reason or reason == REASON.EXIT) and not self.locked
 
 	-- save reason on exit
 	awesome.connect_signal("exit",
