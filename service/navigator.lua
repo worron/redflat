@@ -36,7 +36,7 @@ local function default_style()
 		linegap      = 35,
 		timeout      = 1,
 		notify       = {},
-		keytip       = { base = { geometry = { width = 600, height = 600 }, exit = true } },
+		keytip       = { base = { geometry = { width = 600 }, exit = true } },
 		titlefont    = { font = "Sans", size = 28, face = 1, slant = 0 },
 		num          = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "F1", "F3", "F4", "F5" },
 		font         = { font = "Sans", size = 22, face = 1, slant = 0 },

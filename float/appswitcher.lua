@@ -89,7 +89,7 @@ local function default_style()
 		parser          = {},
 		update_timeout  = 1,
 		min_icon_number = 4,
-		keytip          = { geometry = { width = 400, height = 320 }, exit = false },
+		keytip          = { geometry = { width = 400 }, exit = false },
 		title_font      = "Sans 12",
 		hotkeys         = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" },
 		font            = { font = "Sans", size = 16, face = 0, slant = 0 },

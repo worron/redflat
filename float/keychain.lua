@@ -34,7 +34,7 @@ local function default_style()
 		geometry        = { width = 220, height = 60 },
 		font            = "Sans 14 bold",
 		border_width    = 2,
-		keytip          = { geometry = { width = 500, height = 600 }, exit = false },
+		keytip          = { geometry = { width = 500 }, exit = false },
 		color           = { border = "#575757", wibox = "#202020" },
 		shape           = nil
 	}

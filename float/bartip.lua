@@ -30,7 +30,7 @@ local function default_style()
 		font          = "Sans 14",
 		set_position  = nil,
 		names         = {},
-		keytip        = { geometry = { width = 600, height = 320 } },
+		keytip        = { geometry = { width = 600 } },
 		shape         = nil,
 		margin        = { icon = { title = { 10, 10, 2, 2 }, state = { 10, 10, 2, 2 } } },
 		icon          = {

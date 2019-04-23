@@ -76,7 +76,7 @@ local function default_style()
 		border_width  = 2,
 		bottom_height = 80,
 		button_margin = { 140, 140, 22, 22 },
-		keytip        = { geometry = { width = 400, height = 300 } },
+		keytip        = { geometry = { width = 400 } },
 		title_font    = "Sans 14 bold",
 		unit          = { { "KB", -1 }, { "MB", 1024 }, { "GB", 1024^2 } },
 		color         = { border = "#575757", text = "#aaaaaa", highlight = "#eeeeee", main = "#b1222b",

@@ -92,7 +92,7 @@ local function default_style()
 		configfile      = os.getenv("HOME") .. "/.cache/awesome/applist",
 		label_font      = "Sans 14",
 		border_width    = 2,
-		keytip          = { geometry = { width = 500, height = 400 }, exit = false },
+		keytip          = { geometry = { width = 500 }, exit = false },
 		color           = { border = "#575757", text = "#aaaaaa", main = "#b1222b", urgent = "#32882d",
 		                    wibox  = "#202020", icon = "#a0a0a0", bg   = "#161616", gray   = "#575757" },
 		shape           = nil

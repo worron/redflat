@@ -30,7 +30,7 @@ hotkeys.keys = { close = { "Escape" }, close_all = { "Super_L" } }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		geometry      = { width = 800, height = 600 },
+		geometry      = { width = 800 },
 		border_margin = { 10, 10, 10, 10 },
 		tspace        = 5,
 		delim         = "   ",
@@ -41,6 +41,7 @@ local function default_style()
 		titlefont     = "Sans bold 14",
 		is_align      = false,
 		separator     = {},
+		heights       = { key = 20, title = 24 },
 		color         = { border = "#575757", text = "#aaaaaa", main = "#b1222b", wibox = "#202020",
 		                  gray = "#575757" },
 		shape         = nil
@@ -133,6 +134,7 @@ local function build_tip(pack, style, keypressed)
 
 	for i, column in ipairs(pack) do
 		local coltxt = {}
+		local height = 0
 
 		for _, name in pairs(column.names) do
 			local group = column.groups[name]
@@ -142,6 +144,7 @@ local function build_tip(pack, style, keypressed)
 				'<span font="%s" color="%s">%s</span>',
 				style.titlefont, style.color.gray, name
 			)
+			height = height + style.heights.title
 
 			-- build key tip line
 			for _, key in ipairs(group) do
@@ -168,10 +171,11 @@ local function build_tip(pack, style, keypressed)
 					clr, style.keyfont, line, style.delim, key.description
 				)
 				coltxt[#coltxt + 1] = line
+				height = height + style.heights.key
 			end
 		end
 
-		text[i] = table.concat(coltxt, '\n')
+		text[i] = { text = table.concat(coltxt, '\n'), height = height }
 	end
 
 	return text
@@ -185,7 +189,16 @@ function hotkeys:init()
 	--------------------------------------------------------------------------------
 	local style = default_style()
 	self.style = style
+	self.tip = {}
 
+	-- summary vertical size for all elements except tip textboxes
+	-- used to auto adjust widget height
+	self.vertical_pag = style.border_margin[3] + style.border_margin[4] + style.tspace + 2
+	if style.separator.marginh then
+		self.vertical_pag = self.vertical_pag + style.separator.marginh[3] + style.separator.marginh[4]
+	end
+
+	-- alias
 	local bm = style.border_margin
 
 	-- Create floating wibox for top widget
@@ -208,15 +221,20 @@ function hotkeys:init()
 	self.title:set_align("center")
 	self.title:set_font(style.titlefont)
 
+	local _, th = self.title:get_preferred_size()
+	self.vertical_pag = self.vertical_pag + th
+
+	local subtitle = wibox.widget.textbox("Press any key to highlight tip, Escape for exit")
+	subtitle:set_align("center")
+
+	local _, sh = subtitle:get_preferred_size()
+	self.vertical_pag = self.vertical_pag + sh
+
 	self.wibox:setup({
 		{
 			{
 				self.title,
-				{
-					text = "Press any key to highlight tip, Escape for exit",
-					align = "center",
-					widget = wibox.widget.textbox
-				},
+				subtitle,
 				redflat.gauge.separator.horizontal(style.separator),
 				spacing = style.tspace,
 				layout = wibox.layout.fixed.vertical,
@@ -272,9 +290,9 @@ function hotkeys:set_pack(name, pack, columns, geometry, on_close)
 		self.keypack,
 		{ name = name, pack = self.cache[name], geometry = geometry or self.style.geometry, on_close = on_close }
 	)
-	self.wibox:geometry(self.keypack[#self.keypack].geometry)
 	self.title:set_text(name .. " hotkeys")
 	self:highlight()
+	self:update_geometry(self.keypack[#self.keypack].geometry)
 end
 
 -- Remove current keypack
@@ -282,24 +300,33 @@ end
 function hotkeys:remove_pack()
 	table.remove(self.keypack)
 	self.title:set_text(self.keypack[#self.keypack].name .. " hotkeys")
-	self.wibox:geometry(self.keypack[#self.keypack].geometry)
 	self:highlight()
+	self:update_geometry(self.keypack[#self.keypack].geometry)
+end
+
+-- Calculate and set widget height
+--------------------------------------------------------------------------------
+function hotkeys:update_geometry(predefined)
+	local height = 0
+	for _, column in ipairs(self.tip) do height = math.max(height, column.height) end
+
+	self.wibox:geometry({ width = predefined.width, height = predefined.height or height + self.vertical_pag })
 end
 
 -- Highlight key tip
 --------------------------------------------------------------------------------
 function hotkeys:highlight()
-	local tip = build_tip(self.keypack[#self.keypack].pack, self.style, self.lastkey)
+	self.tip = build_tip(self.keypack[#self.keypack].pack, self.style, self.lastkey)
 
 	self.layout:reset()
-	for i, column in ipairs(tip) do
+	for i, column in ipairs(self.tip) do
 		if not self.boxes[i] then
 			self.boxes[i] = wibox.widget.textbox()
 			self.boxes[i]:set_valign("top")
 			self.boxes[i]:set_font(self.style.font)
 		end
 
-		self.boxes[i]:set_markup(column)
+		self.boxes[i]:set_markup(column.text)
 		self.layout:add(self.boxes[i])
 	end
 end

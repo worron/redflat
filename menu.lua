@@ -62,7 +62,7 @@ local function default_theme()
 		svg_scale    = { false, false },
 		hide_timeout = 0,
 		select_first = true,
-		keytip       = { geometry = { width = 400, height = 400 } },
+		keytip       = { geometry = { width = 400 } },
 		color        = { border = "#575757", text = "#aaaaaa", highlight = "#eeeeee",
 		                 main = "#b1222b", wibox = "#202020",
 		                 submenu_icon = nil, right_icon = nil, left_icon = nil },

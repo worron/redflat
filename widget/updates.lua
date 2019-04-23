@@ -54,7 +54,7 @@ local function default_style()
 			margin = { close = { 0, 0, 0, 0 }, state = { 0, 0, 0, 0 }, title = { 0, 0, 0, 0 }, image = { 0, 0, 0, 0 } }
 		},
 		icon        = redutil.base.placeholder(),
-		keytip      = { geometry = { width = 400, height = 360 } },
+		keytip      = { geometry = { width = 400 } },
 		notify      = {},
 		firstrun    = false,
 		need_notify = true,
