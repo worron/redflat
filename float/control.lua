@@ -196,7 +196,7 @@ end
 -- Window control
 -----------------------------------------------------------------------------------------------------------------------
 
--- Put at center of screen
+-- Put window at center of screen
 --------------------------------------------------------------------------------
 function control:center()
 	if not self.client then return end
@@ -211,22 +211,29 @@ end
 function control:resize(is_shrinking)
 	if not self.client then return end
 
+	-- calculate new size
 	local g = self.client:geometry()
 	local d = self.step * (is_shrinking and -1 or 1)
+	local newg
 
 	if self.resize_mode == RESIZE_MODE.FULL then
-		self.client:geometry({ x = g.x - d, y = g.y - d, width = g.width + 2 * d, height = g.height + 2 * d })
+		newg = { x = g.x - d, y = g.y - d, width = g.width + 2 * d, height = g.height + 2 * d }
 	elseif self.resize_mode == RESIZE_MODE.HORIZONTAL then
-		self.client:geometry({ x = g.x - d, width = g.width + 2 * d  })
+		newg = { x = g.x - d, width = g.width + 2 * d  }
 	elseif self.resize_mode == RESIZE_MODE.VERTICAL then
-		self.client:geometry({ y = g.y - d, height = g.height + 2 * d  })
+		newg = { y = g.y - d, height = g.height + 2 * d  }
 	end
 
+	-- validate new size
+	if newg.height and newg.height <= 0 or newg.width and newg.width < 0 then return end
+
+	-- apply new size
+	self.client:geometry(newg)
 	if self.onscreen then control_off_screen(self.client) end
 	self:update()
 end
 
--- Move/resize by direction
+-- Move by direction
 --------------------------------------------------------------------------------
 function control:move(direction)
 	if not self.client then return end
