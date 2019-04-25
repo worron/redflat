@@ -21,6 +21,9 @@ local svgbox    = require("redflat.gauge.svgbox")
 -----------------------------------------------------------------------------------------------------------------------
 local control = {}
 
+-- Resize mode alias
+local RESIZE_MODE = { FULL = 1, HORIZONTAL = 2, VERTICAL = 3 }
+
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
@@ -34,19 +37,21 @@ local function default_style()
 		shape         = nil,
 		steps         = { 1, 10, 20, 50 },
 		default_step  = 2,
-		is_resizing   = false,
 		onscreen      = true,
 		margin        = { icon = { onscreen = { 10, 10, 2, 2 }, mode = { 10, 10, 2, 2 } } },
 		icon          = {
-			move     = redutil.base.placeholder({ txt = "M" }),
-			resize   = redutil.base.placeholder({ txt = "R" }),
+			resize   = {},
 			onscreen = redutil.base.placeholder({ txt = "X" }),
 		},
 		color         = { border = "#575757", text = "#aaaaaa", main = "#b1222b", wibox = "#202020",
 		                  gray = "#575757", icon = "#a0a0a0" },
 	}
 
-	return redutil.table.merge(style, redutil.table.check(beautiful, "float.bartip") or {})
+	style.icon.resize[RESIZE_MODE.FULL] = redutil.base.placeholder({ txt = "F" })
+	style.icon.resize[RESIZE_MODE.HORIZONTAL] = redutil.base.placeholder({ txt = "H" })
+	style.icon.resize[RESIZE_MODE.VERTICAL] = redutil.base.placeholder({ txt = "V" })
+
+	return redutil.table.merge(style, redutil.table.check(beautiful, "float.control") or {})
 end
 
 -- key bindings
@@ -65,23 +70,23 @@ control.keys.control = {
 		{ description = "Decrease window size", group = "Window control" }
 	},
 	{
-		{ "Mod4" }, "l", function() control:direction_action("right") end,
-		{ description = "Move/resize window to right", group = "Window control" }
+		{ "Mod4" }, "l", function() control:move("right") end,
+		{ description = "Move window to right", group = "Window control" }
 	},
 	{
-		{ "Mod4" }, "j", function() control:direction_action("left") end,
-		{ description = "Move/resize window to left", group = "Window control" }
+		{ "Mod4" }, "j", function() control:move("left") end,
+		{ description = "Move window to left", group = "Window control" }
 	},
 	{
-		{ "Mod4" }, "k", function() control:direction_action("bottom") end,
-		{ description = "Move/resize window to bottom", group = "Window control" }
+		{ "Mod4" }, "k", function() control:move("bottom") end,
+		{ description = "Move window to bottom", group = "Window control" }
 	},
 	{
-		{ "Mod4" }, "i", function() control:direction_action("top") end,
-		{ description = "Move/resize window to top", group = "Window control" }
+		{ "Mod4" }, "i", function() control:move("top") end,
+		{ description = "Move window to top", group = "Window control" }
 	},
 	{
-		{ "Mod4" }, "n", function() control:switch_mode() end,
+		{ "Mod4" }, "n", function() control:switch_resize_mode() end,
 		{ description = "Switch moving/resizing mode", group = "Mode" }
 	},
 	{
@@ -134,7 +139,7 @@ function control:init()
 	self.client = nil
 	self.step = style.steps[style.default_step]
 
-	self.is_resizing = style.is_resizing
+	self.resize_mode = RESIZE_MODE.FULL
 	self.onscreen = style.onscreen
 
 	-- Create floating wibox for top widget
@@ -158,7 +163,7 @@ function control:init()
 	self.onscreen_icon = svgbox(self.style.icon.onscreen)
 	self.onscreen_icon:set_color(self.onscreen and self.style.color.main or self.style.color.icon)
 
-	self.mode_icon = svgbox(self.is_resizing and self.style.icon.resize or self.style.icon.move)
+	self.mode_icon = svgbox(self.style.icon.resize[self.resize_mode])
 	self.mode_icon:set_color(self.style.color.icon)
 
 	self.wibox:setup({
@@ -209,41 +214,33 @@ function control:resize(is_shrinking)
 	local g = self.client:geometry()
 	local d = self.step * (is_shrinking and -1 or 1)
 
-	self.client:geometry({ x = g.x - d, y = g.y - d, width = g.width + 2 * d, height = g.height + 2 * d })
-	if self.onscreen then control_off_screen(self.client) end
-	self:update()
-end
-
-
--- Move/resize by direction
---------------------------------------------------------------------------------
-function control:direction_action(direction)
-	if not self.client then return end
-
-	local g = self.client:geometry()
-
-	if self.is_resizing then
-		if direction == "left" then
-			self.client:geometry({ x = g.x + self.step, width = g.width - 2 * self.step  })
-		elseif direction == "right" then
-			self.client:geometry({ x = g.x - self.step, width = g.width + 2 * self.step  })
-		elseif direction == "top" then
-			self.client:geometry({ y = g.y - self.step, height = g.height + 2 * self.step  })
-		elseif direction == "bottom" then
-			self.client:geometry({ y = g.y + self.step, height = g.height - 2 * self.step  })
-		end
-	else
-		local d = self.step * ((direction == "left" or direction == "top") and -1 or 1)
-
-		if direction == "left" or direction == "right" then
-			self.client:geometry({ x = g.x + d })
-		else
-			self.client:geometry({ y = g.y + d })
-		end
+	if self.resize_mode == RESIZE_MODE.FULL then
+		self.client:geometry({ x = g.x - d, y = g.y - d, width = g.width + 2 * d, height = g.height + 2 * d })
+	elseif self.resize_mode == RESIZE_MODE.HORIZONTAL then
+		self.client:geometry({ x = g.x - d, width = g.width + 2 * d  })
+	elseif self.resize_mode == RESIZE_MODE.VERTICAL then
+		self.client:geometry({ y = g.y - d, height = g.height + 2 * d  })
 	end
 
 	if self.onscreen then control_off_screen(self.client) end
 	self:update()
+end
+
+-- Move/resize by direction
+--------------------------------------------------------------------------------
+function control:move(direction)
+	if not self.client then return end
+
+	local g = self.client:geometry()
+	local d = self.step * ((direction == "left" or direction == "top") and -1 or 1)
+
+	if direction == "left" or direction == "right" then
+		self.client:geometry({ x = g.x + d })
+	else
+		self.client:geometry({ y = g.y + d })
+	end
+
+	if self.onscreen then control_off_screen(self.client) end
 end
 
 
@@ -271,11 +268,13 @@ function control:choose_step(index)
 	self:update()
 end
 
--- Switch move/resize mode
+-- Switch resize mode
 --------------------------------------------------------------------------------
-function control:switch_mode()
-	self.is_resizing = not self.is_resizing
-	self.mode_icon:set_image(self.is_resizing and self.style.icon.resize or self.style.icon.move)
+function control:switch_resize_mode()
+	self.resize_mode = self.resize_mode + 1
+	if not awful.util.table.hasitem(RESIZE_MODE, self.resize_mode) then self.resize_mode = RESIZE_MODE.FULL end
+
+	self.mode_icon:set_image(self.style.icon.resize[self.resize_mode])
 end
 
 -- Switch onscreen mode
