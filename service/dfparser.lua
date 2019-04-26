@@ -18,6 +18,7 @@ local awful = require("awful")
 local beautiful = require("beautiful")
 
 local redutil = require("redflat.util")
+local gears = require("gears")
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -128,7 +129,7 @@ function dfparser.lookup_icon(icon_file, style)
 
 	if icon_file:sub(1, 1) == '/' then
 		if is_format(icon_file, icon_formats) then
-			return icon_file
+			return gears.filesystem.file_readable(icon_file) and icon_file or style.default_icon
 		else
 			icon_file = string.match(icon_file, "([%a%d%-]+)%.")
 		end
