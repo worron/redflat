@@ -303,7 +303,9 @@ function control:show()
 
 	if not self.wibox.visible then
 		-- check if focused client floating
-		local is_floating = client.focus and client.focus.floating
+		local layout = awful.layout.get(mouse.screen)
+		local is_floating = client.focus and (client.focus.floating or layout.name == "floating")
+		                    and not client.focus.maximized
 
 		if not is_floating then
 			rednotify:show(redutil.table.merge({ text = "No floating window focused" }, self.style.notify))
