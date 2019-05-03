@@ -51,6 +51,7 @@ local default_button_style = {
 	color = default_style.color
 }
 
+local positions = { "left", "right", "top", "bottom" }
 
 -- Support functions
 -----------------------------------------------------------------------------------------------------------------------
@@ -154,11 +155,14 @@ end
 -- Toggle client titlebar
 ------------------------------------------------------------
 function titlebar.toggle(c, position)
-	local model = titlebar.get_model(c, position)
-	if not model then return end
-
-	model.tfunction(c, model.hidden and not model.cutted and model.size or 0)
-	model.hidden = not model.hidden
+	local all_positions = position and { position } or positions
+	for _, pos in ipairs(all_positions) do
+		local model = titlebar.get_model(c, pos)
+		if model then
+			model.tfunction(c, model.hidden and not model.cutted and model.size or 0)
+			model.hidden = not model.hidden
+		end
+	end
 end
 
 -- Add titlebar view model
@@ -211,27 +215,34 @@ end
 ------------------------------------------------------------
 function titlebar.cut_all(cl, position)
 	cl = cl or titlebar.get_clients()
-	local cutted = {}
-	for _, c in ipairs(cl) do
-		local model = titlebar.get_model(c, position)
-		if model and not model.cutted then
-			model.cutted = true
-			table.insert(cutted, c)
-			if not model.hidden then model.tfunction(c, 0) end
+	--local cutted = {}
+	local all_positions = position and { position } or positions
+
+	for _, pos in ipairs(all_positions) do
+		for _, c in ipairs(cl) do
+			local model = titlebar.get_model(c, pos)
+			if model and not model.cutted then
+				model.cutted = true
+				--table.insert(cutted, c)
+				if not model.hidden then model.tfunction(c, 0) end
+			end
 		end
 	end
-	return cutted
+	--return cutted
 end
 
 -- Restore client titlebar if it was cutted
 ------------------------------------------------------------
 function titlebar.restore_all(cl, position)
 	cl = cl or titlebar.get_clients()
-	for _, c in ipairs(cl) do
-		local model = titlebar.get_model(c, position)
-		if model.cutted then
-			model.cutted = false
-			if not model.hidden then model.tfunction(c, model.size) end
+	local all_positions = position and { position } or positions
+	for _, pos in ipairs(all_positions) do
+		for _, c in ipairs(cl) do
+			local model = titlebar.get_model(c, pos)
+			if model.cutted then
+				model.cutted = false
+				if not model.hidden then model.tfunction(c, model.size) end
+			end
 		end
 	end
 end
@@ -265,7 +276,7 @@ function titlebar.global_switch(index)
 	if titlebar._index > titlebar._num then titlebar._index = 1 end
 
 	for _, c in pairs(titlebar.get_clients()) do
-		for _, position in ipairs({ "left", "right", "top", "bottom" }) do
+		for _, position in ipairs(positions) do
 			titlebar.switch(c, position, titlebar._index)
 		end
 	end
