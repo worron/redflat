@@ -117,21 +117,22 @@ function dfparser.lookup_icon(icon_file, style)
 	style = redutil.table.merge(default_style().icons, style or {})
 
 	local df_icon
-	if style.df_icon and awful.util.file_readable(style.df_icon) then
+	if style.df_icon and gears.filesystem.file_readable(style.df_icon) then
 		df_icon = style.df_icon
 	end
 
 	-- No icon name
-	if not icon_file or icon_file == "" then return style.default_icon end
+	if not icon_file or icon_file == "" then return df_icon end
 
 	-- Handle full path icons
 	local icon_formats = style.scalable_only and { "svg" } or { "svg", "png", "gif" }
 
 	if icon_file:sub(1, 1) == '/' then
 		if is_format(icon_file, icon_formats) then
-			return gears.filesystem.file_readable(icon_file) and icon_file or style.default_icon
+			return gears.filesystem.file_readable(icon_file) and icon_file or df_icon
 		else
 			icon_file = string.match(icon_file, "([%a%d%-]+)%.")
+			if not icon_file then return df_icon end
 		end
 	end
 
