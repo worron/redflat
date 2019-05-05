@@ -239,7 +239,7 @@ function titlebar.restore_all(cl, position)
 	for _, pos in ipairs(all_positions) do
 		for _, c in ipairs(cl) do
 			local model = titlebar.get_model(c, pos)
-			if model.cutted then
+			if model and model.cutted then
 				model.cutted = false
 				if not model.hidden then model.tfunction(c, model.size) end
 			end
