@@ -591,7 +591,8 @@ function system.transmission.info(setup, args)
 		return
 	end
 
-	awful.spawn.easy_async("transmission-remote -l", function(output)
+	local command = args.command or "transmission-remote localhost -l"
+	awful.spawn.easy_async(command, function(output)
 		local state = system.transmission.parse(output)
 		if args.speed_only then
 			state.lines[1][2] = state.lines[1][1]
