@@ -490,18 +490,10 @@ end
 -- Using nvidia-smi on sysmem with optimus (nvidia-prime)
 ------------------------------------------------------------
 function system.thermal.nvprime()
-	local temp = 0
-	local nvidia_on = string.find(redutil.read.output("prime-select query"), "nvidia")
-
-	if nvidia_on ~= nil then
-		local t = string.match(
-			redutil.read.output("nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader"),
-			"%d%d"
-		)
-		if t then temp = t end
-	end
-
-	return { tonumber(temp), off = nvidia_on == nil }
+	-- remove prime select, not all systems have it
+	local temp = string.match(redutil.read.output("nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader"),"%d%d")
+	-- checks that local temp is not null then returns the convert string to number or if fails returns null
+	if temp ~= nil then return { tonumber(temp) } else return { 0 } end
 end
 
 -- Get info from transmission-remote client
