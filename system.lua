@@ -459,12 +459,15 @@ function system.thermal.hddtemp(args)
 	local port = args.port or "7634"
 	local disk = args.disk or "/dev/sda"
 
-	local output = redutil.read.output(
-		"echo | curl --connect-timeout 1 -fsm 3 telnet://127.0.0.1:" .. port .. " | grep " .. disk
-	)
-	local temp = string.match(output, "|(%d+)|[CF]|")
+	local output = redutil.read.output("echo | curl --connect-timeout 1 -fsm 3 telnet://127.0.0.1:" .. port)
 
-	return temp and { tonumber(temp) } or { 0 }
+	for mnt, _, temp, _ in output:gmatch("|(.-)|(.-)|(.-)|(.-)|") do
+		if mnt == disk then
+			return temp and { tonumber(temp) }
+		end
+	end
+
+	return { 0 }
 end
 
 -- Using nvidia-settings on sysmem with optimus (bumblebee)
