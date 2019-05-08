@@ -59,19 +59,20 @@ mail.checkers["curl_imap"].action = function(args)
 	return curl_req
 end
 
-mail.checkers["exchange"] = { type = "plain" }
-mail.checkers["exchange"].action = function(args)
+mail.checkers["imap"] = { type = "plain" }
+mail.checkers["imap"].action = function(args)
 	-- require imap4 library
 	-- need to luarock install imap4 library
 	local imap4   = require "imap4"
 
 	-- grab args or set default values
-	local port = args.port or 993
+    -- gmail requires 'Less secure app access'
+    local port = args.port or 993
 	local url = args.server or "outlook.office365.com"
 	local mailbox = args.mailbox or "Inbox"
 
 	-- setup connection
-	local connection = imap4(url, port, {protocol = 'sslv23'})
+	local connection = imap4(url, port, {protocol = 'tlsv1_2'})
 	assert(connection:isCapable('IMAP4rev1'))
 	connection:login(args.username, args.password)
 
