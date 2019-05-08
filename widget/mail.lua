@@ -40,13 +40,15 @@ end
 
 -- Mail check functions
 -----------------------------------------------------------------------------------------------------------------------
-mail.check_function = {}
+mail.checkers = {}
 
-mail.check_function["script"] = function(args)
+mail.checkers["script"] = { type = "spawn" }
+mail.checkers["script"].action = function(args)
 	return args.script
 end
 
-mail.check_function["curl_imap"] = function(args)
+mail.checkers["curl_imap"] = { type = "spawn" }
+mail.checkers["curl_imap"].action = function(args)
 	local port = args.port or 993
 	local request = "-X 'STATUS INBOX (UNSEEN)'"
 	local head_command = "curl --connect-timeout 5 -fsm 5"
@@ -57,19 +59,19 @@ mail.check_function["curl_imap"] = function(args)
 	return curl_req
 end
 
-mail.check_function["imap"] = function(args)
+mail.checkers["exchange"] = { type = "plain" }
+mail.checkers["exchange"].action = function(args)
 	-- require imap4 library
 	-- need to luarock install imap4 library
 	local imap4   = require "imap4"
 
 	-- grab args or set default values
-	-- gmail requires 'Less secure app access'
 	local port = args.port or 993
 	local url = args.server or "outlook.office365.com"
 	local mailbox = args.mailbox or "Inbox"
 
 	-- setup connection
-	local connection = imap4(url, port, {protocol = 'tlsv1_2'})
+	local connection = imap4(url, port, {protocol = 'sslv23'})
 	assert(connection:isCapable('IMAP4rev1'))
 	connection:login(args.username, args.password)
 
@@ -129,10 +131,10 @@ function mail:init(args, style)
 		force_notify = is_force
 
 		for _, cmail in ipairs(maillist) do
-			if cmail.checker == "exchange" then
-				mail_count(mail.check_function[cmail.checker](cmail))
-			else
-				awful.spawn.easy_async(mail.check_function[cmail.checker](cmail), mail_count)
+			if mail.checkers[cmail.checker].type == "plain" then
+				mail_count(mail.checkers[cmail.checker].action(cmail))
+			elseif mail.checkers[cmail.checker].type == "spawn" then
+				awful.spawn.easy_async(mail.checkers[cmail.checker].action(cmail), mail_count)
 			end
 		end
 	end
@@ -145,7 +147,6 @@ function mail:init(args, style)
 
 	if style.firstrun and startup.is_startup then self.timer:emit_signal("timeout") end
 end
-
 
 
 -- Create a new mail widget
