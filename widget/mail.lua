@@ -57,6 +57,30 @@ mail.check_function["curl_imap"] = function(args)
 	return curl_req
 end
 
+mail.check_function["exchange"] = function(args)
+	-- require imap4 library
+	-- need to luarock install imap4 library
+	local imap4   = require "imap4"
+
+	-- grab args or set default values
+	local port = args.port or 993
+	local url = args.server or "outlook.office365.com"
+	local mailbox = args.mailbox or "Inbox"
+
+	-- setup connection
+	local connection = imap4(url, port, {protocol = 'sslv23'})
+	assert(connection:isCapable('IMAP4rev1'))
+	connection:login(args.username, args.password)
+
+	-- get information
+	local stat = connection:status(mailbox, {'UNSEEN'})
+
+	-- close connection
+	connection:logout()
+
+	-- return unseen email count
+	return stat.UNSEEN
+end
 
 -- Initialize mails structure
 -----------------------------------------------------------------------------------------------------------------------
@@ -104,7 +128,11 @@ function mail:init(args, style)
 		force_notify = is_force
 
 		for _, cmail in ipairs(maillist) do
-			awful.spawn.easy_async(mail.check_function[cmail.checker](cmail), mail_count)
+			if cmail.checker == "exchange" then
+				mail_count(mail.check_function[cmail.checker](cmail))
+			else
+				awful.spawn.easy_async(mail.check_function[cmail.checker](cmail), mail_count)
+			end
 		end
 	end
 
