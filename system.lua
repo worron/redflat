@@ -596,19 +596,28 @@ end
 -- Async transmission meter function
 --------------------------------------------------------------------------------
 function system.transmission.info(setup, args)
-	if not system.transmission.is_running() then
-		setup({ bars = {}, lines = { { 0, 0 }, { 0, 0 } }, alert = true })
-		return
-	end
+	-- test assumes local transmission only
+	--if not system.transmission.is_running() then
+	--	setup({ bars = {}, lines = { { 0, 0 }, { 0, 0 } }, alert = true })
+	--	return
+	--end
 
 	local command = args.command or "transmission-remote localhost -l"
+
 	awful.spawn.easy_async(command, function(output)
-		local state = system.transmission.parse(output)
-		if args.speed_only then
-			state.lines[1][2] = state.lines[1][1]
-			state.lines[2][2] = state.lines[2][1]
+		-- rather than check if an instance of transmission is running locally, check if there is actually any output
+		-- zero torrents or no program equates to same result
+		if string.len(output) > 0 then
+			local state = system.transmission.parse(output)
+
+			if args.speed_only then
+				state.lines[1][2] = state.lines[1][1]
+				state.lines[2][2] = state.lines[2][1]
+			end
+			setup(state)
+		else
+			setup({ bars = {}, lines = { { 0, 0 }, { 0, 0 } }, alert = true })
 		end
-		setup(state)
 	end)
 end
 
