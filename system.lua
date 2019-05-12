@@ -527,7 +527,7 @@ end
 --------------------------------------------------------------------------------
 function system.transmission.sort_torrent(a, b)
 	return a.status == "Downloading" and b.status ~= "Downloading"
-			or a.status == "Stopped" and b.status ~= "Stopped" and b.status ~= "Downloading"
+	       or a.status == "Stopped" and b.status ~= "Stopped" and b.status ~= "Downloading"
 end
 
 -- Function to parse 'transmission-remote -l' output
@@ -562,17 +562,14 @@ function system.transmission.parse(output, show_active_only)
 			end
 		else
 			-- get torrent info
-			local prog, status, name = string.match(line,
-					"%s+%d+%s+(%d+)%%%s+[%d%.]+%s%a+%s+.+%s+[%d%.]+%s+[%d%.]+%s+[%d%.]+%s+(%a+)%s+(.+)"
+			local prog, status, name = string.match(
+				line,
+				"%s+%d+%s+(%d+)%%%s+[%d%.]+%s%a+%s+.+%s+[%d%.]+%s+[%d%.]+%s+[%d%.]+%s+(%a+)%s+(.+)"
 			)
 
 			if prog and status then
 				-- if active only is selected then filter
-				if show_active_only then
-					if status == "Downloading" or status == "Seeding" then
-						table.insert(torrent.list, { prog = prog, status = status, name = name })
-					end
-				else
+				if not show_active_only or (status == "Downloading" or status == "Seeding") then
 					table.insert(torrent.list, { prog = prog, status = status, name = name })
 				end
 
@@ -584,7 +581,6 @@ function system.transmission.parse(output, show_active_only)
 			end
 		end
 	end
-
 
 	-- Sort torrents
 	------------------------------------------------------------
@@ -611,13 +607,12 @@ end
 --------------------------------------------------------------------------------
 function system.transmission.info(setup, args)
 	local command = args.command or "transmission-remote localhost -l"
-	local show_active_only = args.show_active_only or false
 
 	awful.spawn.easy_async(command, function(output)
 		-- rather than check if an instance of transmission is running locally, check if there is actually any output
 		-- zero torrents or no program equates to same result
 		if string.len(output) > 0 then
-			local state = system.transmission.parse(output, show_active_only)
+			local state = system.transmission.parse(output, args.show_active_only)
 
 			if args.speed_only then
 				state.lines[1][2] = state.lines[1][1]
