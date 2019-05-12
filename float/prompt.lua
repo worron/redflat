@@ -11,15 +11,15 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local type = type
-local unpack = unpack
+local unpack = unpack or table.unpack
 
 local awful = require("awful")
 local beautiful = require("beautiful")
 local wibox = require("wibox")
+local naughty = require("naughty")
 
 local redutil = require("redflat.util")
 local decoration = require("redflat.float.decoration")
-local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -32,8 +32,9 @@ local function default_style()
 		geometry     = { width = 620, height = 120 },
 		margin       = { 20, 20, 40, 40 },
 		border_width = 2,
+		naughty      = {},
 		color        = { border = "#575757", wibox = "#202020" },
-		shape        = rectshape
+		shape        = nil
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.prompt") or {})
 end
@@ -43,13 +44,13 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function floatprompt:init(args)
 
-	local args = args or {}
+	args = args or {}
 	local style = default_style()
+	self.style = style
 
 	-- Create prompt widget
 	--------------------------------------------------------------------------------
 	self.widget = wibox.widget.textbox()
-	self.info = false
 	self.widget:set_ellipsize("start")
 	self.prompt = args.prompt or " Run: "
 	self.decorated_widget = decoration.textfield(self.widget, style.field)
@@ -75,22 +76,21 @@ function floatprompt:run()
 	if not self.wibox then self:init() end
 	redutil.placement.centered(self.wibox, nil, mouse.screen.workarea)
 	self.wibox.visible = true
-	self.info = false
 
-	return awful.prompt.run({
+	awful.prompt.run({
 		prompt = self.prompt,
 		textbox = self.widget,
 		exe_callback = function(input)
 			local result = awful.spawn(input)
 			if type(result) == "string" then
-				self.widget:set_text(result)
-				self.info = true
+				local notify_args = redutil.table.merge({ title = "Prompt", text = result }, self.style.naughty)
+				naughty.notify(notify_args)
 			end
 		end,
 		history_path = awful.util.getdir("cache") .. "/history",
 		history_max = 30,
 		completion_callback = awful.completion.shell,
-		done_callback = function () if not self.info then self.wibox.visible = false end end,
+		done_callback = function () self.wibox.visible = false end,
 	})
 end
 

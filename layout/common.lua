@@ -12,7 +12,7 @@ local navigator = require("redflat.service.navigator")
 
 local ipairs = ipairs
 
-local layout = awful.layout
+local alayout = awful.layout
 local redutil = require("redflat.util")
 local redtip = require("redflat.float.hotkeys")
 
@@ -183,39 +183,39 @@ local function build_magnifier_tip()
 end
 
 local function set_corner_tip()
-	common.tips[layout.suit.corner.nw] = build_corner_tip()
-	common.tips[layout.suit.corner.ne] = build_corner_tip()
-	common.tips[layout.suit.corner.sw] = build_corner_tip()
-	common.tips[layout.suit.corner.se] = build_corner_tip()
+	common.tips[alayout.suit.corner.nw] = build_corner_tip()
+	common.tips[alayout.suit.corner.ne] = build_corner_tip()
+	common.tips[alayout.suit.corner.sw] = build_corner_tip()
+	common.tips[alayout.suit.corner.se] = build_corner_tip()
 end
 
 local function set_tile_tip()
-	common.tips[layout.suit.tile]        = build_tile_tip()
-	common.tips[layout.suit.tile.right]  = build_tile_tip()
-	common.tips[layout.suit.tile.left]   = build_tile_tip()
-	common.tips[layout.suit.tile.top]    = build_tile_tip()
-	common.tips[layout.suit.tile.bottom] = build_tile_tip()
+	common.tips[alayout.suit.tile]        = build_tile_tip()
+	common.tips[alayout.suit.tile.right]  = build_tile_tip()
+	common.tips[alayout.suit.tile.left]   = build_tile_tip()
+	common.tips[alayout.suit.tile.top]    = build_tile_tip()
+	common.tips[alayout.suit.tile.bottom] = build_tile_tip()
 end
 
 common.updates.swap = function()
-	common.tips[layout.suit.fair]           = build_base_tip()
-	common.tips[layout.suit.spiral]         = build_base_tip()
-	common.tips[layout.suit.spiral.dwindle] = build_base_tip()
+	common.tips[alayout.suit.fair]           = build_base_tip()
+	common.tips[alayout.suit.spiral]         = build_base_tip()
+	common.tips[alayout.suit.spiral.dwindle] = build_base_tip()
 	set_tile_tip()
 	set_corner_tip()
 end
 
 common.updates.base = function()
-	common.tips[layout.suit.fair]           = build_base_tip()
-	common.tips[layout.suit.spiral]         = build_base_tip()
-	common.tips[layout.suit.spiral.dwindle] = build_base_tip()
-	common.tips[layout.suit.magnifier]      = build_magnifier_tip()
+	common.tips[alayout.suit.fair]           = build_base_tip()
+	common.tips[alayout.suit.spiral]         = build_base_tip()
+	common.tips[alayout.suit.spiral.dwindle] = build_base_tip()
+	common.tips[alayout.suit.magnifier]      = build_magnifier_tip()
 	set_tile_tip()
 	set_corner_tip()
 end
 
 common.updates.magnifier = function()
-	common.tips[layout.suit.magnifier] = build_magnifier_tip()
+	common.tips[alayout.suit.magnifier] = build_magnifier_tip()
 end
 
 common.updates.tile = function()
@@ -239,7 +239,7 @@ common.grabbers = {}
 
 -- Base grabbers
 --------------------------------------------------------------------------------
-common.grabbers.base = function(mod, key, event)
+common.grabbers.base = function(mod, key)
 	for _, k in ipairs(common.keys.base) do
 		if redutil.key.match_grabber(k, mod, key) then k[3](); return true end
 	end
@@ -267,25 +267,25 @@ common.grabbers.base = function(mod, key, event)
 	end
 end
 
-common.grabbers.swap = function(mod, key, event)
+common.grabbers.swap = function(mod, key)
 	for _, k in ipairs(common.keys.swap) do
 		if redutil.key.match_grabber(k, mod, key) then k[3](); return true end
 	end
 end
 
-common.grabbers.tile = function(mod, key, event)
+common.grabbers.tile = function(mod, key)
 	for _, k in ipairs(common.keys.tile) do
 		if redutil.key.match_grabber(k, mod, key) then k[3](); return true end
 	end
 end
 
-common.grabbers.corner = function(mod, key, event)
+common.grabbers.corner = function(mod, key)
 	for _, k in ipairs(common.keys.corner) do
 		if redutil.key.match_grabber(k, mod, key) then k[3](); return true end
 	end
 end
 
-common.grabbers.magnifier = function(mod, key, event)
+common.grabbers.magnifier = function(mod, key)
 	for _, k in ipairs(common.keys.magnifier) do
 		if redutil.key.match_grabber(k, mod, key) then k[3](); return true end
 	end
@@ -321,20 +321,20 @@ end
 
 -- Handlers table
 -----------------------------------------------------------------------------------------------------------------------
-common.handler[layout.suit.fair]        = fair_handler
-common.handler[layout.suit.spiral]      = fair_handler
-common.handler[layout.suit.magnifier]   = magnifier_handler
-common.handler[layout.suit.tile]        = tile_handler
-common.handler[layout.suit.tile.right]  = tile_handler
-common.handler[layout.suit.tile.left]   = tile_handler
-common.handler[layout.suit.tile.top]    = tile_handler
-common.handler[layout.suit.tile.bottom] = tile_handler
-common.handler[layout.suit.corner.nw]   = corner_handler
-common.handler[layout.suit.corner.ne]   = corner_handler
-common.handler[layout.suit.corner.se]   = corner_handler
-common.handler[layout.suit.corner.sw]   = corner_handler
+common.handler[alayout.suit.fair]        = fair_handler
+common.handler[alayout.suit.spiral]      = fair_handler
+common.handler[alayout.suit.magnifier]   = magnifier_handler
+common.handler[alayout.suit.tile]        = tile_handler
+common.handler[alayout.suit.tile.right]  = tile_handler
+common.handler[alayout.suit.tile.left]   = tile_handler
+common.handler[alayout.suit.tile.top]    = tile_handler
+common.handler[alayout.suit.tile.bottom] = tile_handler
+common.handler[alayout.suit.corner.nw]   = corner_handler
+common.handler[alayout.suit.corner.ne]   = corner_handler
+common.handler[alayout.suit.corner.se]   = corner_handler
+common.handler[alayout.suit.corner.sw]   = corner_handler
 
-common.handler[layout.suit.spiral.dwindle] = fair_handler
+common.handler[alayout.suit.spiral.dwindle] = fair_handler
 
 -- tip dirty setup
 common:set_keys(nil, "base")

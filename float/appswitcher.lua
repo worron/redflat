@@ -12,7 +12,7 @@
 -----------------------------------------------------------------------------------------------------------------------
 local type = type
 local math = math
-local unpack = unpack
+local unpack = unpack or table.unpack
 local table = table
 
 local awful = require("awful")
@@ -23,7 +23,7 @@ local gears = require("gears")
 
 local pixbuf
 local function load_pixbuf()
-	local Gdk = require("lgi").Gdk
+	local _ = require("lgi").Gdk
 	pixbuf = require("lgi").GdkPixbuf
 end
 local is_pixbuf_loaded = pcall(load_pixbuf)
@@ -31,14 +31,12 @@ local is_pixbuf_loaded = pcall(load_pixbuf)
 local dfparser = require("redflat.service.dfparser")
 local redutil = require("redflat.util")
 local redtip = require("redflat.float.hotkeys")
-local redtitle = require("redflat.titlebar")
-local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
 local appswitcher = { clients_list = {}, index = 1, hotkeys = {}, svgsize = 256, keys = {} }
 
-local cache = { border_color = nil }
+local cache = {}
 local svgcache = {}
 local _empty_surface = redutil.base.placeholder({ txt = " " })
 
@@ -91,13 +89,13 @@ local function default_style()
 		parser          = {},
 		update_timeout  = 1,
 		min_icon_number = 4,
-		keytip          = { geometry = { width = 400, height = 320 }, exit = false },
+		keytip          = { geometry = { width = 400 }, exit = false },
 		title_font      = "Sans 12",
 		hotkeys         = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" },
 		font            = { font = "Sans", size = 16, face = 0, slant = 0 },
 		color           = { border = "#575757", text = "#aaaaaa", main = "#b1222b", preview_bg = "#b1222b80",
 		                    wibox  = "#202020", icon = "#a0a0a0", bg   = "#161616", gray = "#575757" },
-		shape           = rectshape
+		shape           = nil
 	}
 
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.appswitcher") or {})
@@ -135,7 +133,7 @@ end
 --------------------------------------------------------------------------------
 local function clients_find(filter)
 	local clients = {}
-	for i, c in ipairs(client.get()) do
+	for _, c in ipairs(client.get()) do
 		if not (c.skip_taskbar or c.hidden or c.type == "splash" or c.type == "dock" or c.type == "desktop")
 		and filter(c, mouse.screen) then
 			table.insert(clients, c)
@@ -222,22 +220,11 @@ function appswitcher:init()
 		return string.format("%s %s", awful.util.escape(c.name) or "Untitled", tag_text)
 	end
 
-	-- Function to mark window (border color change)
-	--------------------------------------------------------------------------------
-	function self.winmark(c, mark)
-		if mark then
-			cache.border_color = c.border_color
-			c.border_color = style.color.main
-		else
-			c.border_color = cache.border_color
-		end
-	end
-
 	-- Function to correct wibox size for given namber of icons
 	--------------------------------------------------------------------------------
 	function self.size_correction(inum)
 		local w, h
-		local inum = math.max(inum, style.min_icon_number)
+		inum = math.max(inum, style.min_icon_number)
 		local expen_h = (inum - 1) * style.preview_gap + style.preview_margin[1] + style.preview_margin[2]
 		                + style.border_margin[1] + style.border_margin[2]
 		local expen_v = style.label_height + style.preview_margin[3] + style.preview_margin[4] + style.title_height
@@ -274,11 +261,11 @@ function appswitcher:init()
 
 	-- Fit
 	------------------------------------------------------------
-	function widg:fit(context, width, height) return width, height end
+	function widg:fit(_, width, height) return width, height end
 
 	-- Draw
 	------------------------------------------------------------
-	function widg.draw(widg, context, cr, width, height)
+	function widg.draw(_, _, cr, _, height)
 
 		-- calculate preview pattern size
 		local psize = {
@@ -296,7 +283,7 @@ function appswitcher:init()
 		for i = 1, #self.clients_list do
 
 			-- support vars
-			local sc, tr, surface, pixbuf
+			local sc, tr, surface, pixbuf_
 			local c = self.clients_list[i]
 
 			-- create surface and calculate scale and translate factors
@@ -313,10 +300,10 @@ function appswitcher:init()
 				end
 			else
 				-- surface = gears.surface(icon_db[string.lower(c.class)] or c.icon)
-				surface, pixbuf = get_icon_visual(icon_db, c, self.svgsize)
+				surface, pixbuf_ = get_icon_visual(icon_db, c, self.svgsize)
 
 				-- sc = style.icon_size / surface.width * iscf
-				sc = style.icon_size / (surface and surface.width or pixbuf.width) * iscf
+				sc = style.icon_size / (surface and surface.width or pixbuf_.width) * iscf
 				tr = {(psize.width - style.icon_size * iscf) / 2, (psize.height - style.icon_size * iscf) / 2}
 			end
 
@@ -333,8 +320,8 @@ function appswitcher:init()
 			cr:translate(unpack(tr))
 			cr:scale(sc, sc)
 
-			if pixbuf then
-				cr:set_source_pixbuf(pixbuf, 0, 0)
+			if pixbuf_ then
+				cr:set_source_pixbuf(pixbuf_, 0, 0)
 			else
 				cr:set_source_surface(surface, 0, 0)
 			end
@@ -373,7 +360,7 @@ function appswitcher:init()
 	-- Set preview icons update timer
 	--------------------------------------------------------------------------------
 	self.update_timer = timer({ timeout = style.update_timeout })
-	self.update_timer:connect_signal("timeout", function() self.widget:emit_signal("widget::updated") end)
+	self.update_timer:connect_signal("timeout", function() self.widget:emit_signal("widget::redraw_needed") end)
 
 	-- Restart switcher if any client was closed
 	--------------------------------------------------------------------------------
@@ -391,7 +378,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function appswitcher:show(args)
 
-	local args = args or {}
+	args = args or {}
 	local filter = args.filter
 	local noaction = args.noaction
 
@@ -405,7 +392,6 @@ function appswitcher:show(args)
 	if #clients == 0 then return end
 
 	self.clients_list = clients
-	self.cutted = redtitle.cut_all(clients)
 	cache.args = args
 	self.size_correction(#clients)
 	redutil.placement.centered(self.wibox, nil, mouse.screen.workarea)
@@ -413,16 +399,15 @@ function appswitcher:show(args)
 	awful.keygrabber.run(self.keygrabber)
 
 	self.index = awful.util.table.hasitem(self.clients_list, client.focus) or 1
-	self.winmark(self.clients_list[self.index], true)
 	self.titlebox:set_markup(self.title_generator(self.clients_list[self.index]))
 	if not noaction then self:switch(args) end
-	self.widget:emit_signal("widget::updated")
+	self.widget:emit_signal("widget::redraw_needed")
 
 	self.wibox.visible = true
 
 	redtip:set_pack(
 		"Appswitcher", self.tip, self.keytip.column, self.keytip.geometry,
-		self.keytip.exit and  function() appswitcher:hide(true) end
+		self.keytip.exit and function() appswitcher:hide(true) end
 	)
 end
 
@@ -435,18 +420,15 @@ function appswitcher:hide(is_empty_call)
 	self.wibox.visible = false
 	redtip:remove_pack()
 	self.update_timer:stop()
-	redtitle.restore_all(self.cutted)
 	awful.keygrabber.stop(self.keygrabber)
 
-	self.winmark(self.clients_list[self.index], false)
 	if not is_empty_call then focus_and_raise(self.clients_list[self.index]) end
 end
 
 -- Toggle appswitcher widget
 -----------------------------------------------------------------------------------------------------------------------
 function appswitcher:switch(args)
-	local args = args or {}
-	self.winmark(self.clients_list[self.index], false)
+	args = args or {}
 
 	if args.index then
 		if self.clients_list[args.index] then self.index = args.index end
@@ -456,15 +438,14 @@ function appswitcher:switch(args)
 		self.index = iterate(self.clients_list, self.index, diff)
 	end
 
-	self.winmark(self.clients_list[self.index], true)
 	self.titlebox:set_markup(self.title_generator(self.clients_list[self.index]))
-	self.widget:emit_signal("widget::updated")
+	self.widget:emit_signal("widget::redraw_needed")
 end
 
 -- Set user hotkeys
 -----------------------------------------------------------------------------------------------------------------------
 function appswitcher:set_keys(keys, layout)
-	local layout = layout or "all"
+	layout = layout or "all"
 	if keys then
 		self.keys[layout] = keys
 		if layout ~= "all" then self.keys.all = awful.util.table.join(self.keys.move, self.keys.action) end

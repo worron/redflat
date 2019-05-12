@@ -2,19 +2,19 @@
 --                                     RedFlat multi monitoring deskotp widget                                       --
 -----------------------------------------------------------------------------------------------------------------------
 -- Multi monitoring widget
--- Pack of corner indicators and two lines with dashbar, label and text
+-- Pack of vertical indicators and two lines with labeled progressbar
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
-local awful = require("awful")
+--local awful = require("awful")
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local timer = require("gears.timer")
+local unpack = unpack or table.unpack
 
 local dcommon = require("redflat.desktop.common")
-local system = require("redflat.system")
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
 
@@ -26,36 +26,34 @@ local multim = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		barpack      = {},
-		corner       = { width = 40 },
-		state_height = 60,
-		digit_num    = 3,
-		prog_height  = 100,
-		labels       = {},
-		image_gap    = 20,
-		unit         = { { "MB", - 1 }, { "GB", 1024 } },
-		color        = { main = "#b1222b", wibox = "#161616", gray = "#404040" }
+		lines          = {},
+		upbar          = { width = 40 },
+		digits         = 3,
+		height         = { upright = 100, lines = 60 },
+		icon           = { image = nil, margin = { 0, 20, 0, 0 }, full = false },
+		labels         = {},
+		unit           = { { "MB", - 1 }, { "GB", 1024 } },
+		color          = { main = "#b1222b", wibox = "#161616", gray = "#404040" }
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.multim") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.multimeter") or {})
 end
 
-local default_geometry = { width = 200, height = 100, x = 100, y = 100 }
 local default_args = {
-	corners = { num = 1, maxm = 1},
+	topbars = { num = 1, maxm = 1},
 	lines   = { maxm = 1 },
-	meter   = { func = system.dformatted.cpumem },
+	meter   = {},
 	timeout = 60,
 }
 
 -- Support functions
 -----------------------------------------------------------------------------------------------------------------------
-local function set_info(value, args, corners, lines, icon, last_state, style)
-	local corners_alert = value.alert
+local function set_info(value, args, upright, lines, icon, last, style)
+	local upright_alert = value.alert
 
-	-- set dashbar values and color
+	-- set progressbar values and color
 	for i, line in ipairs(args.lines) do
 		lines:set_values(value.lines[i][1] / line.maxm, i)
-		lines:set_text(redutil.text.dformat(value.lines[i][2], line.unit or style.unit, style.digit_num), i)
+		lines:set_text(redutil.text.dformat(value.lines[i][2], line.unit or style.unit, style.digits), i)
 
 		if line.crit then
 			local cc = value.lines[i][1] > line.crit and style.color.main or style.color.gray
@@ -64,66 +62,73 @@ local function set_info(value, args, corners, lines, icon, last_state, style)
 		end
 	end
 
-	-- set corners value
-	for i = 1, args.corners.num do
-		local v = value.corners[i] or 0
-		corners:set_values(v / args.corners.maxm, i)
-		if args.corners.crit then corners_alert = corners_alert or v > args.corners.crit end
+	-- set upright value
+	for i = 1, args.topbars.num do
+		local v = value.bars[i] and value.bars[i].value or 0
+		local tip = value.bars[i] and value.bars[i].text or nil
+		upright:set_values(v / args.topbars.maxm, i, tip)
+		if args.topbars.crit then upright_alert = upright_alert or v > args.topbars.crit end
 	end
 
 	-- colorize icon if needed
-	if style.image and corners_alert ~= last_state then
-		icon:set_color(corners_alert and style.color.main or style.color.gray)
-		last_state = corners_alert
+	if style.icon.image and upright_alert ~= last.alert then
+		icon:set_color(upright_alert and style.color.main or style.color.gray)
+		last.alert = upright_alert
 	end
 end
 
 
 -- Create a new widget
 -----------------------------------------------------------------------------------------------------------------------
-function multim.new(args, geometry, style)
+function multim.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local dwidget = {}
 	local icon
-	local last_state
+	local last = { alert = false }
 
-	local args = redutil.table.merge(default_args, args or {})
-	local geometry = redutil.table.merge(default_geometry, geometry or {})
-	local style = redutil.table.merge(default_style(), style or {})
+	args = redutil.table.merge(default_args, args or {})
+	--local geometry = redutil.table.merge(default_geometry, geometry or {})
+	style = redutil.table.merge(default_style(), style or {})
 
-	local barpack_style = redutil.table.merge(style.barpack, { dashbar = { color = style.color } })
-	local corner_style = redutil.table.merge(style.corner, { color = style.color })
+	local lines_style = redutil.table.merge(style.lines, { progressbar = { color = style.color } })
+	local upbar_style = redutil.table.merge(style.upbar, { color = style.color })
 
-	-- Create wibox
-	--------------------------------------------------------------------------------
-	dwidget.wibox = wibox({ type = "desktop", visible = true, bg = style.color.wibox })
-	dwidget.wibox:geometry(geometry)
+	dwidget.style = style
 
 	-- Construct layouts
 	--------------------------------------------------------------------------------
-	local lines = dcommon.barpack(#args.lines, barpack_style)
-	local corners = dcommon.cornerpack(args.corners.num, corner_style)
-	lines.layout:set_forced_height(style.state_height)
+	local lines = dcommon.pack.lines(#args.lines, lines_style)
+	local upright = dcommon.pack.upright(args.topbars.num, upbar_style)
+	lines.layout:set_forced_height(style.height.lines)
 
-	if style.image then
-		icon = svgbox(style.image)
+	if style.icon.image then
+		icon = svgbox(style.icon.image)
 		icon:set_color(style.color.gray)
 	end
 
-	dwidget.wibox:setup({
+	dwidget.area = wibox.widget({
 		{
-			icon and wibox.container.margin(icon, 0, style.image_gap),
-			corners.layout,
+			icon and not style.icon.full and wibox.container.margin(icon, unpack(style.icon.margin)),
+			upright.layout,
 			nil,
-			forced_height = style.prog_height,
-			layout = wibox.layout.align.horizontal()
+			forced_height = style.height.upright,
+			layout = wibox.layout.align.horizontal
 		},
 		nil,
 		lines.layout,
 		layout = wibox.layout.align.vertical
 	})
+
+	if icon and style.icon.full then
+		dwidget.area = wibox.widget({
+			wibox.container.margin(icon, unpack(style.icon.margin)),
+			dwidget.area,
+			nil,
+			layout = wibox.layout.align.horizontal
+		})
+	end
 
 	for i, label in ipairs(style.labels) do
 		lines:set_label(label, i)
@@ -131,20 +136,16 @@ function multim.new(args, geometry, style)
 
 	-- Update info function
 	--------------------------------------------------------------------------------
-	local function get_and_set(source)
-		local state = args.meter.func(source)
-		set_info(state, args, corners, lines, icon, last_state, style)
+	local function raw_set(state)
+		set_info(state, args, upright, lines, icon, last, style)
 	end
 
 	local function update_plain()
-		get_and_set(args.meter.args)
+		local state = args.meter.func(args.meter.args)
+		set_info(state, args, upright, lines, icon, last, style)
 	end
 
-	local function update_async()
-		awful.spawn.easy_async(args.async, get_and_set)
-	end
-
-	local update = args.async and update_async or update_plain
+	local update = args.meter.async and function() args.meter.async(raw_set, args.meter.args) end or update_plain
 
 	-- Set update timer
 	--------------------------------------------------------------------------------

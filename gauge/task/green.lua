@@ -9,6 +9,7 @@
 local setmetatable = setmetatable
 local wibox = require("wibox")
 local beautiful = require("beautiful")
+local unpack = unpack or table.unpack
 
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
@@ -40,7 +41,7 @@ function greentask.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 	-- updating values
 	local data = {

@@ -11,7 +11,7 @@ local beautiful = require("beautiful")
 local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
-local doublebar = require("redflat.gauge.graph.doublebar")
+local monitor = require("redflat.gauge.icon.double")
 local tooltip = require("redflat.float.tooltip")
 local system = require("redflat.system")
 
@@ -29,9 +29,9 @@ local default_args = {
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		widget    = doublebar.new,
+		widget    = monitor.new,
 		timeout   = 5,
-		digit_num = 2
+		digits    = 2
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.net") or {})
 end
@@ -49,9 +49,9 @@ function net.new(args, style)
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local storage = {}
-	local args = redutil.table.merge(default_args, args or {})
 	local unit = {{  "B", 1 }, { "KB", 1024 }, { "MB", 1024^2 }, { "GB", 1024^3 }}
-	local style = redutil.table.merge(default_style(), style or {})
+	args = redutil.table.merge(default_args, args or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 	-- Create monitor widget
 	--------------------------------------------------------------------------------
@@ -80,8 +80,8 @@ function net.new(args, style)
 
 			widg:set_value({ state[2]/args.speed.down, state[1]/args.speed.up })
 			tp:set_text(
-				"↓" .. redutil.text.dformat(state[2], unit, style.digit_num, " ")
-				.. "  ↑" .. redutil.text.dformat(state[1], unit, style.digit_num, " ")
+				"↓" .. redutil.text.dformat(state[2], unit, style.digits, " ")
+				.. "  ↑" .. redutil.text.dformat(state[1], unit, style.digits, " ")
 			)
 		end
 	)

@@ -11,6 +11,8 @@
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
+local unpack = unpack or table.unpack
+
 local awful = require("awful")
 local beautiful = require("beautiful")
 local wibox = require("wibox")
@@ -20,7 +22,6 @@ local dfparser = require("redflat.service.dfparser")
 local redutil = require("redflat.util")
 local decoration = require("redflat.float.decoration")
 local redtip = require("redflat.float.hotkeys")
-local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -46,6 +47,15 @@ apprunner.keys.action = {
 		{ "Mod4" }, "F1", function() redtip:show() end,
 		{ description = "Show hotkeys helper", group = "Action" }
 	},
+	-- fake keys used for hotkeys helper
+	{
+		{}, "Enter", nil,
+		{ description = "Activate item", group = "Action" }
+	},
+	{
+		{}, "Escape", nil,
+		{ description = "Close widget", group = "Action" }
+	},
 }
 
 apprunner.keys.all = awful.util.table.join(apprunner.keys.move, apprunner.keys.action)
@@ -68,11 +78,11 @@ local function default_style()
 		name_font        = "Sans 12",
 		comment_font     = "Sans 12",
 		border_width     = 2,
-		keytip           = { geometry = { width = 400, height = 300 } },
+		keytip           = { geometry = { width = 400 } },
 		dimage           = redutil.base.placeholder(),
 		color            = { border = "#575757", text = "#aaaaaa", highlight = "#eeeeee", main = "#b1222b",
 		                     bg = "#161616", bg_second = "#181818", wibox = "#202020", icon = "a0a0a0" },
-		shape            = rectshape
+		shape            = nil
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.apprunner") or {})
 end
@@ -111,7 +121,7 @@ local function construct_item(style)
 	-- Item functions
 	------------------------------------------------------------
 	function item:set(args)
-		local args = args or {}
+		args = args or {}
 
 		local name_text = awful.util.escape(args.Name) or ""
 		item.name:set_markup(name_text)
@@ -244,7 +254,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 local function keypressed_callback(mod, key)
 	for _, k in ipairs(apprunner.keys.all) do
-		if redutil.key.match_prompt(k, mod, key) then k[3](); return true end
+		if redutil.key.match_prompt(k, mod, key) and k[3] then k[3](); return true end
 	end
 	return false
 end
@@ -343,7 +353,7 @@ end
 -- Set user hotkeys
 -----------------------------------------------------------------------------------------------------------------------
 function apprunner:set_keys(keys, layout)
-	local layout = layout or "all"
+	layout = layout or "all"
 	if keys then
 		self.keys[layout] = keys
 		if layout ~= "all" then self.keys.all = awful.util.table.join(self.keys.move, self.keys.action) end

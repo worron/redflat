@@ -18,12 +18,10 @@ local table = table
 local wibox = require("wibox")
 local awful = require("awful")
 local beautiful = require("beautiful")
-local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
 local dotcount = require("redflat.gauge.graph.dots")
 local tooltip = require("redflat.float.tooltip")
-local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables and wibox
 -----------------------------------------------------------------------------------------------------------------------
@@ -38,10 +36,8 @@ local function default_style()
 		set_position = nil,
 		screen_gap   = 0,
 		border_width = 2,
-		double_wibox = false,
-		show_delay   = 0.05,
 		color        = { wibox = "#202020", border = "#575757" },
-		shape        = rectshape
+		shape        = nil
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.minitray") or {})
 end
@@ -61,16 +57,6 @@ function minitray:init(style)
 	}
 
 	self.wibox = wibox(wargs)
-
-	-- dirty workaround for sowe tray background problems
-	if style.double_wibox then
-		self.wibox_bg = wibox(wargs)
-		self.show_with_delay = timer({
-			timeout = style.show_delay,
-			callback = function() self.wibox.visible = true; self.show_with_delay:stop() end
-		})
-	end
-
 	self.wibox:geometry(style.geometry)
 
 	self.geometry = style.geometry
@@ -109,7 +95,7 @@ function minitray:update_geometry()
 	self.wibox:geometry({ width = self.geometry.width or self.geometry.height * items })
 
 	if self.set_position then
-		self.wibox:geometry(self.set_position())
+		self.set_position(self.wibox)
 	else
 		awful.placement.under_mouse(self.wibox)
 	end
@@ -121,21 +107,13 @@ end
 --------------------------------------------------------------------------------
 function minitray:show()
 	self:update_geometry()
-	if self.wibox_bg then
-		self.wibox_bg:geometry(self.wibox:geometry())
-		self.wibox_bg.visible = true
-		self.show_with_delay:start()
-	else
-		self.wibox.visible = true
-	end
-
+	self.wibox.visible = true
 end
 
 -- Hide
 --------------------------------------------------------------------------------
 function minitray:hide()
 	self.wibox.visible = false
-	if self.wibox_bg then self.wibox_bg.visible = false end
 end
 
 -- Toggle
@@ -156,8 +134,8 @@ function minitray.new(_, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
---	local args = args or {} -- usesless now, leave it be for backward compatibility and future cases
-	local style = redutil.table.merge(default_style(), style or {})
+--	args = args or {} -- usesless now, leave it be for backward compatibility and future cases
+	style = redutil.table.merge(default_style(), style or {})
 
 	-- Initialize minitray window
 	--------------------------------------------------------------------------------

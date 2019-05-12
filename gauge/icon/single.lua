@@ -7,8 +7,11 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
+local math = math
 local string = string
+
 local beautiful = require("beautiful")
+local wibox = require("wibox")
 
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
@@ -23,6 +26,7 @@ local gicon = { mt = {} }
 local function default_style()
 	local style = {
 		icon        = redutil.base.placeholder(),
+		step        = 0.05,
 		is_vertical = false,
 		color       = { main = "#b1222b", icon = "#a0a0a0", urgent = "#32882d" }
 	}
@@ -46,30 +50,36 @@ function gicon.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 	local pattern = style.is_vertical and pattern_string_v or pattern_string_h
-
-	local data = {
-		color = style.color.main
-	}
 
 	-- Create widget
 	--------------------------------------------------------------------------------
-	local widg = svgbox(style.icon)
+	local widg = wibox.container.background(svgbox(style.icon))
+	widg._data = {
+		color = style.color.main,
+		level = 0,
+	}
 
 	-- User functions
 	------------------------------------------------------------
 	function widg:set_value(x)
 		if x > 1 then x = 1 end
 
-		if self._image then
-			local d = style.is_vertical and self._image.height or self._image.width
-			widg:set_color(pattern(d, x, data.color, style.color.icon))
+		if self.widget._image then
+			local level = math.floor(x / style.step) * style.step
+
+			if level ~= self._data.level then
+				self._data.level = level
+				local d = style.is_vertical and self.widget._image.height or self._image.width
+				self.widget:set_color(pattern(d, level, self._data.color, style.color.icon))
+			end
 		end
 	end
 
 	function widg:set_alert(alert)
-		data.color = alert and style.color.urgent or style.color.main
+		-- not sure about redraw after alert set
+		self._data.color = alert and style.color.urgent or style.color.main
 	end
 
 	--------------------------------------------------------------------------------

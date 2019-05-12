@@ -8,6 +8,8 @@
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
 local math = math
+local unpack = unpack or table.unpack
+
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local color = require("gears.color")
@@ -34,23 +36,26 @@ end
 
 -- Create progressbar widget
 -----------------------------------------------------------------------------------------------------------------------
-function pbar(style)
-
-	-- updating values
-	local data = {
-		value = { 0, 0 },
-	}
+local function pbar(style)
 
 	-- Create custom widget
 	--------------------------------------------------------------------------------
 	local widg = wibox.widget.base.make_widget()
+	widg._data = { level = { 0, 0 }}
 
 	-- User functions
 	------------------------------------------------------------
 	function widg:set_value(value)
-		data.value[1] = value[1] < 1 and value[1] or 1
-		data.value[2] = value[2] < 1 and value[2] or 1
-		self:emit_signal("widget::updated")
+		local level = {
+			math.ceil((value[1] < 1 and value[1] or 1) / style.line.num),
+			math.ceil((value[2] < 1 and value[2] or 1) / style.line.num),
+		}
+
+		if level[1] ~= self._data.level[1] or level[2] ~= self._data.level[2] then
+			self._data.level[1] = level[1]
+			self._data.level[2] = level[2]
+			self:emit_signal("widget::redraw_needed")
+		end
 	end
 
 	-- Fit
@@ -62,14 +67,12 @@ function pbar(style)
 	-- Draw
 	------------------------------------------------------------
 	function widg:draw(_, cr, width, height)
-
 		local wd = (width + style.line.gap) / style.line.num - style.line.gap
 		local dy = (height - (2 * style.line.width + style.line.v_gap)) / 2
-		local p = { math.ceil(style.line.num * data.value[1]), math.ceil(style.line.num * data.value[2]) }
 
 		for i = 1, 2 do
 			for k = 1, style.line.num do
-				cr:set_source(color(k <= p[i] and style.color.main or style.color.gray))
+				cr:set_source(color(k <= self._data.level[i] and style.color.main or style.color.gray))
 				cr:rectangle(
 					(k - 1) * (wd + style.line.gap), dy + (i - 1) * (style.line.width + style.line.v_gap),
 					wd, style.line.width
@@ -90,7 +93,7 @@ function doublemonitor.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 	-- Construct layout
 	--------------------------------------------------------------------------------

@@ -18,7 +18,6 @@ local redflat = require("redflat")
 local redutil = require("redflat.util")
 local redtip = require("redflat.float.hotkeys")
 local rednotify = require("redflat.float.notify")
-local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -31,21 +30,20 @@ navigator.ignored = { "dock", "splash", "desktop" }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		geometry     = { width = 200, height = 80 },
 		border_width = 2,
 		marksize     = { width = 200, height = 100, r = 20 },
 		gradstep     = 100,
 		linegap      = 35,
 		timeout      = 1,
 		notify       = {},
-		keytip       = { base = { geometry = { width = 600, height = 600 }, exit = true } },
+		keytip       = { base = { geometry = { width = 600 }, exit = true } },
 		titlefont    = { font = "Sans", size = 28, face = 1, slant = 0 },
 		num          = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "F1", "F3", "F4", "F5" },
 		font         = { font = "Sans", size = 22, face = 1, slant = 0 },
 		color        = { border = "#575757", wibox = "#00000000", bg1 = "#57575740", bg2 = "#57575720",
 		                 fbg1 = "#b1222b40", fbg2 = "#b1222b20", mark = "#575757", text = "#202020",
 		                 hbg1 = "#32882d40", hbg2 = "#32882d20" },
-		shape        = rectshape
+		shape        = nil
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "service.navigator") or {})
 end
@@ -68,21 +66,25 @@ function navigator.make_paint(c)
 	local style = navigator.style
 	local widg = wibox.widget.base.make_widget()
 
-	local data = {
+	widg._data = {
 		client = c,
 		alert = false,
 	}
 
 	-- User functions
 	------------------------------------------------------------
-	function widg:set_client(c)
-		data.client = c
-		self:emit_signal("widget::updated")
+	function widg:set_client(client_)
+		if widg._data.client ~= client_ then
+			widg._data.client = client_
+			self:emit_signal("widget::redraw_needed")
+		end
 	end
 
 	function widg:set_alert(value)
-		data.alert = value
-		self:emit_signal("widget::updated")
+		if widg._data.alert ~= value then
+			widg._data.alert = value
+			self:emit_signal("widget::redraw_needed")
+		end
 	end
 
 	-- Fit
@@ -95,16 +97,16 @@ function navigator.make_paint(c)
 	------------------------------------------------------------
 	function widg:draw(_, cr, width, height)
 
-		if not data.client then return end
+		if not widg._data.client then return end
 
 		-- background
 		local bg1, bg2
 		local num = math.ceil((width + height) / style.gradstep)
 
-		if data.alert then
+		if widg._data.alert then
 			bg1, bg2 = style.color.hbg1, style.color.hbg2
 		else
-			local is_focused = data.client == client.focus
+			local is_focused = widg._data.client == client.focus
 			bg1 = is_focused and style.color.fbg1 or style.color.bg1
 			bg2 = is_focused and style.color.fbg2 or style.color.bg2
 		end
@@ -139,14 +141,14 @@ function navigator.make_paint(c)
 		cr:fill()
 
 		-- label
-		local index = navigator.style.num[awful.util.table.hasitem(navigator.cls, data.client)]
-		local g = redutil.client.fullgeometry(data.client)
+		local index = navigator.style.num[awful.util.table.hasitem(navigator.cls, widg._data.client)]
+		local g = redutil.client.fullgeometry(widg._data.client)
 
 		cr:set_source(color(style.color.text))
 		redutil.cairo.set_font(cr, style.titlefont)
-		redutil.cairo.textcentre.vertical(cr, { width/2, height/2 - style.linegap / 2 }, index)
+		redutil.cairo.textcentre.full(cr, { width/2, height/2 - style.linegap / 2 }, index)
 		redutil.cairo.set_font(cr, style.font)
-		redutil.cairo.textcentre.vertical(cr, { width/2, height/2 + style.linegap / 2 }, g.width .. " x " .. g.height)
+		redutil.cairo.textcentre.full(cr, { width/2, height/2 + style.linegap / 2 }, g.width .. " x " .. g.height)
 	end
 
 	------------------------------------------------------------
@@ -165,7 +167,7 @@ function navigator.make_decor(c)
 		ontop        = true,
 		bg           = style.color.wibox,
 		border_width = style.border_width,
-		border_color = style.color.borderk,
+		border_color = style.color.border,
 		shape        = style.shape
 	})
 
@@ -176,14 +178,14 @@ function navigator.make_decor(c)
 	-- User functions
 	------------------------------------------------------------
 	object.update =  {
-		focus = function() object.widget:emit_signal("widget::updated") end,
+		focus = function() object.widget:emit_signal("widget::redraw_needed") end,
 		close = function() navigator:restart() end,
 		geometry = function() redutil.client.fullgeometry(object.wibox, redutil.client.fullgeometry(object.client)) end
 	}
 
-	function object:set_client(c)
-		object.client = c
-		object.widget:set_client(c)
+	function object:set_client(client_)
+		object.client = client_
+		object.widget:set_client(client_)
 		redutil.client.fullgeometry(object.wibox, redutil.client.fullgeometry(object.client))
 
 		object.client:connect_signal("focus", object.update.focus)

@@ -22,11 +22,12 @@ local textbox = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		width  = nil,
-		height = nil,
-		draw   = "by_left",
-		color  = "#404040",
-		font   = { font = "Sans", size = 20, face = 0, slant = 0 }
+		width     = nil,
+		height    = nil,
+		draw      = "by_left",
+		separator = '%s',
+		color     = "#404040",
+		font      = { font = "Sans", size = 20, face = 0, slant = 0 }
 	}
 
 	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.common.textbox") or {})
@@ -50,10 +51,14 @@ function align.by_right(cr, width, _, text)
 	cr:show_text(text)
 end
 
-function align.by_edges(cr, width, height, text)
-	local left_text, right_text = string.match(text, "(.+)%s%s(.+)")
-	align.by_left(cr, width, height, left_text)
-	align.by_right(cr, width, height, right_text)
+function align.by_edges(cr, width, height, text, style)
+	local left_text, right_text = string.match(text, "(.+)" .. style.separator .. "(.+)")
+	if left_text and right_text then
+		align.by_left(cr, width, height, left_text)
+		align.by_right(cr, width, height, right_text)
+	else
+		align.by_right(cr, width, height, text)
+	end
 end
 
 function align.by_width(cr, width, _, text)
@@ -88,50 +93,56 @@ function textbox.new(txt, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 --	local textdraw = align[style.draw] or align.by_left
 
-	-- updating values
-	local data = {
+	-- Create custom widget
+	--------------------------------------------------------------------------------
+	local textwidg = wibox.widget.base.make_widget()
+	textwidg._data = {
 		text = txt or "",
 		width = style.width,
 		color = style.color
 	}
 
-	-- Create custom widget
-	--------------------------------------------------------------------------------
-	local textwidg = wibox.widget.base.make_widget()
-
 	-- User functions
 	------------------------------------------------------------
 	function textwidg:set_text(text)
-		data.text = text
-		self:emit_signal("widget::updated")
+		if self._data.text ~= text then
+			self._data.text = text
+			self:emit_signal("widget::redraw_needed")
+		end
 	end
 
-	function textwidg:set_color(color)
-		data.color = color
-		self:emit_signal("widget::updated")
+	function textwidg:set_color(value)
+		if self._data.color ~= value then
+			self._data.color = value
+			self:emit_signal("widget::redraw_needed")
+		end
 	end
 
 	function textwidg:set_width(width)
-		data.width = width
-		self:emit_signal("widget::updated")
+		if self._data.width ~= width then
+			self._data.width = width
+			self:emit_signal("widget::redraw_needed")
+		end
 	end
 
 	-- Fit
 	------------------------------------------------------------
 	function textwidg:fit(_, width, height)
-		return data.width or width, style.height or height
+		local w = self._data.width and math.min(self._data.width, width) or width
+		local h = style.height and math.min(style.height, height) or height
+		return w, h
 	end
 
 	-- Draw
 	------------------------------------------------------------
 	function textwidg:draw(_, cr, width, height)
-		cr:set_source(color(data.color))
+		cr:set_source(color(self._data.color))
 		redutil.cairo.set_font(cr, style.font)
 
-		align[style.draw](cr, width, height, data.text)
+		align[style.draw](cr, width, height, self._data.text, style)
 	end
 
 	--------------------------------------------------------------------------------

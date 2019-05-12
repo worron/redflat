@@ -48,7 +48,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function layoutbox:init(layouts, style)
 
-	local style = style or default_style()
+	style = style or default_style()
 
 	-- Set tooltip
 	------------------------------------------------------------
@@ -111,10 +111,10 @@ function layoutbox.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local args = args or {}
+	args = args or {}
 	local layouts = args.layouts or awful.layout.layouts
 	local s = args.screen or 1
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 	local w = svgbox()
 	w:set_color(style.color.icon)
 
@@ -127,9 +127,9 @@ function layoutbox.new(args, style)
 	-- Update function
 	--------------------------------------------------------------------------------
 	local function update()
-		local layout = layout.getname(layout.get(s))
-		w:set_image(style.icon[layout] or style.icon.unknown)
-		layoutbox:update_tooltip(layout)
+		local layout_name = layout.getname(layout.get(s))
+		w:set_image(style.icon[layout_name] or style.icon.unknown)
+		layoutbox:update_tooltip(layout_name)
 
 		if layoutbox.menu.wibox.visible then
 			layoutbox:update_menu(last_tag)
@@ -142,8 +142,8 @@ function layoutbox.new(args, style)
 	tag.connect_signal("property::layout", update)
 	w:connect_signal("mouse::enter",
 		function()
-			local layout = layout.getname(layout.get(s))
-			layoutbox:update_tooltip(layout)
+			local layout_name = layout.getname(layout.get(s))
+			layoutbox:update_tooltip(layout_name)
 		end
 	)
 	w:connect_signal("mouse::leave",

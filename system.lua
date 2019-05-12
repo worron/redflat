@@ -18,7 +18,9 @@ local tonumber = tonumber
 local io = io
 local os = os
 local string = string
+local math = math
 
+local timer = require("gears.timer")
 local awful = require("awful")
 local redutil = require("redflat.util")
 
@@ -26,11 +28,24 @@ local redutil = require("redflat.util")
 -----------------------------------------------------------------------------------------------------------------------
 local system = { thermal = {}, dformatted = {}, pformatted = {} }
 
+-- Async settlers generator
+-----------------------------------------------------------------------------------------------------------------------
+function system.simple_async(command, pattern)
+	return function(setup)
+		awful.spawn.easy_async_with_shell(command,
+			function(output)
+				local value = tonumber(string.match(output, pattern))
+				setup(value and { value } or { 0 })
+			end
+		)
+	end
+end
+
 -- Disk usage
 -----------------------------------------------------------------------------------------------------------------------
 function system.fs_info(args)
 	local fs_info = {}
-	local args = args or "/"
+	args = args or "/"
 
 	-- Get data from df
 	------------------------------------------------------------
@@ -45,6 +60,59 @@ function system.fs_info(args)
 	-- Format output special for redflat desktop widget
 	------------------------------------------------------------
    return { tonumber(fs_info.use_p) or 0, tonumber(fs_info.used) or 0}
+end
+
+-- Qemu image check
+-----------------------------------------------------------------------------------------------------------------------
+local function q_format(size, k)
+	if not size or not k then return 0 end
+	return k == "K" and tonumber(size) or k == "M" and size * 1024 or k == "G" and size * 1024^2 or 0
+end
+
+function system.qemu_image_size(args)
+	local img_info = {}
+
+	-- Get data from qemu-ima
+	------------------------------------------------------------
+	local line = redutil.read.output("LC_ALL=C qemu-img info " .. args)
+
+	-- Parse data
+	------------------------------------------------------------
+	local size, k = string.match(line, "disk%ssize:%s([%.%d]+)(%w)")
+	img_info.size = q_format(size, k)
+	local vsize, vk = string.match(line, "virtual%ssize:%s([%.%d]+)(%w)")
+	img_info.virtual_size = q_format(vsize, vk)
+	img_info.use_p = img_info.virtual_size > 0 and math.floor(img_info.size / img_info.virtual_size * 100) or 0
+
+	-- Format output special for redflat desktop widget
+	------------------------------------------------------------
+   return { img_info.use_p, img_info.size, off = img_info.size == 0 }
+end
+
+-- Traffic check with vnstat (async)
+-----------------------------------------------------------------------------------------------------------------------
+local function vnstat_format(value, unit)
+	if not value or not unit then return 0 end
+	local v = value:gsub(',', '.')
+	return    unit == "B"   and tonumber(v)
+	       or unit == "KiB" and v * 1024
+	       or unit == "MiB" and v * 1024^2
+	       or unit == "GiB" and v * 1024^3
+end
+
+function system.vnstat_check(args)
+	local command = string.format("vnstat %s | tail -n 3 | head -n 1", args)
+	return function(setup)
+		awful.spawn.easy_async_with_shell(command,
+			function(output)
+				local x, u = string.match(
+					output, "%s+%d+,%d+%s%w+%s+%|%s+%d+,%d+%s%w+%s+%|%s+(%d+,%d+)%s(%w+)%s+%|%s+.+"
+				)
+				local total = vnstat_format(x, u)
+				setup({ total })
+			end
+		)
+	end
 end
 
 -- Get network speed
@@ -315,58 +383,118 @@ end
 
 -- Using lm-sensors
 ------------------------------------------------------------
-function system.thermal.sensors(args)
-	local args = args or "'Physical id 0'"
-	local output = redutil.read.output("sensors | grep " .. args)
+system.lmsensors = { storage = {}, patterns = {}, delay = 1, time = 0 }
 
-	local temp = string.match(output, "%+(%d+%.%d)°[CF]")
-
-	return temp and { math.floor(tonumber(temp)) } or { 0 }
+function system.lmsensors:update(output)
+	for name, pat in pairs(self.patterns) do
+		local value = string.match(output, pat.match)
+		if value and pat.posthook then value = pat.posthook(value) end
+		value = tonumber(value)
+		self.storage[name] = value and { value } or { 0 }
+	end
+	self.time = os.time()
 end
 
-local sensors_store
+function system.lmsensors:start(timeout)
+	if self.timer then return end
 
-function system.thermal.sensors_core(args)
-	local args = args or {}
-	local index = args.index or 0
+	self.timer = timer({ timeout = timeout })
+	self.timer:connect_signal("timeout", function()
+		awful.spawn.easy_async("sensors", function(output) system.lmsensors:update(output) end)
+	end)
 
-	if args.main then sensors_store = redutil.read.output("sensors | grep Core") end
-	local line = string.match(sensors_store, "Core " .. index .."(.-)\r?\n")
-
-	if not line then return { 0 } end
-
-	local temp = string.match(line, "%+(%d+%.%d)°[CF]")
-	return temp and { math.floor(tonumber(temp)) } or { 0 }
+	self.timer:start()
+	self.timer:emit_signal("timeout")
 end
+
+function system.lmsensors:soft_start(timeout, shift)
+	if self.timer then return end
+
+	timer({
+		timeout     = timeout - (shift or 1),
+		autostart   = true,
+		single_shot = true,
+		callback    = function() self:start(timeout) end
+	})
+end
+
+function system.lmsensors.get(name)
+	if os.time() - system.lmsensors.time > system.lmsensors.delay then
+		local output = redutil.read.output("sensors")
+		system.lmsensors:update(output)
+	end
+	return system.lmsensors.storage[name] or { 0 }
+end
+
+-- Legacy
+------------------------------------------------------------
+--function system.thermal.sensors(args)
+--	local args = args or "'Physical id 0'"
+--	local output = redutil.read.output("sensors | grep " .. args)
+--
+--	local temp = string.match(output, "%+(%d+%.%d)°[CF]")
+--
+--	return temp and { math.floor(tonumber(temp)) } or { 0 }
+--end
+--
+--local sensors_store
+--
+--function system.thermal.sensors_core(args)
+--	args = args or {}
+--	local index = args.index or 0
+--
+--	if args.main then sensors_store = redutil.read.output("sensors | grep Core") end
+--	local line = string.match(sensors_store, "Core " .. index .."(.-)\r?\n")
+--
+--	if not line then return { 0 } end
+--
+--	local temp = string.match(line, "%+(%d+%.%d)°[CF]")
+--	return temp and { math.floor(tonumber(temp)) } or { 0 }
+--end
 
 -- Using hddtemp
 ------------------------------------------------------------
 function system.thermal.hddtemp(args)
-	local args = args or {}
+	args = args or {}
 	local port = args.port or "7634"
 	local disk = args.disk or "/dev/sda"
 
-	local output = redutil.read.output(
-		"echo | curl --connect-timeout 1 -fsm 3 telnet://127.0.0.1:" .. port .. " | grep " .. disk
-	)
-	local temp = string.match(output, "|(%d+)|[CF]|")
+	local output = redutil.read.output("echo | curl --connect-timeout 1 -fsm 3 telnet://127.0.0.1:" .. port)
 
-	return temp and { tonumber(temp) } or { 0 }
+	for mnt, _, temp, _ in output:gmatch("|(.-)|(.-)|(.-)|(.-)|") do
+		if mnt == disk then
+			return temp and { tonumber(temp) }
+		end
+	end
+
+	return { 0 }
 end
 
 -- Using nvidia-settings on sysmem with optimus (bumblebee)
+-- Async
 ------------------------------------------------------------
-function system.thermal.nvoptimus()
-	local temp = 0
+function system.thermal.nvoptimus(setup)
 	local nvidia_on = string.find(redutil.read.output("cat /proc/acpi/bbswitch"), "ON")
-
-	if nvidia_on ~= nil then
-		temp = string.match(
-			redutil.read.output("optirun -b none nvidia-settings -c :8 -q gpucoretemp -t | tail -1"), "[^\n]+"
+	if not nvidia_on then
+		setup({ 0, off = true })
+	else
+		awful.spawn.easy_async_with_shell("optirun -b none nvidia-settings -c :8 -q gpucoretemp -t | tail -1",
+			function(output)
+				local value = tonumber(string.match(output, "[^\n]+"))
+				setup({ value or 0, off = false })
+			end
 		)
 	end
+end
 
-	return { tonumber(temp), off = nvidia_on == nil }
+-- Direct call of nvidia-smi
+------------------------------------------------------------
+function system.thermal.nvsmi()
+	local temp = string.match(
+		redutil.read.output("nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader"), "%d%d"
+	)
+	-- checks that local temp is not null then returns the convert string to number or if fails returns null
+	return temp and { tonumber(temp) } or { 0 }
 end
 
 -- Using nvidia-smi on sysmem with optimus (nvidia-prime)
@@ -376,50 +504,42 @@ function system.thermal.nvprime()
 	local nvidia_on = string.find(redutil.read.output("prime-select query"), "nvidia")
 
 	if nvidia_on ~= nil then
-		local t = string.match(
-			redutil.read.output("nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader"),
-			"%d%d"
-		)
-		if t then temp = t end
+		-- reuse function nvsmi
+		temp = system.thermal.nvsmi()[1]
 	end
 
-	return { tonumber(temp), off = nvidia_on == nil }
+	return { temp, off = nvidia_on == nil }
 end
 
 -- Get info from transmission-remote client
 -- This function adapted special for async reading
 -----------------------------------------------------------------------------------------------------------------------
+system.transmission = {}
 
 -- Check if transmission client running
 --------------------------------------------------------------------------------
-local function is_transmission_running(args)
+function system.transmission.is_running(args)
 	local t_client = args or "transmission-gtk"
 	return redutil.read.output("pidof -x " .. t_client) ~= ""
 end
 
 -- Function for torrents sorting (downloading and paused first)
 --------------------------------------------------------------------------------
-local function sort_torrent(a, b)
+function system.transmission.sort_torrent(a, b)
 	return a.status == "Downloading" and b.status ~= "Downloading"
 	       or a.status == "Stopped" and b.status ~= "Stopped" and b.status ~= "Downloading"
 end
 
 -- Function to parse 'transmission-remote -l' output
 --------------------------------------------------------------------------------
-function system.transmission_parse(output)
-
-	-- Empty output for redflat desktop widget if torrent client is not running
-	------------------------------------------------------------
-	if not is_transmission_running() then
-		return { corners = {}, lines = { { 0, 0 }, { 0, 0 } }, alert = true }
-	end
+function system.transmission.parse(output, show_active_only)
 
 	-- Initialize vars
 	------------------------------------------------------------
 	local torrent = {
-		seed  = { num = 0, speed = 0 },
-		dnld  = { num = 0, speed = 0 },
-		list  = {},
+		seed = { num = 0, speed = 0 },
+		dnld = { num = 0, speed = 0 },
+		list = {},
 	}
 
 	-- Find state and progress for every torrent
@@ -428,26 +548,35 @@ function system.transmission_parse(output)
 	--local status_pos = string.find(output, "Status")
 
 	-- assuming "Up & Down" and "Downloading" is the same thing
-	output = string.gsub(output,"Up & Down","Downloading")
+	output = string.gsub(output, "Up & Down", "Downloading")
 
 	-- parse every line
-	for line in string.gmatch(output, "[^\n]+") do
+	for line in string.gmatch(output, "[^\r\n]+") do
+
 		if string.sub(line, 1, 3) == "Sum" then
 			-- get total speed
 			local seed, dnld = string.match(line, "Sum:%s+[%d%.]+%s+%a+%s+([%d%.]+)%s+([%d%.]+)")
+			seed, dnld = tonumber(seed), tonumber(dnld)
 			if seed and dnld then
 				torrent.seed.speed, torrent.dnld.speed = seed, dnld
 			end
 		else
 			-- get torrent info
-			local prog, status = string.match(line,
-				"%s+%d+%s+(%d+)%%%s+[%d%.]+%s%a+%s+.+%s+[%d%.]+%s+[%d%.]+%s+[%d%.]+%s+(%a+)"
+			local prog, status, name = string.match(
+				line,
+				"%s+%d+%s+(%d+)%%%s+[%d%.]+%s%a+%s+.+%s+[%d%.]+%s+[%d%.]+%s+[%d%.]+%s+(%a+)%s+(.+)"
 			)
-			if prog and status then
-				table.insert(torrent.list, { prog = prog, status = status })
 
-				if     status == "Seeding"     then torrent.seed.num = torrent.seed.num + 1
-				elseif status == "Downloading" then torrent.dnld.num = torrent.dnld.num + 1
+			if prog and status then
+				-- if active only is selected then filter
+				if not show_active_only or (status == "Downloading" or status == "Seeding") then
+					table.insert(torrent.list, { prog = prog, status = status, name = name })
+				end
+
+				if status == "Seeding" then
+					torrent.seed.num = torrent.seed.num + 1
+				elseif status == "Downloading" then
+					torrent.dnld.num = torrent.dnld.num + 1
 				end
 			end
 		end
@@ -455,24 +584,51 @@ function system.transmission_parse(output)
 
 	-- Sort torrents
 	------------------------------------------------------------
-	table.sort(torrent.list, sort_torrent)
+	-- do not need to sort active as transmission-remote automatically sorts
+	if not show_active_only then
+		table.sort(torrent.list, system.transmission.sort_torrent)
+	end
 
 	-- Format output special for redflat desktop widget
 	------------------------------------------------------------
 	local sorted_prog = {}
-	for _, t in ipairs(torrent.list) do table.insert(sorted_prog , t.prog) end
+	for _, t in ipairs(torrent.list) do
+		table.insert(sorted_prog, { value = t.prog, text = string.format("%d%% %s", t.prog, t.name) })
+	end
 
 	return {
-		corners = sorted_prog,
+		bars = sorted_prog,
 		lines = { { torrent.seed.speed, torrent.seed.num }, { torrent.dnld.speed, torrent.dnld.num } },
 		alert = false
 	}
 end
 
+-- Async transmission meter function
+--------------------------------------------------------------------------------
+function system.transmission.info(setup, args)
+	local command = args.command or "transmission-remote localhost -l"
+
+	awful.spawn.easy_async(command, function(output)
+		-- rather than check if an instance of transmission is running locally, check if there is actually any output
+		-- zero torrents or no program equates to same result
+		if string.len(output) > 0 then
+			local state = system.transmission.parse(output, args.show_active_only)
+
+			if args.speed_only then
+				state.lines[1][2] = state.lines[1][1]
+				state.lines[2][2] = state.lines[2][1]
+			end
+			setup(state)
+		else
+			setup({ bars = {}, lines = { { 0, 0 }, { 0, 0 } }, alert = true })
+		end
+	end)
+end
+
 -- Get processes list and cpu and memory usage for every process
 -- !!! Fixes is needed !!!
 -----------------------------------------------------------------------------------------------------------------------
-local storage = {}
+local proc_storage = {}
 
 function system.proc_info(cpu_storage)
 	local process = {}
@@ -515,10 +671,10 @@ function system.proc_info(cpu_storage)
 
 			-- calculate cpu usage for process
 			local proc_time = proc_stat[13] + proc_stat[14]
-			local pcpu = (proc_time - (storage[pid] or 0)) / cpu_diff
+			local pcpu = (proc_time - (proc_storage[pid] or 0)) / cpu_diff
 
 			-- save current cpu time for future
-			storage[pid] = proc_time
+			proc_storage[pid] = proc_time
 
 			-- save results
 			table.insert(process, { pid = pid, name = name, mem = mem, pcpu = pcpu })
@@ -534,11 +690,14 @@ end
 -- CPU and memory usage formatted special for desktop widget
 --------------------------------------------------------------------------------
 function system.dformatted.cpumem(storage)
-	local mem   = system.memory_info()
-	local cores = system.cpu_usage(storage).core
+	local mem = system.memory_info()
+	local cores = {}
+	for i, v in ipairs(system.cpu_usage(storage).core) do
+		table.insert(cores, { value = v, text = string.format("CORE%d %s%%", i - 1, v) })
+	end
 
 	return {
-		corners = cores,
+		bars = cores,
 		lines = { { mem.usep, mem.inuse }, { mem.swp.usep, mem.swp.inuse } }
 	}
 end
@@ -546,7 +705,7 @@ end
 -- CPU usage formatted special for panel widget
 --------------------------------------------------------------------------------
 function system.pformatted.cpu(crit)
-	local crit = crit or 75
+	crit = crit or 75
 	local storage = { cpu_total = {}, cpu_active = {} }
 
 	return function()
@@ -562,7 +721,7 @@ end
 -- Memory usage formatted special for panel widget
 --------------------------------------------------------------------------------
 function system.pformatted.mem(crit)
-	local crit = crit or 75
+	crit = crit or 75
 
 	return function()
 		local usage = system.memory_info().usep
@@ -577,7 +736,7 @@ end
 -- Battery state formatted special for panel widget
 --------------------------------------------------------------------------------
 function system.pformatted.bat(crit)
-	local crit = crit or 15
+	crit = crit or 15
 
 	return function(arg)
 		local state = system.battery(arg)

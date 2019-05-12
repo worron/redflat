@@ -74,8 +74,8 @@ local function default_style()
 	local style = {
 		width        = 80,
 		font         = { font = "Sans", size = 16, face = 0, slant = 0 },
-		text_gap     = 22,
-		counter      = { size = 12, gap = 2, coord = { 40, 35 } },
+		text_shift   = 22,
+		counter      = { size = 12, margin = 2, coord = { 40, 35 } },
 		show_counter = true,
 		color        = { main   = "#b1222b", gray = "#575757", icon = "#a0a0a0", urgent = "#32882d",
 		                 wibox = "#202020" }
@@ -101,7 +101,7 @@ function redtag.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 	-- updating values
 	local data = {
@@ -117,12 +117,12 @@ function redtag.new(style)
 	------------------------------------------------------------
 	function widg:set_state(state)
 		data.state = state
-		self:emit_signal("widget::updated")
+		self:emit_signal("widget::redraw_needed")
 	end
 
 	function widg:set_width(width)
 		data.width = width
-		self:emit_signal("widget::updated")
+		self:emit_signal("widget::redraw_needed")
 	end
 
 	-- Fit
@@ -142,7 +142,7 @@ function redtag.new(style)
 		-- text
 		cr:set_source(color(style.color.icon))
 		redutil.cairo.set_font(cr, style.font)
-		redutil.cairo.textcentre.horizontal(cr, { width/2, style.text_gap }, data.state.text)
+		redutil.cairo.textcentre.horizontal(cr, { width/2, style.text_shift }, data.state.text)
 
 		-- active mark
 		cr:set_source(color(data.state.active and style.color.main or style.color.gray))
@@ -166,15 +166,15 @@ function redtag.new(style)
 			local ext = cr:text_extents(tostring(#data.state.list))
 			cr:set_source(color(style.color.wibox))
 			cr:rectangle(
-				style.counter.coord[1] - ext.width / 2 - style.counter.gap,
-				style.counter.coord[2] - ext.height / 2 - style.counter.gap,
-				ext.width + 2 * style.counter.gap,
-				ext.height + 2 * style.counter.gap
+				style.counter.coord[1] - ext.width / 2 - style.counter.margin,
+				style.counter.coord[2] - ext.height / 2 - style.counter.margin,
+				ext.width + 2 * style.counter.margin,
+				ext.height + 2 * style.counter.margin
 			)
 			cr:fill()
 
 			cr:set_source(color(style.color.icon))
-			redutil.cairo.textcentre.vertical(cr, style.counter.coord, tostring(#data.state.list))
+			redutil.cairo.textcentre.full(cr, style.counter.coord, tostring(#data.state.list))
 		end
 	end
 

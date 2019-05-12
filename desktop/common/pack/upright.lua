@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------------
---                                            RedFlat cornerpack widget                                              --
+--                                             RedFlat ber pack widget                                               --
 -----------------------------------------------------------------------------------------------------------------------
--- Group of corner indicators placed in horizontal layout
+-- Group of upright indicators placed in horizontal layout
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
@@ -11,45 +11,51 @@ local setmetatable = setmetatable
 local wibox = require("wibox")
 --local beautiful = require("beautiful")
 
-local corners = require("redflat.desktop.common.corners")
+local progressbar = require("redflat.desktop.common.bar.shaped")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local cornerpack = { mt = {} }
+local barpack = { mt = {} }
 
--- Create a new cornerpack widget
+-- Create a new barpack widget
 -- @param num Number of indicators
--- @param style Style variables for redflat corners widget
+-- @param style Style variables for redflat shaped progressbar widget
 -----------------------------------------------------------------------------------------------------------------------
-function cornerpack.new(num, style)
+function barpack.new(num, style)
 
 	local pack = {}
-	local style = style or {}
+	style = style or {}
 
-	-- construct group of corner indicators
+	-- construct group of bar indicators
 	pack.layout = wibox.layout.align.horizontal()
 	local flex_horizontal = wibox.layout.flex.horizontal()
 	local crn = {}
 
 	for i = 1, num do
-		crn[i] = corners(style)
+		crn[i] = progressbar(style)
 		if i == 1 then
 			pack.layout:set_left(crn[i])
 		else
-			local corner_space = wibox.layout.align.horizontal()
-			corner_space:set_right(crn[i])
-			flex_horizontal:add(corner_space)
+			local bar_space = wibox.layout.align.horizontal()
+			bar_space:set_right(crn[i])
+			flex_horizontal:add(bar_space)
 		end
 	end
 	pack.layout:set_middle(flex_horizontal)
 
 	-- setup functions
-	function pack:set_values(values, n)
+	function pack:set_values(values, n, tip)
 		if n then
-			if crn[n] then crn[n]:set_value(values) end
+			if crn[n] then
+				crn[n]:set_value(values)
+				if tip then crn[n]:set_tip(tip) end
+			end
 		else
 			for i, v in ipairs(values) do
-				if crn[i] then crn[i]:set_value(v) end
+				if crn[i] then
+					crn[i]:set_value(v)
+					if tip then crn[n]:set_tip(tip) end
+				end
 			end
 		end
 	end
@@ -57,10 +63,10 @@ function cornerpack.new(num, style)
 	return pack
 end
 
--- Config metatable to call cornerpack module as function
+-- Config metatable to call barpack module as function
 -----------------------------------------------------------------------------------------------------------------------
-function cornerpack.mt:__call(...)
-	return cornerpack.new(...)
+function barpack.mt:__call(...)
+	return barpack.new(...)
 end
 
-return setmetatable(cornerpack, cornerpack.mt)
+return setmetatable(barpack, barpack.mt)

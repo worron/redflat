@@ -16,7 +16,6 @@ local beautiful = require("beautiful")
 local redflat = require("redflat")
 local redutil = require("redflat.util")
 local redtip = require("redflat.float.hotkeys")
-local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -35,9 +34,9 @@ local function default_style()
 		geometry        = { width = 220, height = 60 },
 		font            = "Sans 14 bold",
 		border_width    = 2,
-		keytip          = { geometry = { width = 500, height = 600 }, exit = false },
+		keytip          = { geometry = { width = 500 }, exit = false },
 		color           = { border = "#575757", wibox = "#202020" },
-		shape           = rectshape
+		shape           = nil
 	}
 
 	return redflat.util.table.merge(style, redflat.util.table.check(beautiful, "float.keychain") or {})
@@ -54,7 +53,7 @@ local function build_label(item)
 end
 
 local function build_tip(store, item, prefix)
-	local prefix = prefix or build_label(item)
+	prefix = prefix or build_label(item)
 	for _, k in ipairs(item[3]) do
 		local p = prefix .. " " .. build_label(k)
 		if type(k[3]) == "table" then
@@ -98,7 +97,7 @@ function keychain:init(style)
 	self.parents = {}
 	self.sequence = ""
 
-	local style = redflat.util.table.merge(default_style(), style or {})
+	style = redflat.util.table.merge(default_style(), style or {})
 	self.style = style
 
 	-- Wibox

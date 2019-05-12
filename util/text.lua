@@ -19,10 +19,10 @@ end
 -- Format output for destop widgets
 ------------------------------------------------------------
 function text.dformat(value, unit, w, spacer)
+	w = w or 3
+	spacer = spacer or " "
 	local res = value
 	local add = ""
-	local w = w or 3
-	local spacer = spacer or "  "
 
 	for _, v in pairs(unit) do
 		if value > v[2] then

@@ -8,7 +8,7 @@ local cairo = { textcentre = {} }
 
 -- Draw text aligned by center
 ------------------------------------------------------------
-function cairo.textcentre.vertical(cr, coord, text)
+function cairo.textcentre.full(cr, coord, text)
 	local ext = cr:text_extents(text)
 	cr:move_to(coord[1] - (ext.width/2 + ext.x_bearing), coord[2] - (ext.height/2 + ext.y_bearing))
 	cr:show_text(text)

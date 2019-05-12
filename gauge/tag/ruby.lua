@@ -1,12 +1,14 @@
 -----------------------------------------------------------------------------------------------------------------------
---                                            RedFlat doublebar widget                                               --
+--                                                   RedFlat tag widget                                              --
 -----------------------------------------------------------------------------------------------------------------------
--- Gauge wigget with two vertical progressbar
+-- Custom widget to display tag info
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
+local math = math
+
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local color = require("gears.color")
@@ -15,30 +17,33 @@ local redutil = require("redflat.util")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
-local doublebar = { mt = {} }
+local rubytag = { mt = {} }
 
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		line  = { width = 4, gap = 5 },
-		color = { main = "#b1222b", gray = "#575757" }
+		width        = 50,
+		base = { pad = 5, height = 12, thickness = 2 },
+		mark = { pad = 10, height = 4 },
+		color        = { main  = "#b1222b", gray  = "#575757", icon = "#a0a0a0", urgent = "#32882d" }
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.doublebar") or {})
+
+	return redutil.table.merge(style, redutil.table.check(beautiful, "gauge.tag.ruby") or {})
 end
 
--- Create a new doublebar widget
+-- Create a new tag widget
 -- @param style Table containing colors and geometry parameters for all elemets
 -----------------------------------------------------------------------------------------------------------------------
-function doublebar.new(style)
+function rubytag.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 	-- updating values
 	local data = {
-		value = {0, 0}
+		width = style.width or nil
 	}
 
 	-- Create custom widget
@@ -47,30 +52,52 @@ function doublebar.new(style)
 
 	-- User functions
 	------------------------------------------------------------
-	function widg:set_value(value)
-		data.value = { value[1] < 1 and value[1] or 1, value[2] < 1 and value[2] or 1 }
-		self:emit_signal("widget::updated")
-		return self
+	function widg:set_state(state)
+		data.state = state
+		self:emit_signal("widget::redraw_needed")
+	end
+
+	function widg:set_width(width)
+		data.width = width
+		self:emit_signal("widget::redraw_needed")
 	end
 
 	-- Fit
 	------------------------------------------------------------
-	function widg:fit(_, _, height)
-		local width = 2 * style.line.width + style.line.gap
-		return width, height
+	function widg:fit(_, width, height)
+		if data.width then
+			return math.min(width, data.width), height
+		else
+			return width, height
+		end
 	end
 
 	-- Draw
 	------------------------------------------------------------
 	function widg:draw(_, cr, width, height)
-		cr:set_source(color(style.color.gray))
-		cr:rectangle(0, 0, style.line.width, height)
-		cr:rectangle(width - style.line.width, 0, style.line.width, height)
-		cr:fill()
 
-		cr:set_source(color(style.color.main))
-		cr:rectangle(0, height, style.line.width, - height * data.value[1])
-		cr:rectangle(width - style.line.width, height, style.line.width, - height * data.value[2])
+		-- state
+		local cl = data.state.active and style.color.main or style.color.gray
+		cr:set_source(color(cl))
+
+		cr:rectangle(
+			style.base.pad, math.floor((height - style.base.height) / 2),
+			width - 2 * style.base.pad, style.base.height
+		)
+		cr:set_line_width(style.base.thickness)
+		cr:stroke()
+
+		-- focus
+		cl = data.state.focus and style.color.main
+		     or data.state.urgent and style.color.urgent
+		     or (data.state.occupied and  style.color.icon or style.color.gray)
+		cr:set_source(color(cl))
+
+		cr:rectangle(
+			style.mark.pad, math.floor((height - style.mark.height) / 2),
+			width - 2 * style.mark.pad, style.mark.height
+		)
+
 		cr:fill()
 	end
 
@@ -78,10 +105,10 @@ function doublebar.new(style)
 	return widg
 end
 
--- Config metatable to call doublebar module as function
+-- Config metatable to call rubytag module as function
 -----------------------------------------------------------------------------------------------------------------------
-function doublebar.mt:__call(...)
-	return doublebar.new(...)
+function rubytag.mt:__call(...)
+	return rubytag.new(...)
 end
 
-return setmetatable(doublebar, doublebar.mt)
+return setmetatable(rubytag, rubytag.mt)

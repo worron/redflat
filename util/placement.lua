@@ -21,7 +21,7 @@ function placement.no_offscreen(object, gap, area)
 	local border = object.border_width
 
 	local screen_idx = object.screen or awful.screen.getbycoord(geometry.x, geometry.y)
-	local area = area or screen[screen_idx].workarea
+	area = area or screen[screen_idx].workarea
 	if gap then area = placement.add_gap(area, gap) end
 
 	for coord, dim in pairs(direction) do
@@ -41,7 +41,7 @@ local function centered_base(is_h, is_v)
 		local new_geometry = {}
 
 		local screen_idx = object.screen or awful.screen.getbycoord(geometry.x, geometry.y)
-		local area = area or screen[screen_idx].geometry
+		area = area or screen[screen_idx].geometry
 		if gap then area = placement.add_gap(area, gap) end
 
 		if is_h then new_geometry.x = area.x + (area.width - geometry.width) / 2 - object.border_width end

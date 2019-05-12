@@ -11,6 +11,7 @@ local beautiful = require("beautiful")
 local ipairs = ipairs
 local pairs = pairs
 local math = math
+local unpack = unpack or table.unpack
 
 local awful = require("awful")
 local common = require("redflat.layout.common")
@@ -144,7 +145,7 @@ local function get_rail(c)
 	local rail = { x = { wa.x, wa.x + wa.width }, y = { wa.y, wa.y + wa.height } }
 	table.remove(cls, hasitem(cls, c))
 
-	for i, v in ipairs(cls) do
+	for _, v in ipairs(cls) do
 		local lg = redutil.client.fullgeometry(v)
 		local xr = lg.x + lg.width
 		local yb = lg.y + lg.height
@@ -165,7 +166,7 @@ local function update_rail(c) grid.data.rail = get_rail(c) end
 
 -- Calculate cell geometry
 ------------------------------------------------------------
-local function cell(wa, cellnum)
+local function make_cell(wa, cellnum)
 	local cell = {
 		x = wa.width  / cellnum.x,
 		y = wa.height / cellnum.y
@@ -219,8 +220,8 @@ function grid.move_to(dir, is_rail, k)
 		update_rail(c)
 	end
 
-	local g = redutil.client.fullgeometry(c, g)
-	local k = k or 1
+	local g = redutil.client.fullgeometry(c)
+	k = k or 1
 
 	if dir == "left" then
 		if is_rail then
@@ -345,7 +346,7 @@ end
 
 -- Keygrabber
 -----------------------------------------------------------------------------------------------------------------------
-grid.maingrabber = function(mod, key, event)
+grid.maingrabber = function(mod, key)
 	for _, k in ipairs(grid.keys.all) do
 		if redutil.key.match_grabber(k, mod, key) then k[3](); return true end
 	end
@@ -371,13 +372,13 @@ function grid.arrange(p)
 
 	-- calculate cell
 	-- fix useless gap correction?
-	grid.data.cell = cell({ width = wa.width + 2 * p.useless_gap, height = wa.height + 2 * p.useless_gap }, cellnum)
+	grid.data.cell = make_cell({ width = wa.width + 2 * p.useless_gap, height = wa.height + 2 * p.useless_gap }, cellnum)
 
 	-- nothing to tile here
 	if #cls == 0 then return end
 
 	-- tile
-	for i, c in ipairs(cls) do
+	for _, c in ipairs(cls) do
 		local g = redutil.client.fullgeometry(c)
 
 		g = fit_cell(g, grid.data.cell)
@@ -388,7 +389,7 @@ end
 
 -- Mouse moving function
 -----------------------------------------------------------------------------------------------------------------------
-function grid.move_handler(c, context, hints)
+function grid.move_handler(c, _, hints)
 	local g = redutil.client.fullgeometry(c)
 	local hg = { x = hints.x, y = hints.y, width = g.width, height = g.height }
 	if is_diff(hg, g, grid.data.cell) then
@@ -399,7 +400,7 @@ end
 
 -- Mouse resizing function
 -----------------------------------------------------------------------------------------------------------------------
-function grid.mouse_resize_handler(c, corner, x, y)
+function grid.mouse_resize_handler(c, corner)
 	local g = redutil.client.fullgeometry(c)
 	local cg = g
 
@@ -407,7 +408,7 @@ function grid.mouse_resize_handler(c, corner, x, y)
 
 	mousegrabber.run(
 		function (_mouse)
-			 for k, v in ipairs(_mouse.buttons) do
+			 for _, v in ipairs(_mouse.buttons) do
 				if v then
 					local ng
 					if corner == "bottom_right" then
@@ -457,7 +458,7 @@ end
 -- Redflat navigator support functions
 -----------------------------------------------------------------------------------------------------------------------
 function grid:set_keys(keys, layout)
-	local layout = layout or "all"
+	layout = layout or "all"
 	if keys then
 		self.keys[layout] = keys
 		if layout ~= "all" then grid.keys.all = awful.util.table.join(grid.keys.move, grid.keys.resize) end

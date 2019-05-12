@@ -20,6 +20,8 @@ local ipairs = ipairs
 local table = table
 local string = string
 local math = math
+local unpack = unpack or table.unpack
+
 local beautiful = require("beautiful")
 local tag = require("awful.tag")
 local awful = require("awful")
@@ -32,7 +34,6 @@ local separator = require("redflat.gauge.separator")
 local redmenu = require("redflat.menu")
 local svgbox = require("redflat.gauge.svgbox")
 local dfparser = require("redflat.service.dfparser")
-local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables and vars for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -72,7 +73,7 @@ local function default_style()
 		titleline      = { font = "Sans 16 bold", height = 35 },
 		stateline      = { height = 35 },
 		state_iconsize = { width = 20, height = 20 },
-		sep_margin     = { 3, 3, 5, 5 },
+		separator      = { marginh = { 3, 3, 5, 5 } },
 		tagmenu        = { icon_margin = { 2, 2, 2, 2 } },
 		hide_action    = { min = true,
 		                   move = true,
@@ -92,7 +93,7 @@ local function default_style()
 		sl_highlight = false, -- single line highlight
 		color        = { border = "#575757", text = "#aaaaaa", main = "#b1222b", highlight = "#eeeeee",
 		                 wibox = "#202020", gray = "#575757", urgent = "#32882d" },
-		shape        = rectshape
+		shape        = nil
 
 	}
 	style.winmenu.menu = {
@@ -112,7 +113,7 @@ end
 --------------------------------------------------------------------------------
 local function get_state(c_group, style)
 
-	local style = style or {}
+	style = style or {}
 	local names = style.appnames or {}
 	local chars = style.char_digit
 
@@ -275,7 +276,7 @@ end
 local function visible_clients(filter, screen)
 	local clients = {}
 
-	for i, c in ipairs(client.get()) do
+	for _, c in ipairs(client.get()) do
 		local hidden = c.skip_taskbar or c.hidden or c.type == "splash" or c.type == "dock" or c.type == "desktop"
 
 		if not hidden and filter(c, screen) then
@@ -532,15 +533,15 @@ function redtasklist.winmenu:init(style)
 	local stateboxes = state_line_construct(state_icons, stateline_horizontal, style)
 
 	-- update function for state icons
-	local function stateboxes_update(c, state_icons, stateboxes)
-		for i, v in ipairs(state_icons) do
-			stateboxes[i]:set_color(v.indicator(c) and style.color.main or style.color.gray)
+	local function stateboxes_update(c, icons, boxes)
+		for i, v in ipairs(icons) do
+			boxes[i]:set_color(v.indicator(c) and style.color.main or style.color.gray)
 		end
 	end
 
 	-- Separators config
 	------------------------------------------------------------
-	local menusep = { widget = separator.horizontal({ margin = style.sep_margin }) }
+	local menusep = { widget = separator.horizontal(style.separator) }
 
 	-- Construct tag submenus ("move" and "add")
 	------------------------------------------------------------
@@ -571,7 +572,7 @@ function redtasklist.winmenu:init(style)
 			{ "Minimize",    minimize, nil, style.icon.minimize or style.icon.unknown },
 			{ "Close",       close,    nil, style.icon.close or style.icon.unknown },
 			menusep,
-			{ widget = stateline }
+			{ widget = stateline, focus = true }
 		}
 	})
 
@@ -703,7 +704,7 @@ function redtasklist.new(args, style)
 	local cs = args.screen
 	local filter = args.filter or redtasklist.filter.currenttags
 
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 	if style.custom_icon then style.icons = dfparser.icon_list(style.parser) end
 	if style.task.width  then style.width = style.task.width end
 
@@ -742,7 +743,6 @@ function redtasklist.new(args, style)
 	tasklist.queue:connect_signal("timeout", function() update(cs); tasklist.queue:stop() end)
 
 	-- Signals setup
-	-- TODO: split signals for screens
 	--------------------------------------------------------------------------------
 	local client_signals = {
 		"property::urgent", "property::sticky", "property::minimized",
@@ -761,7 +761,7 @@ function redtasklist.new(args, style)
 	-- force hide pop-up widgets if any client was closed
 	-- because last vars may be no actual anymore
 	client.connect_signal("unmanage",
-		function(c)
+		function()
 			tasklist_update()
 			redtasklist.tasktip.wibox.visible = false
 			redtasklist.winmenu.menu:hide()
@@ -782,7 +782,7 @@ end
 
 -- focus/minimize
 function redtasklist.action.select(args)
-	local args = args or {}
+	args = args or {}
 	local state = get_state(args.group)
 
 	if state.focus then
@@ -799,23 +799,23 @@ end
 
 -- close all in group
 function redtasklist.action.close(args)
-	local args = args or {}
-	for i, c in ipairs(args.group) do c:kill() end
+	args = args or {}
+	for _, c in ipairs(args.group) do c:kill() end
 end
 
 -- show/close winmenu
 function redtasklist.action.menu(args)
-	local args = args or {}
+	args = args or {}
 	redtasklist.winmenu:show(args.group, args.gap)
 end
 
 -- switch to next task
-function redtasklist.action.switch_next(args)
+function redtasklist.action.switch_next()
 	switch_focus(last.screen_clients[mouse.screen])
 end
 
 -- switch to previous task
-function redtasklist.action.switch_prev(args)
+function redtasklist.action.switch_prev()
 	switch_focus(last.screen_clients[mouse.screen], true)
 end
 
@@ -827,7 +827,7 @@ end
 
 -- To include all clients
 --------------------------------------------------------------------------------
-function redtasklist.filter.allscreen(c, screen)
+function redtasklist.filter.allscreen()
 	return true
 end
 
@@ -845,7 +845,7 @@ function redtasklist.filter.currenttags(c, screen)
 
 	local tags = screen.tags
 
-	for k, t in ipairs(tags) do
+	for _, t in ipairs(tags) do
 		if t.selected then
 			local ctags = c:tags()
 
@@ -867,7 +867,7 @@ function redtasklist.filter.minimizedcurrenttags(c, screen)
 
 	local tags = screen.tags
 
-	for k, t in ipairs(tags) do
+	for _, t in ipairs(tags) do
 		if t.selected then
 			local ctags = c:tags()
 

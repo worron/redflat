@@ -12,7 +12,7 @@ local ipairs = ipairs
 local math = math
 local wibox = require("wibox")
 local color = require("gears.color")
---local beautiful = require("beautiful")
+local beautiful = require("beautiful")
 
 local redutil = require("redflat.util")
 
@@ -23,7 +23,7 @@ local chart = { mt = {} }
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
-	return {
+	local style = {
 		maxm        = 1,
 		color       = "#404040",
 		width       = nil,
@@ -32,6 +32,8 @@ local function default_style()
 		bar         = { gap = 5, width = 5 },
 		autoscale   = true
 	}
+
+	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.common.chart") or {})
 end
 
 -- Create a new chart widget
@@ -42,7 +44,7 @@ function chart.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 	local count = 0
 	local barnum
 	local current_maxm = style.maxm
@@ -62,7 +64,7 @@ function chart.new(style)
 		if barnum then
 			count = count % barnum + 1
 			data.values[count] = x
-			self:emit_signal("widget::updated")
+			self:emit_signal("widget::redraw_needed")
 		end
 	end
 

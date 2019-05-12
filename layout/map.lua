@@ -9,6 +9,7 @@
 local ipairs = ipairs
 local pairs = pairs
 local math = math
+local unpack = unpack or table.unpack
 
 local awful = require("awful")
 local timer = require("gears.timer")
@@ -169,8 +170,8 @@ function map.construct_itempack(cls, wa, is_vertical, parent)
 
 	-- Update pack clients
 	------------------------------------------------------------
-	function pack:set_cls(cls)
-		local current = { unpack(cls) }
+	function pack:set_cls(clist)
+		local current = { unpack(clist) }
 
 		-- update existing items, remove overage if need
 		for i, item in ipairs(self.items) do
@@ -193,30 +194,30 @@ function map.construct_itempack(cls, wa, is_vertical, parent)
 	-- Get current pack clients
 	------------------------------------------------------------
 	function pack:get_cls()
-		local cls = {}
-		for i, item in ipairs(self.items) do if not item.child then cls[#cls + 1] = item.client end end
-		return cls
+		local clist = {}
+		for _, item in ipairs(self.items) do if not item.child then clist[#clist + 1] = item.client end end
+		return clist
 	end
 
 	-- Update pack geometry
 	------------------------------------------------------------
-	function pack:set_wa(wa)
-		self.wa = wa
+	function pack:set_wa(workarea)
+		self.wa = workarea
 	end
 
 	-- Get number of items reserved for single client only
 	------------------------------------------------------------
 	function pack:get_places()
 		local n = 0
-		for i, item in ipairs(self.items) do if not item.child then n = n + 1 end end
+		for _, item in ipairs(self.items) do if not item.child then n = n + 1 end end
 		return n
 	end
 
 	-- Get child index
 	------------------------------------------------------------
-	function pack:get_child_id(pack)
+	function pack:get_child_id(pack_)
 		for i, item in ipairs(self.items) do
-			if item.child == pack then return i end
+			if item.child == pack_ then return i end
 		end
 	end
 
@@ -224,7 +225,7 @@ function map.construct_itempack(cls, wa, is_vertical, parent)
 	------------------------------------------------------------
 	function pack:is_filled()
 		local filled = false
-		for i, item in ipairs(self.items) do
+		for _, item in ipairs(self.items) do
 			if not item.child then
 				return true
 			else
@@ -236,12 +237,12 @@ function map.construct_itempack(cls, wa, is_vertical, parent)
 
 	-- Increase window size factor for item with index
 	------------------------------------------------------------
-	function pack:incfacror(index, df, is_vertical)
-		if is_vertical == self.is_vertical then
+	function pack:incfacror(index, df, vertical)
+		if vertical == self.is_vertical then
 			self.items[index].factor = math.max(self.items[index].factor + df, 0.1)
 		elseif self.parent then
 			local pi = self.parent:get_child_id(self)
-			self.parent:incfacror(pi, df, is_vertical)
+			self.parent:incfacror(pi, df, vertical)
 		end
 	end
 
@@ -255,7 +256,7 @@ function map.construct_itempack(cls, wa, is_vertical, parent)
 		local direction = self.is_vertical and "height" or "width"
 
 		-- check factor norming
-		for i, item in ipairs(self.items) do
+		for _, item in ipairs(self.items) do
 			if not item.child or item.child:is_filled() then weight = weight + item.factor end
 		end
 		if weight == 0 then return geometries end
@@ -281,7 +282,7 @@ end
 
 -- Build layout tree
 --------------------------------------------------------------------------------
-local function construct_tree(cls, wa, t)
+local function construct_tree(wa, t)
 
 	-- Initial structure on creation
 	------------------------------------------------------------
@@ -318,7 +319,7 @@ local function construct_tree(cls, wa, t)
 		local new_pack = map.construct_itempack({}, pack.wa, is_vertical, pack.parent)
 
 		if pack.parent then
-			for i, item in ipairs(pack.parent.items) do
+			for _, item in ipairs(pack.parent.items) do
 				if item.child == pack then item.child = new_pack; break end
 			end
 		end
@@ -332,7 +333,7 @@ local function construct_tree(cls, wa, t)
 	-- Destroy the given container
 	------------------------------------------------------------
 	function tree:delete_group(pack)
-		local pack = pack or self.set[self.active]
+		pack = pack or self.set[self.active]
 		local index = hasitem(self.set, pack)
 		local has_child = pack:get_places() < #pack.items
 
@@ -387,12 +388,12 @@ local function construct_tree(cls, wa, t)
 
 	-- Recalculate geometry for whole layout
 	------------------------------------------------------------
-	function tree:rebuild(cls, wa)
-		local current = { unpack(cls) }
+	function tree:rebuild(clist)
+		local current = { unpack(clist) }
 		local geometries = {}
 
 		-- distributing clients among existing contaners
-		for i, pack in ipairs(self.set) do
+		for _, pack in ipairs(self.set) do
 			local n = pack:get_places()
 			local chunk = { unpack(current, 1, n) }
 			current = { unpack(current, n + 1) }
@@ -481,7 +482,7 @@ end
 -- Remove client from layout tree and change tree structure
 --------------------------------------------------------------------------------
 function map.clean_client(c)
-	for t, tree in pairs(map.data) do
+	for t, _ in pairs(map.data) do
 		local pack, index = map.data[t]:get_pack(c)
 		if pack then table.remove(pack.items, index) end
 	end
@@ -499,7 +500,7 @@ end
 -- Set active container (new client will be allocated to this one)
 --------------------------------------------------------------------------------
 function map.set_active(c)
-	local c = c or client.focus
+	c = c or client.focus
 	if not c then return end
 
 	local t = c.screen.selected_tag
@@ -537,7 +538,7 @@ end
 -- Move client to active container
 --------------------------------------------------------------------------------
 function map.move_to_active(c)
-	local c = c or client.focus
+	c = c or client.focus
 	if not c then return end
 
 	local t = c.screen.selected_tag
@@ -551,7 +552,7 @@ end
 -- Increase window size factor for client
 --------------------------------------------------------------------------------
 function map.incfactor(c, df, is_vertical, on_group)
-	local c = c or client.focus
+	c = c or client.focus
 	if not c then return end
 
 	local t = c.screen.selected_tag
@@ -605,7 +606,8 @@ end
 
 -- Base layout scheme
 -----------------------------------------------------------------------------------------------------------------------
-function map.base_set_new_pack(cls, wa, is_vertical, parent, factor)
+-- TODO: fix unused arg
+function map.base_set_new_pack(cls, wa, _, parent, factor)
 	local pack = map.construct_itempack(cls, wa, true, parent)
 	table.insert(parent.items, { child = pack, factor = factor or 1 })
 	return pack
@@ -641,7 +643,7 @@ function map.arrange(p)
 	if #cls == 0 then return end
 
 	-- init layout tree
-	if not data[t] then data[t] = construct_tree(cls, wa, t) end
+	if not data[t] then data[t] = construct_tree(wa, t) end
 
 	-- tile
 	p.geometries = data[t]:rebuild(cls)
@@ -650,7 +652,7 @@ end
 
 -- Keygrabber
 -----------------------------------------------------------------------------------------------------------------------
-map.maingrabber = function(mod, key, event)
+map.maingrabber = function(mod, key)
 	for _, k in ipairs(map.keys.all) do
 		if redutil.key.match_grabber(k, mod, key) then k[3](); return true end
 	end
@@ -658,7 +660,7 @@ end
 
 map.key_handler = function (mod, key, event)
 	if event == "press" then return end
-	if map.maingrabber(mod, key, event)      then return end
+	if map.maingrabber(mod, key)             then return end
 	if common.grabbers.swap(mod, key, event) then return end
 	if common.grabbers.base(mod, key, event) then return end
 end
@@ -667,7 +669,7 @@ end
 -- Redflat navigator support functions
 -----------------------------------------------------------------------------------------------------------------------
 function map:set_keys(keys, layout)
-	local layout = layout or "all"
+	layout = layout or "all"
 	if keys then
 		self.keys[layout] = keys
 		if layout ~= "all" then self.keys.all = awful.util.table.join(self.keys.layout, map.keys.resize) end

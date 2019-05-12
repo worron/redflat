@@ -2,7 +2,7 @@
 --                                                  RedFlat tooltip                                                  --
 -----------------------------------------------------------------------------------------------------------------------
 -- Slightly modded awful tooltip
--- style.margin were added
+-- padding added
 -- Proper placement on every text update
 -----------------------------------------------------------------------------------------------------------------------
 -- Some code was taken from
@@ -14,14 +14,12 @@
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
 local ipairs = ipairs
-local unpack = unpack
 local wibox = require("wibox")
 local awful = require("awful")
 local beautiful = require("beautiful")
 local timer = require("gears.timer")
 
 local redutil = require("redflat.util")
-local rectshape = require("gears.shape").rectangle
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -31,12 +29,13 @@ local tooltip = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		margin       = { 5, 5, 3, 3 },
+		padding      = { vertical = 3, horizontal = 5 },
 		timeout      = 1,
 		font  = "Sans 12",
 		border_width = 2,
+		set_position = nil,
 		color        = { border = "#404040", text = "#aaaaaa", wibox = "#202020" },
-		shape        = rectshape
+		shape        = nil
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.tooltip") or {})
 end
@@ -47,16 +46,18 @@ function tooltip.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local args = args or {}
+	args = args or {}
 	local objects = args.objects or {}
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 	-- Construct tooltip window with wibox and textbox
 	--------------------------------------------------------------------------------
-	local ttp = { wibox = wibox({ type = "tooltip" }) }
+	local ttp = { wibox = wibox({ type = "tooltip" }), tip = nil }
 	local tb = wibox.widget.textbox()
+	tb:set_align("center")
+
 	ttp.widget = tb
-	ttp.wibox:set_widget(wibox.container.margin(tb, unpack(style.margin)))
+	ttp.wibox:set_widget(tb)
 	tb:set_font(style.font)
 
 	-- configure wibox properties
@@ -70,13 +71,16 @@ function tooltip.new(args, style)
 
 	-- Tooltip size configurator
 	--------------------------------------------------------------------------------
-	 function ttp:set_geometry()
-		local geom = self.wibox:geometry()
-		local n_w, n_h = self.widget:get_preferred_size()
-		if geom.width ~= n_w or geom.height ~= n_h then
+	function ttp:set_geometry()
+		local wibox_sizes = self.wibox:geometry()
+		local w, h = self.widget:get_preferred_size()
+		local requsted_width = w + 2*style.padding.horizontal
+		local requsted_height = h + 2*style.padding.vertical
+
+		if wibox_sizes.width ~= requsted_width or wibox_sizes.height ~= requsted_height then
 			self.wibox:geometry({
-				width = n_w + style.margin[1] + style.margin[2],
-				height = n_h + style.margin[3] + style.margin[4]
+				width = requsted_width,
+				height = requsted_height
 			})
 		end
 	end
@@ -87,7 +91,11 @@ function tooltip.new(args, style)
 	show_timer:connect_signal("timeout",
 		function()
 			ttp:set_geometry()
-			awful.placement.under_mouse(ttp.wibox)
+			if style.set_position then
+				style.set_position(ttp.wibox)
+			else
+				awful.placement.under_mouse(ttp.wibox)
+			end
 			awful.placement.no_offscreen(ttp.wibox)
 			ttp.wibox.visible = true
 			show_timer:stop()
@@ -105,12 +113,16 @@ function tooltip.new(args, style)
 	end
 
 	function ttp:set_text(text)
-		self.widget:set_text(text)
-		if self.wibox.visible then
-			self:set_geometry()
-			self.wibox.x = mouse.coords().x - self.wibox.width/2
-			awful.placement.no_offscreen(self.wibox)
-	   end
+		if self.tip ~= text then
+			self.widget:set_text(text)
+			self.tip = text
+
+			if self.wibox.visible then
+				self:set_geometry()
+				self.wibox.x = mouse.coords().x - self.wibox.width / 2
+				awful.placement.no_offscreen(self.wibox)
+			end
+		end
 	end
 
 	function ttp:add_to_object(object)

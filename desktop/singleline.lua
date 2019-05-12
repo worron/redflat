@@ -27,39 +27,34 @@ local function default_style()
 	local style = {
 		lbox      = { draw = "by_left", width = 50 },
 		rbox      = { draw = "by_right", width = 50 },
-		digit_num = 3,
+		digits    = 3,
 		icon      = nil,
 		iwidth    = 120,
 		unit      = { { "B", -1 }, { "KB", 1024 }, { "MB", 1024^2 }, { "GB", 1024^3 } },
 		color     = { main = "#b1222b", wibox = "#161616", gray = "#404040" }
 	}
-	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.sline") or {})
+	return redutil.table.merge(style, redutil.table.check(beautiful, "desktop.singleline") or {})
 end
 
-local default_geometry = { width = 200, height = 100, x = 100, y = 100 }
-local default_args = { names = {}, textadd = "", timeout = 60, sensors = {} }
+local default_args = { timeout = 60, sensors = {} }
 
 -- Create a new widget
 -----------------------------------------------------------------------------------------------------------------------
-function sline.new(args, geometry, style)
+function sline.new(args, style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
 	local dwidget = {}
-	local args = redutil.table.merge(default_args, args or {})
-	local geometry = redutil.table.merge(default_geometry, geometry or {})
-	local style = redutil.table.merge(default_style(), style or {})
+	args = redutil.table.merge(default_args, args or {})
+	style = redutil.table.merge(default_style(), style or {})
 
-	-- Create wibox
+	dwidget.style = style
+
+	-- Initialize layouts
 	--------------------------------------------------------------------------------
-	dwidget.wibox = wibox({ type = "desktop", visible = true, bg = style.color.wibox })
-	dwidget.wibox:geometry(geometry)
-
-	-- initialize layouts
 	dwidget.item = {}
 	dwidget.icon = {}
-	dwidget.layout = wibox.layout.align.horizontal()
-	dwidget.wibox:set_widget(dwidget.layout)
+	dwidget.area = wibox.layout.align.horizontal()
 
 	local mid = wibox.layout.flex.horizontal()
 
@@ -70,7 +65,7 @@ function sline.new(args, geometry, style)
 		if style.icon then dwidget.icon[i] = svgbox(style.icon) end
 
 		local boxlayout = wibox.widget({
-			textbox(string.upper(args.names[i] or "mon"), style.lbox),
+			textbox(string.upper(args.sensors[i].name or "mon"), style.lbox),
 			style.icon and {
 				nil, dwidget.icon[i], nil,
 				expand = "outside",
@@ -82,7 +77,7 @@ function sline.new(args, geometry, style)
 		})
 
 		if i == 1 then
-			dwidget.layout:set_left(boxlayout)
+			dwidget.area:set_left(boxlayout)
 		else
 			local space = wibox.layout.align.horizontal()
 			space:set_right(boxlayout)
@@ -90,20 +85,36 @@ function sline.new(args, geometry, style)
 		end
 	end
 
-	dwidget.layout:set_middle(mid)
+	dwidget.area:set_middle(mid)
 
 	-- Update info function
 	--------------------------------------------------------------------------------
+	local function set_raw_state(state, crit, i)
+		local text_color = crit and state[1] > crit and style.color.main or style.color.gray
+		local txt = redutil.text.dformat(state[2] or state[1], style.unit, style.digits)
+
+		dwidget.item[i]:set_text(txt)
+		dwidget.item[i]:set_color(text_color)
+
+		if dwidget.icon[i] then
+			local icon_color = state.off and style.color.gray or style.color.main
+			dwidget.icon[i]:set_color(icon_color)
+		end
+	end
+
+	local function item_hadnler(crit, i)
+		return function(state) set_raw_state(state, crit, i) end
+	end
+
 	local function update()
 		for i, sens in ipairs(args.sensors) do
-			local state = sens.meter_function(sens.args)
-			local text_color = sens.crit and state[1] > sens.crit and style.color.main or style.color.gray
-			local icon_color = state.off and style.color.gray or style.color.main
-			local txt = redutil.text.dformat(state[2] or state[1], style.unit, style.digit_num)
-
-			dwidget.item[i]:set_text(txt)
-			dwidget.item[i]:set_color(text_color)
-			if dwidget.icon[i] then dwidget.icon[i]:set_color(icon_color) end
+			local crit = sens.crit
+			if sens.meter_function then
+				local state = sens.meter_function(sens.args)
+				set_raw_state(state, crit, i)
+			else
+				sens.async_function(item_hadnler(crit, i))
+			end
 		end
 	end
 

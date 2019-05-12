@@ -7,6 +7,7 @@
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
+local unpack = unpack or table.unpack
 
 local awful = require("awful")
 local wibox = require("wibox")
@@ -40,7 +41,7 @@ function greentag.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 
 	-- updating values
 	local data = {

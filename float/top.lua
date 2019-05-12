@@ -6,6 +6,8 @@
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
+local unpack = unpack or table.unpack
+
 local awful = require("awful")
 local beautiful = require("beautiful")
 local wibox = require("wibox")
@@ -15,7 +17,6 @@ local redutil = require("redflat.util")
 local system = require("redflat.system")
 local decoration = require("redflat.float.decoration")
 local redtip = require("redflat.float.hotkeys")
-local rectshape = require("gears.shape").rectangle
 
 
 -- Initialize tables for module
@@ -23,15 +24,18 @@ local rectshape = require("gears.shape").rectangle
 local top = { keys = {} }
 
 -- key bindings
-top.keys.action = {
+top.keys.management = {
 	{
 		{}, "c", function() top:set_sort("cpu") end,
-		{ description = "Sort by CPU usage", group = "Action" }
+		{ description = "Sort by CPU usage", group = "Management" }
 	},
 	{
 		{}, "m", function() top:set_sort("mem") end,
-		{ description = "Sort by RAM usage", group = "Action" }
+		{ description = "Sort by RAM usage", group = "Management" }
 	},
+}
+
+top.keys.action = {
 	{
 		{}, "k", function() top.kill_selected() end,
 		{ description = "Kill process", group = "Action" }
@@ -46,12 +50,12 @@ top.keys.action = {
 	},
 }
 
-top.keys.all = awful.util.table.join({}, top.keys.action)
+top.keys.all = awful.util.table.join(top.keys.management, top.keys.action)
 
 top._fake_keys = {
 	{
 		{}, "N", nil,
-		{ description = "Select process by key", group = "Action",
+		{ description = "Select process by key", group = "Management",
 		  keyset = { "1", "2", "3", "4", "5", "6", "7", "8", "9" } }
 	},
 }
@@ -66,18 +70,18 @@ local function default_style()
 		set_position  = nil,
 		geometry      = { width = 460, height = 380 },
 		border_margin = { 10, 10, 10, 10 },
-		labels_width  = { 30, 70, 120 },
+		labels_width  = { num = 30, cpu = 70, mem = 120 },
 		title_height  = 48,
 		list_side_gap = 8,
 		border_width  = 2,
 		bottom_height = 80,
 		button_margin = { 140, 140, 22, 22 },
-		keytip        = { geometry = { width = 400, height = 300 } },
+		keytip        = { geometry = { width = 400 } },
 		title_font    = "Sans 14 bold",
 		unit          = { { "KB", -1 }, { "MB", 1024 }, { "GB", 1024^2 } },
 		color         = { border = "#575757", text = "#aaaaaa", highlight = "#eeeeee", main = "#b1222b",
 		                  bg = "#161616", bg_second = "#181818", wibox = "#202020" },
-		shape         = rectshape
+		shape         = nil
 
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.top") or {})
@@ -118,13 +122,13 @@ local function construct_item(style)
 	local num_label_with_gap = wibox.container.margin(item.label.number, style.list_side_gap)
 
 	local right = wibox.layout.fixed.horizontal()
-	right:add(wibox.container.constraint(item.label.cpu, "exact", style.labels_width[2], nil))
-	right:add(wibox.container.constraint(mem_label_with_gap, "exact", style.labels_width[3], nil))
+	right:add(wibox.container.constraint(item.label.cpu, "exact", style.labels_width.cpu, nil))
+	right:add(wibox.container.constraint(mem_label_with_gap, "exact", style.labels_width.mem, nil))
 
 	local middle = wibox.layout.align.horizontal()
 	middle:set_left(item.label.name)
 
-	local left = wibox.container.constraint(num_label_with_gap, "exact", style.labels_width[1], nil)
+	local left = wibox.container.constraint(num_label_with_gap, "exact", style.labels_width.num, nil)
 
 	local item_horizontal  = wibox.layout.align.horizontal()
 	item_horizontal:set_left(left)
@@ -344,7 +348,7 @@ function top:show(srt)
 		self:update_list()
 
 		if self.style.set_position then
-			self.wibox:geometry(self.style.set_position())
+			self.style.set_position(self.wibox)
 		else
 			awful.placement.under_mouse(self.wibox)
 		end
@@ -361,10 +365,10 @@ end
 -- Set user hotkeys
 -----------------------------------------------------------------------------------------------------------------------
 function top:set_keys(keys, layout)
-	local layout = layout or "all"
+	layout = layout or "all"
 	if keys then
 		self.keys[layout] = keys
-		if layout ~= "all" then self.keys.all = awful.util.table.join({}, self.keys.action) end
+		if layout ~= "all" then self.keys.all = awful.util.table.join(self.keys.management, self.keys.action) end
 	end
 
 	self.tip = awful.util.table.join(self.keys.all, self._fake_keys)

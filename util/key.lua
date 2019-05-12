@@ -1,5 +1,7 @@
 -- RedFlat util submodule
 
+local unpack = unpack or table.unpack
+
 local table = table
 local awful = require("awful")
 

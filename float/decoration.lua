@@ -20,8 +20,8 @@ local decor = {}
 -----------------------------------------------------------------------------------------------------------------------
 local function button_style()
 	local style = {
-		color = { shadow3 = "#1c1c1c", gray = "#575757",
-		          shadow4 = "#767676", text = "#cccccc", shadow_down = "404040" }
+		color = { shadow3 = "#1c1c1c", button = "#575757",
+		          shadow4 = "#767676", text = "#cccccc", pressed = "404040" }
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "float.decoration.button") or {})
 end
@@ -37,12 +37,12 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function decor.button(textbox, action, style)
 
-	local style = redutil.table.merge(button_style(), style or {})
+	style = redutil.table.merge(button_style(), style or {})
 
 	-- Widget and layouts
 	--------------------------------------------------------------------------------
 	textbox:set_align("center")
-	local button_widget = wibox.container.background(textbox, style.color.gray)
+	local button_widget = wibox.container.background(textbox, style.color.button)
 	button_widget:set_fg(style.color.text)
 
 	local bord1 = wibox.container.background(wibox.container.margin(button_widget, 1, 1, 1, 1), style.color.shadow4)
@@ -51,12 +51,10 @@ function decor.button(textbox, action, style)
 	-- Button
 	--------------------------------------------------------------------------------
 	local press_func = function()
-		button_widget:set_bg(style.color.shadow3)
-		bord1:set_bg(style.color.shadow_down)
+		button_widget:set_bg(style.color.pressed)
 	end
 	local release_func = function()
-		button_widget:set_bg(style.color.gray)
-		bord1:set_bg(style.color.shadow4)
+		button_widget:set_bg(style.color.button)
 		action()
 	end
 
@@ -67,8 +65,7 @@ function decor.button(textbox, action, style)
 	button_widget:connect_signal(
 		"mouse::leave",
 		function()
-			button_widget:set_bg(style.color.gray)
-			bord1:set_bg(style.color.shadow4)
+			button_widget:set_bg(style.color.button)
 		end
 	)
 
@@ -79,7 +76,7 @@ end
 -- Input text field
 -----------------------------------------------------------------------------------------------------------------------
 function decor.textfield(textbox, style)
-	local style = redutil.table.merge(field_style(), style or {})
+	style = redutil.table.merge(field_style(), style or {})
 	local field = wibox.container.background(textbox, style.color.bg)
 	local bord1 = wibox.container.background(wibox.container.margin(field, 1, 1, 1, 1), style.color.shadow1)
 	local bord2 = wibox.container.background(wibox.container.margin(bord1, 1, 1, 1, 1), style.color.shadow2)

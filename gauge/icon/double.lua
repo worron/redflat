@@ -8,6 +8,8 @@
 -----------------------------------------------------------------------------------------------------------------------
 local setmetatable = setmetatable
 local string = string
+local math = math
+
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 
@@ -26,6 +28,7 @@ local function default_style()
 		icon1       = redutil.base.placeholder(),
 		icon2       = redutil.base.placeholder(),
 		igap        = 8,
+		step        = 0.05,
 		is_vertical = false,
 		color       = { main = "#b1222b", icon = "#a0a0a0" }
 	}
@@ -49,12 +52,8 @@ function dubgicon.new(style)
 
 	-- Initialize vars
 	--------------------------------------------------------------------------------
-	local style = redutil.table.merge(default_style(), style or {})
+	style = redutil.table.merge(default_style(), style or {})
 	local pattern = style.is_vertical and pattern_string_v or pattern_string_h
-
-	local data = {
-		value = { 0, 0 },
-	}
 
 	-- Create widget
 	--------------------------------------------------------------------------------
@@ -62,20 +61,24 @@ function dubgicon.new(style)
 	local layout = wibox.container.constraint(fixed, "exact", style.width)
 	layout._icon1 = svgbox(style.icon1)
 	layout._icon2 = svgbox(style.icon2)
-
+	layout._data = { level = { 0, 0 }}
 	fixed:add(wibox.container.margin(layout._icon1, 0, style.igap, 0, 0))
 	fixed:add(layout._icon2)
 
 	-- User functions
 	------------------------------------------------------------
 	function layout:set_value(value)
-		data.value[1] = value[1] < 1 and value[1] or 1
-		data.value[2] = value[2] < 1 and value[2] or 1
+		local level = {
+			math.floor((value[1] < 1 and value[1] or 1) / style.step) * style.step,
+			math.floor((value[2] < 1 and value[2] or 1) / style.step) * style.step
+		}
 
 		for i, widg in ipairs({ self._icon1, self._icon2 }) do
-			if widg._image then
+			if widg._image and level[i] ~= layout._data.level[i] then
+				layout._data.level[i] = level[i]
+
 				local d = style.is_vertical and widg._image.height or widg._image.width
-				widg:set_color(pattern(d, data.value[i], style.color.main, style.color.icon))
+				widg:set_color(pattern(d, level[i], style.color.main, style.color.icon))
 			end
 		end
 	end
