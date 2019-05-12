@@ -532,14 +532,14 @@ end
 
 -- Function to parse 'transmission-remote -l' output
 --------------------------------------------------------------------------------
-function system.transmission.parse(output)
+function system.transmission.parse(output, show_active_only)
 
 	-- Initialize vars
 	------------------------------------------------------------
 	local torrent = {
-		seed  = { num = 0, speed = 0 },
-		dnld  = { num = 0, speed = 0 },
-		list  = {},
+		seed = { num = 0, speed = 0 },
+		dnld = { num = 0, speed = 0 },
+		list = {},
 	}
 
 	-- Find state and progress for every torrent
@@ -548,10 +548,11 @@ function system.transmission.parse(output)
 	--local status_pos = string.find(output, "Status")
 
 	-- assuming "Up & Down" and "Downloading" is the same thing
-	output = string.gsub(output,"Up & Down","Downloading")
+	output = string.gsub(output, "Up & Down", "Downloading")
 
 	-- parse every line
-	for line in string.gmatch(output, "[^\n]+") do
+	for line in string.gmatch(output, "[^\r\n]+") do
+
 		if string.sub(line, 1, 3) == "Sum" then
 			-- get total speed
 			local seed, dnld = string.match(line, "Sum:%s+[%d%.]+%s+%a+%s+([%d%.]+)%s+([%d%.]+)")
@@ -561,15 +562,21 @@ function system.transmission.parse(output)
 			end
 		else
 			-- get torrent info
-			local prog, status, name = string.match(line,
+			local prog, status, name = string.match(
+				line,
 				"%s+%d+%s+(%d+)%%%s+[%d%.]+%s%a+%s+.+%s+[%d%.]+%s+[%d%.]+%s+[%d%.]+%s+(%a+)%s+(.+)"
 			)
 
 			if prog and status then
-				table.insert(torrent.list, { prog = prog, status = status, name = name })
+				-- if active only is selected then filter
+				if not show_active_only or (status == "Downloading" or status == "Seeding") then
+					table.insert(torrent.list, { prog = prog, status = status, name = name })
+				end
 
-				if     status == "Seeding"     then torrent.seed.num = torrent.seed.num + 1
-				elseif status == "Downloading" then torrent.dnld.num = torrent.dnld.num + 1
+				if status == "Seeding" then
+					torrent.seed.num = torrent.seed.num + 1
+				elseif status == "Downloading" then
+					torrent.dnld.num = torrent.dnld.num + 1
 				end
 			end
 		end
@@ -577,7 +584,10 @@ function system.transmission.parse(output)
 
 	-- Sort torrents
 	------------------------------------------------------------
-	table.sort(torrent.list, system.transmission.sort_torrent)
+	-- do not need to sort active as transmission-remote automatically sorts
+	if not show_active_only then
+		table.sort(torrent.list, system.transmission.sort_torrent)
+	end
 
 	-- Format output special for redflat desktop widget
 	------------------------------------------------------------
@@ -596,19 +606,13 @@ end
 -- Async transmission meter function
 --------------------------------------------------------------------------------
 function system.transmission.info(setup, args)
-	-- test assumes local transmission only
-	--if not system.transmission.is_running() then
-	--	setup({ bars = {}, lines = { { 0, 0 }, { 0, 0 } }, alert = true })
-	--	return
-	--end
-
 	local command = args.command or "transmission-remote localhost -l"
 
 	awful.spawn.easy_async(command, function(output)
 		-- rather than check if an instance of transmission is running locally, check if there is actually any output
 		-- zero torrents or no program equates to same result
 		if string.len(output) > 0 then
-			local state = system.transmission.parse(output)
+			local state = system.transmission.parse(output, args.show_active_only)
 
 			if args.speed_only then
 				state.lines[1][2] = state.lines[1][1]
