@@ -66,24 +66,28 @@ mail.checkers["imap"].action = function(args)
 	local imap4   = require "imap4"
 
 	-- grab args or set default values
-    -- gmail requires 'Less secure app access'
-    local port = args.port or 993
+	-- gmail requires 'Less secure app access'
+	local port = args.port or 993
 	local url = args.server or "outlook.office365.com"
 	local mailbox = args.mailbox or "Inbox"
 
 	-- setup connection
-	local connection = imap4(url, port, {protocol = 'tlsv1_2'})
-	assert(connection:isCapable('IMAP4rev1'))
-	connection:login(args.username, args.password)
+	local status, connection = pcall(imap4, url, port, {protocol = 'tlsv1_2'})
 
-	-- get information
-	local stat = connection:status(mailbox, {'UNSEEN'})
+	if status ~= false and connection:isCapable('IMAP4rev1') then
+		connection:login(args.username, args.password)
 
-	-- close connection
-	connection:logout()
+		-- get information
+		local stat = connection:status(mailbox, {'UNSEEN'})
 
-	-- return unseen email count
-	return stat.UNSEEN
+		-- close connection
+		connection:logout()
+
+		-- return unseen email count
+		return stat.UNSEEN
+	else
+		return "0"
+	end
 end
 
 -- Initialize mails structure
