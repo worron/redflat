@@ -74,21 +74,17 @@ mail.checkers["imap"].action = function(args)
 	-- setup connection
 	local status, connection = pcall(imap4, url, port, {protocol = 'tlsv1_2'})
 
-	if status ~= false then
-		if connection:isCapable('IMAP4rev1') then
-			connection:login(args.username, args.password)
+	if status ~= false and connection:isCapable('IMAP4rev1') then
+		connection:login(args.username, args.password)
 
-			-- get information
-			local stat = connection:status(mailbox, {'UNSEEN'})
+		-- get information
+		local stat = connection:status(mailbox, {'UNSEEN'})
 
-			-- close connection
-			connection:logout()
+		-- close connection
+		connection:logout()
 
-			-- return unseen email count
-			return stat.UNSEEN
-		else
-			return "0"
-		end
+		-- return unseen email count
+		return stat.UNSEEN
 	else
 		return "0"
 	end
