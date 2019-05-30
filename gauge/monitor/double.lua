@@ -47,8 +47,8 @@ local function pbar(style)
 	------------------------------------------------------------
 	function widg:set_value(value)
 		local level = {
-			math.ceil((value[1] < 1 and value[1] or 1) / style.line.num),
-			math.ceil((value[2] < 1 and value[2] or 1) / style.line.num),
+			math.ceil((value[1] < 1 and value[1] or 1) * style.line.num),
+			math.ceil((value[2] < 1 and value[2] or 1) * style.line.num),
 		}
 
 		if level[1] ~= self._data.level[1] or level[2] ~= self._data.level[2] then
