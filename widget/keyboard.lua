@@ -25,11 +25,12 @@ local keybd = { mt = {} }
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		icon         = redutil.base.placeholder(),
-		micon        = { blank = redutil.base.placeholder({ txt = " " }),
-		                 check = redutil.base.placeholder({ txt = "+" }) },
-		menu         = { color = { right_icon = "#a0a0a0" } },
-		layout_color = { "#a0a0a0", "#b1222b" }
+		icon           = redutil.base.placeholder(),
+		micon          = { blank = redutil.base.placeholder({ txt = " " }),
+						   check = redutil.base.placeholder({ txt = "+" }) },
+		menu           = { color = { right_icon = "#a0a0a0" } },
+		layout_color   = { "#a0a0a0", "#b1222b" },
+		fallback_color = "#32882d",
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "widget.keyboard") or {})
 end
@@ -63,10 +64,12 @@ function keybd:init(layouts, style)
 	-- update layout data
 	self.update = function()
 		local layout = awesome.xkb_get_layout_group() + 1
-		for _, w in ipairs(self.objects) do w:set_color(style.layout_color[layout] or "#000000") end
+		for _, w in ipairs(self.objects) do
+			w:set_color(style.layout_color[layout] or style.fallback_color)
+		end
 
 		-- update tooltip
-		keybd.tp:set_text(self.layouts[layout])
+		keybd.tp:set_text(self.layouts[layout] or "Unknown")
 
 		-- update menu
 		for i = 1, #self.layouts do
