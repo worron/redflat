@@ -31,6 +31,8 @@ local function default_style()
 		cgap         = TPI / 20,
 		show_min     = true,
 		min_sections = 1,
+		text         = false,
+		font         = { font = "Sans", size = 16, face = 0, slant = 0 },
 		color        = { main  = "#b1222b", gray  = "#575757", icon = "#a0a0a0", urgent = "#32882d" }
 	}
 
@@ -48,6 +50,7 @@ function orangetag.new(style)
 
 	-- updating values
 	local data = {
+		state = { text = "TEXT" },
 		width = style.width or nil
 	}
 
@@ -89,8 +92,18 @@ function orangetag.new(style)
 		cl = data.state.active and style.color.main or (data.state.occupied and  style.color.icon or style.color.gray)
 		cr:set_source(color(cl))
 
-		cr:arc(width / 2, height / 2, style.iradius, 0, TPI)
-		cr:fill()
+		if style.text then
+			-- text
+			redutil.cairo.set_font(cr, style.font)
+			local ext = cr:text_extents(tostring(#data.state.list))
+			cr:move_to((width - ext.width - ext.x_bearing) / 2, (height + ext.height + ext.x_bearing) / 2)
+			cr:show_text(data.state.text)
+			cr:stroke()
+		else
+			-- round
+			cr:arc(width / 2, height / 2, style.iradius, 0, TPI)
+			cr:fill()
+		end
 
 		-- occupied mark
 		cr:set_line_width(style.line_width)
