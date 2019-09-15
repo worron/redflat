@@ -78,9 +78,9 @@ function system.qemu_image_size(args)
 
 	-- Parse data
 	------------------------------------------------------------
-	local size, k = string.match(line, "disk%ssize:%s([%.%d]+)(%w)")
+	local size, k = string.match(line, "disk%ssize:%s([%.%d]+)%s(%w)")
 	img_info.size = q_format(size, k)
-	local vsize, vk = string.match(line, "virtual%ssize:%s([%.%d]+)(%w)")
+	local vsize, vk = string.match(line, "virtual%ssize:%s([%.%d]+)%s(%w)")
 	img_info.virtual_size = q_format(vsize, vk)
 	img_info.use_p = img_info.virtual_size > 0 and math.floor(img_info.size / img_info.virtual_size * 100) or 0
 
