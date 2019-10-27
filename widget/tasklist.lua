@@ -469,7 +469,7 @@ local function construct_tasktip(c_group, layout, data, buttons, style)
 
 	-- return tasktip size
 	return {
-		width  = tip_width + style.margin[1] + style.margin[2],
+		width  = tip_width + style.margin[1] + style.margin[2] + 2,
 		height = #c_group * (tb_h + style.margin[3] + style.margin[4])
 	}
 end
