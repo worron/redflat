@@ -374,8 +374,8 @@ function dfparser.icon_list(style)
 
 		for _, prog in ipairs(programs) do
 			if prog.Icon and prog.Exec then
-				local key = string.match(prog.Exec, "[%a%d%.%-/]+")
-				if string.find(key, "/") then key = string.match(key, "[%a%d%.%-]+$") end
+				local key = string.match(prog.Exec, "[%a%d%.%-_/]+")
+				if string.find(key, "/") then key = string.match(key, "[%a%d%.%-_]+$") end
 				list[key] = prog.icon_path
 			end
 		end
