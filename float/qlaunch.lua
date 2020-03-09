@@ -110,7 +110,7 @@ end
 local function get_clients(app)
 	local clients = {}
 	for _, c in ipairs(client.get()) do
-		if c.class:lower() == app then table.insert(clients, c) end
+		if c.class and c.class:lower() == app then table.insert(clients, c) end
 	end
 	return clients
 end
