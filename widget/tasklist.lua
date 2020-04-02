@@ -23,10 +23,10 @@ local math = math
 local unpack = unpack or table.unpack
 
 local beautiful = require("beautiful")
-local tag = require("awful.tag")
 local awful = require("awful")
 local wibox = require("wibox")
 local timer = require("gears.timer")
+local geometry = require("gears.geometry")
 
 local basetask = require("redflat.gauge.tag.blue")
 local redutil = require("redflat.util")
@@ -261,7 +261,7 @@ local function new_task(c_group, style)
 	task.group = c_group
 	task.l     = wibox.container.margin(task.widg, unpack(style.task_margin))
 
-	task.widg:connect_signal("mouse::enter", function() redtasklist.tasktip:show(task.group) end)
+	task.widg:connect_signal("mouse::enter", function(w, geo) redtasklist.tasktip:show(task.group, geo) end)
 	task.widg:connect_signal("mouse::leave",
 		function()
 			redtasklist.tasktip.hidetimer:start()
@@ -678,11 +678,18 @@ function redtasklist.tasktip:init(buttons, style)
 			if not redtasklist.winmenu.menu.hidetimer.started then redtasklist.winmenu.menu.hidetimer:start() end
 		end
 	)
+
+	-- hide tasktip if tag changes
+	tag.connect_signal("property::selected",
+		function()
+			self.hidetimer:emit_signal("timeout")
+		end
+	)
 end
 
 -- Show tasktip
 -----------------------------------------------------------------------------------------------------------------------
-function redtasklist.tasktip:show(c_group)
+function redtasklist.tasktip:show(c_group, parent_geo)
 
 	if self.hidetimer.started then self.hidetimer:stop() end
 
@@ -690,7 +697,13 @@ function redtasklist.tasktip:show(c_group)
 		self.wibox.visible = true
 		last.group = c_group
 		self:update(c_group)
-		awful.placement.under_mouse(self.wibox)
+		awful.placement.next_to(self.wibox,
+		    {
+		        preferred_positions = {'top'},
+		        preferred_anchors   = {'middle'},
+		        geometry            = parent_geo,
+		    }
+		)
 		awful.placement.no_offscreen(self.wibox)
 	end
 end
@@ -754,9 +767,9 @@ function redtasklist.new(args, style)
 	local tag_signals = { "property::selected", "property::activated" }
 
 	-- for _, sg in ipairs(client_signals) do client.connect_signal(sg, update) end
-	-- for _, sg in ipairs(tag_signals)    do tag.attached_connect_signal(cs, sg, update) end
+	-- for _, sg in ipairs(tag_signals)    do awful.tag.attached_connect_signal(cs, sg, update) end
 	for _, sg in ipairs(client_signals) do client.connect_signal(sg, function() tasklist.queue:again() end) end
-	for _, sg in ipairs(tag_signals) do tag.attached_connect_signal(cs, sg, function() tasklist.queue:again() end) end
+	for _, sg in ipairs(tag_signals) do awful.tag.attached_connect_signal(cs, sg, function() tasklist.queue:again() end) end
 
 	-- force hide pop-up widgets if any client was closed
 	-- because last vars may be no actual anymore
