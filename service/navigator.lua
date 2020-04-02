@@ -275,7 +275,7 @@ function navigator:run()
 	end
 
 	-- check handler
-	local l = awful.layout.get(client.focus.screen)
+	local l = awful.layout.get(s)
 	local handler = l.key_handler or redflat.layout.common.handler[l]
 	if not handler then
 		rednotify:show(redutil.table.merge({ text = "Layout not supported" }, self.style.notify))
