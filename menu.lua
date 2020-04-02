@@ -469,7 +469,7 @@ function menu:add(args)
 
 	item._background:buttons(awful.util.table.join(
 		awful.button({}, 3, function () self:hide() end),
-		awful.button({}, 1, function ()
+		awful.button({}, 1, nil, function ()
 			self:item_enter(num)
 			self:exec(num)
 		end)
