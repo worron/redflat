@@ -43,6 +43,21 @@ local dbus_set = dbus_mpris
 local dbus_action = dbus_mpris
                     .. "org.mpris.MediaPlayer2.Player."
 
+-- Hotfix for https://github.com/awesomeWM/awesome/issues/2985
+-----------------------------------------------------------------------------------------------------------------------
+local function mouse_get_current_widget_geometry()
+	local w = mouse.current_wibox
+	if w then
+		local geo, coords = w:geometry(), mouse:coords()
+		local bw = w.border_width
+
+		local list = w:find_widgets(coords.x - geo.x - bw, coords.y - geo.y - bw)
+
+		-- return the geometry of the topmost widget
+		return list[#list]
+	end
+end
+
 -- Helper function to decode URI string format
 -----------------------------------------------------------------------------------------------------------------------
 local function decodeURI(s)
@@ -197,7 +212,7 @@ function player:init(args)
 		awful.button(
 			{}, 1, function()
 				local coords = {
-					bar   = mouse.current_widget_geometry,
+					bar   = mouse_get_current_widget_geometry(),
 					wibox = mouse.current_wibox:geometry(),
 					mouse = mouse.coords(),
 				}
