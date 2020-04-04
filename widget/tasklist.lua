@@ -793,12 +793,45 @@ end
 -- Mouse action functions
 -----------------------------------------------------------------------------------------------------------------------
 
+-- checks whether the given client is visually occluded by any other window
+local function client_is_occluded(c)
+	local first = true
+	local intersect = false
+	local geo = c:geometry()
+
+	for _, c2 in ipairs(client.get(c.screen, true)) do
+		if first then
+			-- if we are already at the top of the stack we are also visibly at the top naturally
+			if c2 == c then return false end
+			first = false
+		else
+			-- if we haven't hit any intersection and reach the client c, we are still visibly at the top
+			if c2 == c then return false end
+		end
+		if c2:isvisible() and geometry.rectangle.area_intersect_area(geo, c2:geometry()) then
+			-- any intersection on the way down the stack means we are visibly occluded by another client
+			return true
+		end
+	end
+	return false
+end
+
 -- focus/minimize
 function redtasklist.action.select(args)
 	args = args or {}
 	local state = get_state(args.group)
 
 	if state.focus then
+		-- if only a single client is selected
+		if args.group[2] == nil then
+			local c = args.group[1]
+			-- if it is not at top position in z-order,
+			-- raise it instead of minimizing it
+			if client_is_occluded(c) then
+				c:raise()
+				return
+			end
+		end
 		for _, c in ipairs(args.group) do c.minimized = true end
 	else
 		if state.minimized then
