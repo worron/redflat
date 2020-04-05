@@ -126,6 +126,9 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function pulse:update_volume(args)
 	args = args or {}
+	if args.sink_update then
+		self._sink = get_default_sink({ type = self._type })
+	end
 	if not self._type or not self._sink then return end
 
 	-- initialize vars
