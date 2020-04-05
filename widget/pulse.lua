@@ -64,10 +64,8 @@ end
 -- Change volume level
 -----------------------------------------------------------------------------------------------------------------------
 function pulse:change_volume(args)
+
 	-- initialize vars
-	if args.sink_update then
-		self._sink = get_default_sink({ type = self._type })
-	end
 	args = redutil.table.merge(change_volume_default_args, args or {})
 	local diff = args.down and -args.step or args.step
 
@@ -111,9 +109,6 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function pulse:mute(args)
 	args = args or {}
-	if args.sink_update then
-		self._sink = get_default_sink({ type = self._type })
-	end
 	if not self._type or not self._sink then return end
 
 	local mute = redutil.read.output(string.format("pacmd dump | grep 'set-%s-mute %s'", self._type, self._sink))
@@ -131,6 +126,9 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function pulse:update_volume(args)
 	args = args or {}
+	if args.sink_update then
+		self._sink = get_default_sink({ type = self._type })
+	end
 	if not self._type or not self._sink then return end
 
 	-- initialize vars
