@@ -467,12 +467,19 @@ function menu:add(args)
 	------------------------------------------------------------
 	local num = #self.items
 
+	local press_action = function()
+		self:item_enter(num)
+		self:exec(num)
+	end
+	local release_action
+
+	if theme.action_on_release then
+		release_action, press_action = press_action, release_action
+	end
+
 	item._background:buttons(awful.util.table.join(
 		awful.button({}, 3, function () self:hide() end),
-		awful.button({}, 1, nil, function ()
-			self:item_enter(num)
-			self:exec(num)
-		end)
+		awful.button({}, 1, press_action, release_action)
 	))
 
 	item.widget:connect_signal("mouse::enter", function() self:item_enter(num, { hover = true }) end)
