@@ -124,14 +124,17 @@ end
 function notify:show(args)
 	if not self.wibox then self:init() end
 	self:set(args)
+	local args = args or {}
+	local target_screen = args.screen or mouse.screen
+	local set_position = args.set_position or self.style.set_position or nil
 
-	if not self.wibox.visible or mouse.screen.index ~= self.last.screen then
-		if self.style.set_position then self.style.set_position(self.wibox) end
-		redutil.placement.no_offscreen(self.wibox, self.style.screen_gap, mouse.screen.workarea)
+	if not self.wibox.visible or target_screen.index ~= self.last.screen then
+		if set_position then set_position(self.wibox) end
+		redutil.placement.no_offscreen(self.wibox, self.style.screen_gap, target_screen.workarea)
 		self.wibox.visible = true
 	end
 
-	self.last.screen = mouse.screen.index
+	self.last.screen = target_screen.index
 	self.hidetimer:again()
 end
 
