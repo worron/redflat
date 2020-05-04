@@ -63,13 +63,13 @@ function gicon.new(style)
 
 	-- User functions
 	------------------------------------------------------------
-	function widg:set_value(x)
+	function widg:set_value(x, force_redraw)
 		if x > 1 then x = 1 end
 
 		if self.widget._image then
 			local level = math.floor(x / style.step) * style.step
 
-			if level ~= self._data.level then
+			if force_redraw or level ~= self._data.level then
 				self._data.level = level
 				local d = style.is_vertical and self.widget._image.height or self._image.width
 				self.widget:set_color(pattern(d, level, self._data.color, style.color.icon))
@@ -78,8 +78,12 @@ function gicon.new(style)
 	end
 
 	function widg:set_alert(alert)
-		-- not sure about redraw after alert set
+		local old_color = self._data.color
 		self._data.color = alert and style.color.urgent or style.color.main
+		if self._data.color ~= old_color then
+			-- force redraw if color has changed
+			self:set_value(self._data.level, true)
+		end
 	end
 
 	--------------------------------------------------------------------------------
