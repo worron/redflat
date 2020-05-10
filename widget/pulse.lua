@@ -107,8 +107,8 @@ end
 
 -- Set mute
 -----------------------------------------------------------------------------------------------------------------------
-function pulse:mute(args)
-	args = args or {}
+function pulse:mute()
+	--args = args or {}
 	if not self._type or not self._sink then return end
 
 	local mute = redutil.read.output(string.format("pacmd dump | grep 'set-%s-mute %s'", self._type, self._sink))

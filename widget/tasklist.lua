@@ -261,7 +261,7 @@ local function new_task(c_group, style)
 	task.group = c_group
 	task.l     = wibox.container.margin(task.widg, unpack(style.task_margin))
 
-	task.widg:connect_signal("mouse::enter", function(w, geo) redtasklist.tasktip:show(task.group, geo) end)
+	task.widg:connect_signal("mouse::enter", function(_, geo) redtasklist.tasktip:show(task.group, geo) end)
 	task.widg:connect_signal("mouse::leave",
 		function()
 			redtasklist.tasktip.hidetimer:start()
@@ -769,7 +769,9 @@ function redtasklist.new(args, style)
 	-- for _, sg in ipairs(client_signals) do client.connect_signal(sg, update) end
 	-- for _, sg in ipairs(tag_signals)    do awful.tag.attached_connect_signal(cs, sg, update) end
 	for _, sg in ipairs(client_signals) do client.connect_signal(sg, function() tasklist.queue:again() end) end
-	for _, sg in ipairs(tag_signals) do awful.tag.attached_connect_signal(cs, sg, function() tasklist.queue:again() end) end
+	for _, sg in ipairs(tag_signals) do
+		awful.tag.attached_connect_signal(cs, sg, function() tasklist.queue:again() end)
+	end
 
 	-- force hide pop-up widgets if any client was closed
 	-- because last vars may be no actual anymore
@@ -796,7 +798,6 @@ end
 -- checks whether the given client is visually occluded by any other window
 local function client_is_occluded(c)
 	local first = true
-	local intersect = false
 	local geo = c:geometry()
 
 	for _, c2 in ipairs(client.get(c.screen, true)) do

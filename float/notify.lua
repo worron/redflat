@@ -124,7 +124,7 @@ end
 function notify:show(args)
 	if not self.wibox then self:init() end
 	self:set(args)
-	local args = args or {}
+	args = args or {}
 	local target_screen = args.screen or mouse.screen
 	local set_position = args.set_position or self.style.set_position or nil
 

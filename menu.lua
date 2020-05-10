@@ -474,7 +474,7 @@ function menu:add(args)
 	local release_action
 
 	if theme.action_on_release then
-		release_action, press_action = press_action, release_action
+		release_action, press_action = press_action, release_action --luacheck: ignore 321
 	end
 
 	item._background:buttons(awful.util.table.join(
