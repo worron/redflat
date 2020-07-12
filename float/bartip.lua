@@ -38,7 +38,7 @@ local function default_style()
 			active   = redutil.base.placeholder({ txt = "+" }),
 			absent   = redutil.base.placeholder({ txt = "!" }),
 			disabled = redutil.base.placeholder({ txt = "X" }),
-			hidden   = redutil.base.placeholder({ txt = "↓" }),
+			hidden   = redutil.base.placeholder({ txt = "*" }),
 			unknown  = redutil.base.placeholder({ txt = "?" }),
 		},
 		color         = { border = "#575757", text = "#aaaaaa", main = "#b1222b", wibox = "#202020",

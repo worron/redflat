@@ -80,8 +80,8 @@ function net.new(args, style)
 
 			widg:set_value({ state[2]/args.speed.down, state[1]/args.speed.up })
 			tp:set_text(
-				"↓" .. redutil.text.dformat(state[2], unit, style.digits, " ")
-				.. "  ↑" .. redutil.text.dformat(state[1], unit, style.digits, " ")
+				"▾ " .. redutil.text.dformat(state[2], unit, style.digits, " ")
+				.. "  ▴ " .. redutil.text.dformat(state[1], unit, style.digits, " ")
 			)
 		end
 	)

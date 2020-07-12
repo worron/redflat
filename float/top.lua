@@ -216,10 +216,10 @@ function top:init()
 	function self:set_sort(args)
 		if args == "cpu" then
 			sort_function = sort_by_cpu
-			title:set({ cpu = "↓CPU", mem = "Memory"})
+			title:set({ cpu = "▾ CPU", mem = "Memory"})
 		elseif args == "mem" then
 			sort_function = sort_by_mem
-			title:set({ cpu = "CPU", mem = "↓Memory"})
+			title:set({ cpu = "CPU", mem = "▾ Memory"})
 		end
 	end
 
@@ -244,7 +244,7 @@ function top:init()
 	--------------------------------------------------------------------------------
 	title = construct_item(style)
 	title:set_bg(style.color.wibox)
-	title:set({ number = "#", name = "Process Name", cpu = "↓ CPU", mem = "Memory"})
+	title:set({ number = "#", name = "Process Name", cpu = "▾ CPU", mem = "Memory"})
 
 	for _, txtbox in pairs(title.label) do
 		txtbox:set_font(style.title_font)
