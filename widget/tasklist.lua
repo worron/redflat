@@ -66,25 +66,32 @@ local function default_style()
 		task_margin = { 5, 5, 0, 0 }
 	}
 	style.winmenu = {
-		icon           = { unknown = redutil.base.placeholder() },
-		micon          = { blank = redutil.base.placeholder({ txt = " " }),
-		                   check = redutil.base.placeholder({ txt = "+" }) },
-		layout_icon    = { unknown = redutil.base.placeholder() },
-		titleline      = { font = "Sans 16 bold", height = 35 },
-		stateline      = { height = 35 },
-		state_iconsize = { width = 20, height = 20 },
-		separator      = { marginh = { 3, 3, 5, 5 } },
-		tagmenu        = { icon_margin = { 2, 2, 2, 2 } },
-		hide_action    = { min = true,
-		                   move = true,
-		                   max = false,
-		                   add = false,
-		                   floating = false,
-		                   sticky = false,
-		                   ontop = false,
-		                   below = false,
-		                   maximized = false },
-		color          = { main = "#b1222b", icon = "#a0a0a0", gray = "#404040" }
+		icon                 = { unknown = redutil.base.placeholder(),
+		                         tag = redutil.base.placeholder({ txt = "■" }),
+		                         switch_screen = redutil.base.placeholder() },
+		micon                = { blank = redutil.base.placeholder({ txt = " " }),
+		                         check = redutil.base.placeholder({ txt = "+" }) },
+		layout_icon          = { unknown = redutil.base.placeholder() },
+		titleline            = { font = "Sans 16 bold", height = 35 },
+		stateline            = { height = 35 },
+		tagline              = { height = 30 },
+		state_iconsize       = { width = 20, height = 20 },
+		tag_iconsize         = { width = 16, height = 16 },
+		separator            = { marginh = { 3, 3, 5, 5 } },
+		tagmenu              = { icon_margin = { 2, 2, 2, 2 } },
+		hide_action          = { min = true,
+		                         move = true,
+		                         max = false,
+		                         add = false,
+		                         floating = false,
+		                         sticky = false,
+		                         ontop = false,
+		                         below = false,
+		                         maximized = false },
+		enable_screen_switch = false,
+		enable_tagline       = false,
+		tagline_mod_key      = "Mod4",
+		color                = { main = "#b1222b", icon = "#a0a0a0", gray = "#404040" }
 	}
 	style.tasktip = {
 		border_width = 2,
@@ -233,6 +240,63 @@ local function state_line_construct(state_icons, setup_layout, style)
 	end
 
 	return stateboxes
+end
+
+-- Function to construct menu line with tag switches (for style.enable_tagline)
+-----------------------------------------------------------------------------------
+local function tagline_construct(setup_layout, style)
+	local tagboxes = {}
+
+	for i, t in ipairs(last.screen.tags) do
+		if not awful.tag.getproperty(t, "hide") then
+
+			tagboxes[i] = svgbox(style.icon.tag)
+			tagboxes[i]:set_forced_width(style.tag_iconsize.width)
+			tagboxes[i]:set_forced_height(style.tag_iconsize.height)
+
+			-- set widget in line
+			local l = wibox.layout.align.horizontal()
+			l:set_expand("outside")
+			l:set_second(tagboxes[i])
+			setup_layout:add(l)
+
+
+			-- set mouse action
+			tagboxes[i]:buttons(awful.util.table.join(
+				awful.button({}, 1,
+					function()
+						last.client:move_to_tag(t)
+						awful.layout.arrange(t.screen)
+						redtasklist.winmenu.menu:hide()
+					end
+				),
+				awful.button({ style.tagline_mod_key }, 1,
+					function()
+						last.client:move_to_tag(t)
+						awful.layout.arrange(t.screen)
+						redtasklist.winmenu.menu:hide()
+						t:view_only()
+					end
+				),
+				awful.button({}, 2,
+					function()
+						last.client:move_to_tag(t)
+						awful.layout.arrange(t.screen)
+						redtasklist.winmenu.menu:hide()
+						t:view_only()
+					end
+				),
+				awful.button({}, 3,
+					function()
+						last.client:toggle_tag(t)
+						awful.layout.arrange(t.screen)
+					end
+				)
+			))
+		end
+	end
+
+	return tagboxes
 end
 
 -- Calculate menu position
@@ -488,6 +552,7 @@ function redtasklist.winmenu:init(style)
 	local close    = function() last.client:kill(); self.menu:hide() end
 	local minimize = function() last.client.minimized = not last.client.minimized; self.hide_check("min") end
 	-- local maximize = function() last.client.maximized = not last.client.maximized; self.hide_check("max")end
+	local switchscreen = function() redutil.placement.next_screen(last.client); self.menu:hide() end
 
 	-- Create array of state icons
 	-- associate every icon with action and state indicator
@@ -559,21 +624,42 @@ function redtasklist.winmenu:init(style)
 	local movemenu_items = tagmenu_items(self.movemenu_action, style)
 	local addmenu_items = tagmenu_items(self.addmenu_action, style)
 
+	local menu_items = {
+		{ widget = classline },
+		menusep,
+		{ "Minimize",    minimize, nil, style.icon.minimize or style.icon.unknown },
+		{ "Close",       close,    nil, style.icon.close or style.icon.unknown },
+		menusep,
+		{ widget = stateline, focus = true }
+	}
+
+	if style.enable_tagline then
+		-- Construct visual tag representations in a menu line
+		self.tagline_container = wibox.layout.flex.horizontal()
+		local tagline_vertical = wibox.layout.align.vertical()
+		tagline_vertical:set_second(self.tagline_container)
+		tagline_vertical:set_expand("outside")
+		self.tagboxes = tagline_construct(self.tagline_container, style)
+		local tagline = wibox.container.constraint(tagline_vertical, "exact", nil, style.tagline.height)
+		table.insert(menu_items, 3, menusep)
+		table.insert(menu_items, 3, { widget = tagline })
+	else
+		table.insert(menu_items, 3, { "Add to tag",  { items = addmenu_items,  theme = style.tagmenu } })
+		table.insert(menu_items, 3, { "Move to tag", { items = movemenu_items, theme = style.tagmenu } })
+	end
+
+	-- inject switch screen action into menu if applicable
+	if style.enable_screen_switch and screen.count() > 1 then
+		local action = { "Switch screen", switchscreen, nil, style.icon.switch_screen or style.icon.unknown }
+		if style.enable_tagline then table.insert(menu_items, 3, menusep) end
+		table.insert(menu_items, 3, action)
+	end
+
 	-- Create menu
 	------------------------------------------------------------
 	self.menu = redmenu({
 		theme = style.menu,
-		items = {
-			{ widget = classline },
-			menusep,
-			{ "Move to tag", { items = movemenu_items, theme = style.tagmenu } },
-			{ "Add to tag",  { items = addmenu_items,  theme = style.tagmenu } },
-
-			{ "Minimize",    minimize, nil, style.icon.minimize or style.icon.unknown },
-			{ "Close",       close,    nil, style.icon.close or style.icon.unknown },
-			menusep,
-			{ widget = stateline, focus = true }
-		}
+		items = menu_items,
 	})
 
 	-- Widget update functions
@@ -582,7 +668,11 @@ function redtasklist.winmenu:init(style)
 		if self.menu.wibox.visible then
 			classbox:set_text(c.class or "Undefined")
 			stateboxes_update(c, state_icons, stateboxes)
-			tagmenu_update(c, self.menu, { 1, 2 }, style)
+			if style.enable_tagline then
+				self:tagline_update(c, style)
+			else
+				tagmenu_update(c, self.menu, style.enable_screen_switch and { 2, 3 } or { 1, 2 }, style)
+			end
 		end
 	end
 
@@ -595,6 +685,34 @@ function redtasklist.winmenu:init(style)
 	}
 	for _, sg in ipairs(client_signals) do
 		client.connect_signal(sg, function() self:update(last.client) end)
+	end
+end
+
+-- Function to rebuild the tag line entirely if screen and tags have changed
+--------------------------------------------------------------------------------
+function redtasklist.winmenu:tagline_rebuild(style)
+	self.tagline_container:set_children({})
+	self.tagboxes = tagline_construct(self.tagline_container, style)
+end
+
+-- Function to update the tag line's icon states
+--------------------------------------------------------------------------------
+function redtasklist.winmenu:tagline_update(c, style)
+	if last.tag_screen ~= mouse.screen then
+		self:tagline_rebuild(style)
+		last.tag_screen = mouse.screen
+	end
+	for k, t in ipairs(last.screen.tags) do
+		if not awful.tag.getproperty(t, "hide") then
+
+			local icon_color = style.color.gray
+			if c then
+				local client_tags = c:tags()
+				icon_color = awful.util.table.hasitem(client_tags, t) and style.color.main or icon_color
+			end
+
+			self.tagboxes[k]:set_color(icon_color)
+		end
 	end
 end
 
@@ -769,9 +887,7 @@ function redtasklist.new(args, style)
 	-- for _, sg in ipairs(client_signals) do client.connect_signal(sg, update) end
 	-- for _, sg in ipairs(tag_signals)    do awful.tag.attached_connect_signal(cs, sg, update) end
 	for _, sg in ipairs(client_signals) do client.connect_signal(sg, function() tasklist.queue:again() end) end
-	for _, sg in ipairs(tag_signals) do
-		awful.tag.attached_connect_signal(cs, sg, function() tasklist.queue:again() end)
-	end
+	for _, sg in ipairs(tag_signals) do awful.tag.attached_connect_signal(cs, sg, function() tasklist.queue:again() end) end
 
 	-- force hide pop-up widgets if any client was closed
 	-- because last vars may be no actual anymore

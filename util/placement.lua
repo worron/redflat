@@ -35,6 +35,17 @@ function placement.no_offscreen(object, gap, area)
 	object:geometry(geometry)
 end
 
+-- make window fit screen bounds
+local function control_off_screen(window, workarea)
+	local wa = workarea or screen[window.screen].workarea
+	local wg = window:geometry()
+
+	if wg.width > wa.width then window:geometry({ width = wa.width, x = wa.x }) end
+	if wg.height > wa.height then window:geometry({ height = wa.height, y = wa.y }) end
+
+	placement.no_offscreen(window, nil, wa)
+end
+
 local function centered_base(is_h, is_v)
 	return function(object, gap, area)
 		local geometry = object:geometry()
@@ -48,6 +59,19 @@ local function centered_base(is_h, is_v)
 		if is_v then new_geometry.y = area.y + (area.height - geometry.height) / 2 - object.border_width end
 
 		return object:geometry(new_geometry)
+	end
+end
+
+-- attempts to move the focused client to the next screen (if screen.count() > 1)
+-- if a specific client is not passed via 'c', the focused client is selected
+function placement.next_screen(c)
+	local c = c or client.focus
+	if not c then return end
+	local next_idx = c.screen.index + 1
+	local next_screen = screen[ next_idx > screen.count() and 1 or next_idx ]
+	if screen.count() > 1 then
+		c:move_to_screen(next_screen)
+		control_off_screen(c, next_screen.workarea)
 	end
 end
 
