@@ -6,7 +6,6 @@
 
 -- Grab environment
 -----------------------------------------------------------------------------------------------------------------------
-local type = type
 local unpack = unpack or table.unpack
 
 local awful = require("awful")
@@ -31,7 +30,7 @@ local calendar = {}
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		geometry                  = { width = 340, height = 395 },
+		geometry                  = { width = 340, height = 420 },
 		margin                    = { 20, 20, 20, 15 },
 		controls_margin           = { 0, 0, 0, 4 },
 		calendar_item_margin      = { 2, 5, 2, 2 },
@@ -40,22 +39,24 @@ local function default_style()
 		separator_thickness       = 2,
 		border_width              = 2,
 		color                     = { border = "#575757", wibox = "#202020", icon = "#a0a0a0",
-			                          main = "#b1222b", shadow1 = "#333333", highlight = "#202020",
-			                          gray = "#575757", text = "#a0a0a0"},
-		days                      = { weeknumber = { fg = "#575757", bg = "transparent"},
-			                          weekday    = { fg = "#575757", bg = "transparent"},
-			                          weekend    = { fg = "#a0a0a0", bg = "#333333"},
-			                          today      = { fg = "#a0a0a0", bg = "#b1222b" },
-			                          day        = { fg = "#a0a0a0", bg = "transparent"}},
+		                              main = "#b1222b", shadow1 = "#333333", highlight = "#202020",
+		                              gray = "#575757", text = "#a0a0a0" },
+		days                      = { weeknumber = { fg = "#575757", bg = "transparent" },
+		                              weekday    = { fg = "#575757", bg = "transparent" },
+		                              weekend    = { fg = "#a0a0a0", bg = "#333333" },
+		                              today      = { fg = "#a0a0a0", bg = "#b1222b" },
+		                              day        = { fg = "#a0a0a0", bg = "transparent" },
+		                              default    = { fg = "white",   bg = "transparent" } },
 		fonts                     = { clock           = "Sans 24",
-			                          date            = "Sans 15",
-			                          week_numbers    = "Sans 12",
-			                          weekdays_header = "Sans 11",
-			                          days            = "Sans 12",
-			                          focus           = "Sans 14 Bold",
-			                          controls        = "Sans 13" },
+		                              date            = "Sans 15",
+		                              week_numbers    = "Sans 12",
+		                              weekdays_header = "Sans 11",
+		                              days            = "Sans 12",
+		                              default         = "Sans 10",
+		                              focus           = "Sans 14 Bold",
+		                              controls        = "Sans 13" },
 		icon                      = { next   = redutil.base.placeholder({ txt = "►" }),
-		                              prev   = redutil.base.placeholder({ txt = "◄" }),},
+		                              prev   = redutil.base.placeholder({ txt = "◄" }), },
 		clock_format              = "%H:%M",
 		date_format               = "%A, %d. %B",
 		clock_refresh_seconds     = 60,
@@ -73,9 +74,7 @@ end
 
 -- Initialize calendar widget
 -----------------------------------------------------------------------------------------------------------------------
-function calendar:init(args)
-
-	args = args or {}
+function calendar:init()
 	local style = default_style()
 	self.style = style
 
@@ -91,12 +90,12 @@ function calendar:init(args)
 	-- Factory function to produce clickable buttons with icons and hover effect
 	--------------------------------------------------------------------------------
 	local function make_control_button(icon, action)
-		local w = svgbox(icon, nil, style.color.icon)
-		w:set_forced_width(style.controls_icon_size.width)
-		w:set_forced_height(style.controls_icon_size.height)
-		local marginbox = wibox.container.margin(w, unpack(style.controls_margin))
+		local button = svgbox(icon, nil, style.color.icon)
+		button:set_forced_width(style.controls_icon_size.width)
+		button:set_forced_height(style.controls_icon_size.height)
+		local marginbox = wibox.container.margin(button, unpack(style.controls_margin))
 		local wrapper = wibox.container.background(marginbox)
-		wrapper.svgbox = w
+		wrapper.svgbox = button
 
 		wrapper:connect_signal("mouse::enter", function(w)
 			w:set_bg(style.color.main)
@@ -146,14 +145,13 @@ function calendar:init(args)
 
 		-- only display the focus marker if month and year match the current date
 		if flag == "focus" then
-			local current_date = os.date('*t')
-			if current_date.year ~= date.year or current_date.month ~= date.month then
+			local now = os.date('*t')
+			if now.year ~= date.year or now.month ~= date.month then
 				flag = "normal"
 			end
 		end
 
-		local font = "Sans 10"
-		local fg = "white"
+		local font, bg, fg
 		if flag == "weeknumber" then
 			-- left side week numbers
 			font = style.fonts.week_numbers
@@ -174,17 +172,21 @@ function calendar:init(args)
 			fg = style.days.today.fg
 			bg = style.days.today.bg
 		elseif flag == "normal" then
+			font = style.fonts.days
 			if date.wday == 1 or date.wday == 7 then
 				-- separate styling for weekends
-				font = style.fonts.days
 				fg = style.days.weekend.fg
 				bg = style.days.weekend.bg
 			else
 				-- normal weekdays
-				font = style.fonts.days
 				fg = style.days.day.fg
 				bg = style.days.day.bg
 			end
+		else
+			-- fallback style, do not know if it ever necessary
+			font = style.fonts.default
+			fg = style.days.default.fg
+			bg = style.days.default.bg
 		end
 
 		-- style each calendar cell
@@ -248,9 +250,9 @@ function calendar:init(args)
 	datetime_panel:add(self.date_label)
 
 	self.update_datetime = function()
-		local current_date = DateTime.new_now(TimeZone.new_local())
-		local date = current_date:format(style.date_format)
-		local time = current_date:format(style.clock_format)
+		local now = DateTime.new_now(TimeZone.new_local())
+		local date = now:format(style.date_format)
+		local time = now:format(style.clock_format)
 		self.clock_label:set_markup('<span color="' .. style.color.text .. '">' .. time .. '</span>')
 		self.date_label:set_markup('<span color="' .. style.color.gray .. '">' .. date .. '</span>')
 	end
@@ -319,8 +321,8 @@ function calendar:show_date(year, month, day)
 end
 
 function calendar:switch_month(offset)
-	month = self.date.month + offset
-	year = self.date.year
+	local month = self.date.month + offset
+	local year = self.date.year
 	while month > 12 do
 		month = month - 12
 		year = year + 1
@@ -333,7 +335,7 @@ function calendar:switch_month(offset)
 end
 
 function calendar:switch_year(offset)
-	year = self.date.year + offset
+	local year = self.date.year + offset
 	self:show_date(year, self.date.month)
 end
 
