@@ -21,6 +21,7 @@ local TimeZone = lgi.GLib.TimeZone
 
 local redutil = require("redflat.util")
 local svgbox = require("redflat.gauge.svgbox")
+local separator = require("redflat.gauge.separator")
 
 -- Initialize tables for module
 -----------------------------------------------------------------------------------------------------------------------
@@ -36,10 +37,10 @@ local function default_style()
 		calendar_item_margin      = { 2, 5, 2, 2 },
 		spacing                   = { separator = 28, datetime = 5, controls = 5, calendar = 8 },
 		controls_icon_size        = { width = 24, height = 24 },
-		separator_thickness       = 2,
+		separator                 = {},
 		border_width              = 2,
 		color                     = { border = "#575757", wibox = "#202020", icon = "#a0a0a0",
-		                              main = "#b1222b", shadow1 = "#333333", highlight = "#202020",
+		                              main = "#b1222b", highlight = "#202020",
 		                              gray = "#575757", text = "#a0a0a0" },
 		days                      = { weeknumber = { fg = "#575757", bg = "transparent" },
 		                              weekday    = { fg = "#575757", bg = "transparent" },
@@ -283,9 +284,7 @@ function calendar:init()
 	month_control:add(make_control_button(style.icon.next, function() self:switch_month(1) end))
 	controls_panel:set_left(month_control)
 
-	local layout_separator = wibox.widget.separator()
-	layout_separator.thickness = style.separator_thickness
-	layout_separator.color = style.color.shadow1
+	local layout_separator = separator.horizontal(style.separator)
 
 	local layout = wibox.layout.fixed.vertical()
 	layout.spacing_widget = layout_separator
