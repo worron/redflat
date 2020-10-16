@@ -157,23 +157,23 @@ end
 logout.keys = {
 	{
 		{ }, "Escape", logout.action.hide,
-		{ description = "Close the logout screen", group = "Actions" }
+		{ description = "Close the logout screen", group = "Action" }
 	},
 	{
-		{ "Mod1" }, "Left", logout.action.select_prev,
+		{ "Mod4" }, "Left", logout.action.select_prev,
 		{ description = "Select previous option", group = "Selection" }
 	},
 	{
-		{ "Mod1" }, "Right", logout.action.select_next,
+		{ "Mod4" }, "Right", logout.action.select_next,
 		{ description = "Select next option", group = "Selection" }
 	},
 	{
 		{ }, "Return", logout.action.execute_selected,
-		{ description = "Execute selected option", group = "Actions" }
+		{ description = "Execute selected option", group = "Action" }
 	},
 	{
-		{ "Mod1" }, "F1", function() redtip:show() end,
-		{ description = "Show hotkeys helper", group = "" }
+		{ "Mod4" }, "F1", function() redtip:show() end,
+		{ description = "Show hotkeys helper", group = "Action" }
 	},
 	{ -- fake keys for redtip
 		{ }, "1..9", nil,
