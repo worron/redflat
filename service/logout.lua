@@ -10,6 +10,7 @@ local naughty = require("naughty")
 local beautiful = require("beautiful")
 
 local redutil = require("redflat.util")
+local redtip = require("redflat.float.hotkeys")
 local svgbox = require("redflat.gauge.svgbox")
 
 -- Initialize tables and vars for module
@@ -34,6 +35,7 @@ local function default_style()
 			lock     = redutil.base.placeholder({ txt = "⊙" }),
 			logout   = redutil.base.placeholder({ txt = "←" }),
 		},
+		keytip                    = { geometry = { width = 400 } },
 		graceful_shutdown         = true,
 		show_timeout_notification = true,
 		client_kill_timeout       = 2,
@@ -155,20 +157,29 @@ end
 logout.keys = {
 	{
 		{ }, "Escape", logout.action.hide,
-		{ description = "Close the logout screen", group = "" }
+		{ description = "Close the logout screen", group = "Actions" }
 	},
 	{
 		{ "Mod1" }, "Left", logout.action.select_prev,
-		{ description = "Select previous option", group = "" }
+		{ description = "Select previous option", group = "Selection" }
 	},
 	{
 		{ "Mod1" }, "Right", logout.action.select_next,
-		{ description = "Select next option", group = "" }
+		{ description = "Select next option", group = "Selection" }
 	},
 	{
 		{ }, "Return", logout.action.execute_selected,
-		{ description = "Execute selected option", group = "" }
+		{ description = "Execute selected option", group = "Actions" }
 	},
+	{
+		{ "Mod1" }, "F1", function() redtip:show() end,
+		{ description = "Show hotkeys helper", group = "" }
+	},
+	{ -- fake keys for redtip
+		{ }, "1..9", nil,
+		{ description = "Select option by number", group = "Selection",
+		  keyset = { "1", "2", "3", "4", "5", "6", "7", "8", "9" } }
+	}
 }
 -- add number shortcuts for the ordered options
 for i = 1, 9 do
@@ -176,7 +187,7 @@ for i = 1, 9 do
 		{ }, tostring(i), function(_logout)
 			logout.action.select_by_id(_logout, i)
 		end,
-		{ description = "Select option #" .. tostring(i), group = "" }
+		{ } -- don't show in redtip
 	})
 end
 
@@ -306,6 +317,7 @@ function logout:hide()
 	for idx = 1, #self.options do
 		self:deselect_option(idx)
 	end
+	redtip:remove_pack()
 	self.wibox.visible = false
 end
 
@@ -321,6 +333,7 @@ function logout:show()
 	self.wibox.y       = s.geometry.y
 	self.wibox.visible = true
 	self.selected = nil
+	redtip:set_pack("Logout screen", self.keys, self.style.keytip.column, self.style.keytip.geometry)
 	awful.keygrabber.run(self.keygrabber)
 end
 
