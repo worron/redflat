@@ -73,8 +73,7 @@ local graceful_shutdown = function(timeout, callback, show_notification)
 		end
 	end
 	-- execute the given logout action after the kill timeout
-	gears.timer({ timeout = timeout, autostart = true,
-				  single_shot = true, callback = callback})
+	gears.timer({ timeout = timeout, autostart = true, single_shot = true, callback = callback })
 end
 
 -- Define all available logout options to be displayed
@@ -82,31 +81,31 @@ end
 -- order specified will determine order of the displayed buttons
 -----------------------------------------------------------------------------------------------------------------------
 logout.entries = {
-	{	-- Logout
+	{   -- Logout
 		callback   = function() awesome.quit() end,
 		icon_name  = 'logout',
 		label      = 'Logout',
 		close_apps = true,
 	},
-	{	-- Lock screen
+	{   -- Lock screen
 		callback   = function() awful.spawn.with_shell("sleep 0.5 && xscreensaver-command -l") end,
 		icon_name  = 'lock',
 		label      = 'Lock',
 		close_apps = false,
 	},
-	{	-- Shutdown
+	{   -- Shutdown
 		callback   = function() awful.spawn.with_shell("systemctl poweroff") end,
 		icon_name  = 'poweroff',
 		label      = 'Shutdown',
 		close_apps = true,
 	},
-	{	-- Suspend
+	{   -- Suspend
 		callback   = function() awful.spawn.with_shell("systemctl suspend") end,
 		icon_name  = 'suspend',
 		label      = 'Sleep',
 		close_apps = false,
 	},
-	{	-- Reboot
+	{   -- Reboot
 		callback   = function() awful.spawn.with_shell("systemctl reboot") end,
 		icon_name  = 'reboot',
 		label      = 'Restart',
