@@ -38,6 +38,7 @@ local function default_style()
 		keytip                    = { geometry = { width = 400 } },
 		graceful_shutdown         = true,
 		show_timeout_notification = true,
+		double_click_activation   = false,
 		client_kill_timeout       = 2,
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "service.logout") or {})
@@ -118,9 +119,18 @@ logout.entries = {
 function logout.action.select_by_id(_logout, num)
 	local option = _logout.options[num]
 	if not option then return end
+
+	-- activate button on double selection
+	if _logout.style.double_click_activation and num == _logout.selected then
+		logout.action.execute_selected(_logout)
+		return
+	end
+
+	-- highlight selected button
 	if _logout.selected then
 		_logout:deselect_option(_logout.selected)
 	end
+
 	option.button.select()
 	_logout.selected = num
 end
