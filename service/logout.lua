@@ -116,49 +116,49 @@ logout.entries = {
 
 -- Logout screen control functions
 -----------------------------------------------------------------------------------------------------------------------
-function logout.action.select_by_id(_logout, num)
-	local option = _logout.options[num]
+function logout.action.select_by_id(num)
+	local option = logout.options[num]
 	if not option then return end
 
 	-- activate button on double selection
-	if _logout.style.double_click_activation and num == _logout.selected then
-		logout.action.execute_selected(_logout)
+	if logout.style.double_click_activation and num == logout.selected then
+		logout.action.execute_selected()
 		return
 	end
 
 	-- highlight selected button
-	if _logout.selected then
-		_logout:deselect_option(_logout.selected)
+	if logout.selected then
+		logout:deselect_option(logout.selected)
 	end
 
 	option.button.select()
-	_logout.selected = num
+	logout.selected = num
 end
 
-function logout.action.execute_by_id(_logout, num)
-	local option = _logout.options[num]
+function logout.action.execute_by_id(num)
+	local option = logout.options[num]
 	if not option then return end
 	option.action()
 end
 
-function logout.action.execute_selected(_logout)
-	local option = _logout.options[_logout.selected]
+function logout.action.execute_selected()
+	local option = logout.options[logout.selected]
 	if not option then return end
 	option.action()
 end
 
-function logout.action.select_next(_logout)
-	local target_option = _logout.selected and _logout.selected + 1 or 1
-	logout.action.select_by_id(_logout, target_option)
+function logout.action.select_next()
+	local target_id = logout.selected and logout.selected + 1 or 1
+	logout.action.select_by_id(target_id)
 end
 
-function logout.action.select_prev(_logout)
-	local target_option = _logout.selected and _logout.selected - 1 or 1
-	logout.action.select_by_id(_logout, target_option)
+function logout.action.select_prev()
+	local target_option = logout.selected and logout.selected - 1 or 1
+	logout.action.select_by_id(target_option)
 end
 
-function logout.action.hide(_logout)
-	_logout:hide()
+function logout.action.hide()
+	logout:hide()
 end
 
 -- Logout screen keygrabber keybindings
@@ -193,8 +193,8 @@ logout.keys = {
 -- add number shortcuts for the ordered options
 for i = 1, 9 do
 	table.insert(logout.keys, {
-		{ }, tostring(i), function(_logout)
-			logout.action.select_by_id(_logout, i)
+		{ }, tostring(i), function()
+			logout.action.select_by_id(i)
 		end,
 		{ } -- don't show in redtip
 	})
@@ -276,7 +276,7 @@ function logout:init()
 	self.keygrabber = function(mod, key, event)
 		if event == "press" then
 			for _, k in ipairs(logout.keys) do
-				if redutil.key.match_grabber(k, mod, key) then k[3](self); return end
+				if redutil.key.match_grabber(k, mod, key) then k[3](); return end
 			end
 		end
 	end
@@ -285,9 +285,9 @@ function logout:init()
 	layout.spacing = self.style.button_spacing
 	for idx, option in ipairs(self.options) do
 		local iconbox = option.button:get_all_children()[1]
-		iconbox:connect_signal('mouse::enter', function() logout.action.select_by_id(self, idx) end)
+		iconbox:connect_signal('mouse::enter', function() logout.action.select_by_id(idx) end)
 		iconbox:connect_signal('mouse::leave', function() logout:deselect_option(idx) end)
-		option.button:connect_signal('button::release', function() logout.action.execute_by_id(self, idx) end)
+		option.button:connect_signal('button::release', function() logout.action.execute_by_id(idx) end)
 		layout:add(option.button)
 	end
 
