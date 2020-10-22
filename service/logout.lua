@@ -25,6 +25,7 @@ local function default_style()
 		icon_margin         = 16,
 		text_margin         = 12,
 		button_spacing      = 48,
+		label_font          = "Sans 14",
 		button_shape        = gears.shape.rectangle,
 		color               = { wibox = "#202020", text = "#a0a0a0", icon = "#a0a0a0",
 		                        gray = "#575757", main = "#b1222b" },
@@ -38,7 +39,7 @@ local function default_style()
 		keytip                    = { geometry = { width = 400 } },
 		graceful_shutdown         = true,
 		show_timeout_notification = true,
-		double_click_activation   = false,
+		double_key_activation     = false,
 		client_kill_timeout       = 2,
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "service.logout") or {})
@@ -78,7 +79,7 @@ local graceful_shutdown = function(timeout, callback, show_notification)
 end
 
 -- Define all available logout options to be displayed
--- maybe overriden by user configs via logout:set_entries()
+-- maybe overwritten by user configs via logout:set_entries()
 -- order specified will determine order of the displayed buttons
 -----------------------------------------------------------------------------------------------------------------------
 logout.entries = {
@@ -116,45 +117,33 @@ logout.entries = {
 
 -- Logout screen control functions
 -----------------------------------------------------------------------------------------------------------------------
-function logout.action.select_by_id(num)
-	local option = logout.options[num]
-	if not option then return end
+function logout.action.select_by_id(id)
+	local new_option = logout.options[id]
+	if not new_option then return end
 
-	-- activate button on double selection
-	if logout.style.double_click_activation and num == logout.selected then
-		logout.action.execute_selected()
+	-- if already selected
+	if new_option == logout.selected then
+		-- activate button on double selection
+		if logout.style.double_key_activation then new_option:execute() end
 		return
 	end
 
-	-- highlight selected button
-	if logout.selected then
-		logout:deselect_option(logout.selected)
-	end
-
-	option.button.select()
-	logout.selected = num
-end
-
-function logout.action.execute_by_id(num)
-	local option = logout.options[num]
-	if not option then return end
-	option.action()
+	new_option:select()
 end
 
 function logout.action.execute_selected()
-	local option = logout.options[logout.selected]
-	if not option then return end
-	option.action()
+	if not logout.selected then return end
+	logout.selected:execute()
 end
 
 function logout.action.select_next()
-	local target_id = logout.selected and logout.selected + 1 or 1
+	local target_id = logout.selected and logout.selected.id + 1 or 1
 	logout.action.select_by_id(target_id)
 end
 
 function logout.action.select_prev()
-	local target_option = logout.selected and logout.selected - 1 or 1
-	logout.action.select_by_id(target_option)
+	local target_id = logout.selected and logout.selected.id - 1 or 1
+	logout.action.select_by_id(target_id)
 end
 
 function logout.action.hide()
@@ -203,95 +192,109 @@ end
 -- Logout screen UI build functions
 -----------------------------------------------------------------------------------------------------------------------
 
--- Returns a styled button for a logout action
+-- Button for layout option
 --------------------------------------------------------------------------------
-local make_button_widget = function(icon, name, style)
+function logout:_make_button(icon_name)
+	local icon = self.style.icons[icon_name] or redutil.base.placeholder({ txt = "?" })
 
-	local label = wibox.widget.textbox(name)
-	label.font = beautiful.fonts.mtitle
+	local image = wibox.container.margin(svgbox(icon, nil, self.style.color.icon))
+	image.margins = self.style.icon_margin
+
+	local iconbox = wibox.container.background(image)
+	iconbox.bg = self.style.color.gray
+	iconbox.shape = self.style.button_shape
+	iconbox.forced_width = self.style.button_size.width
+	iconbox.forced_height = self.style.button_size.height
+
+	return iconbox
+end
+
+-- Label for layout option
+--------------------------------------------------------------------------------
+function logout:_make_label(title)
+	local label = wibox.widget.textbox(title)
+	label.font = self.style.label_font
 	label.align = "center"
 	label.valign = "center"
 
-	local image = wibox.container.margin(svgbox(icon, nil, style.color.icon))
-	image.margins = style.icon_margin
-
-	local iconbox = wibox.container.background(image)
-	iconbox.bg = style.color.gray
-	iconbox.shape = style.button_shape
-	iconbox.forced_width = style.button_size.width
-	iconbox.forced_height = style.button_size.height
-
-	local widget_with_label = wibox.layout.fixed.vertical()
-	widget_with_label.spacing = style.text_margin
-	widget_with_label:add(iconbox)
-	widget_with_label:add(label)
-
-	widget_with_label.select = function()
-		iconbox.bg = style.color.main
-	end
-
-	widget_with_label.deselect = function()
-		iconbox.bg = style.color.gray
-	end
-
-	return widget_with_label
+	return label
 end
 
--- Returns a table containing the button widget
--- and action function for a logout action
---------------------------------------------------------------------------------
-function logout:build_option(name, icon, callback, do_close_apps)
-	return {
-		button = make_button_widget(icon, name, self.style),
-		action = function()
-			logout:hide()
-			if do_close_apps and self.style.graceful_shutdown then
-				graceful_shutdown(self.style.client_kill_timeout, callback, self.style.show_timeout_notification)
-			else
-				callback()
-			end
+-- Add new logout option to widget
+-----------------------------------------------------------------------------------------------------------------------
+function logout:add_option(id, action)
+
+	-- creating option structure
+	local option = { id = id, close_apps = action.close_apps, callback = action.callback }
+	option.button = logout:_make_button(action.icon_name)
+	option.label = logout:_make_label(action.label)
+
+	-- logout option methods
+	function option:select()
+		if logout.selected then logout.selected:deselect() end
+		self.button.bg = logout.style.color.main
+		logout.selected = self
+	end
+
+	function option:deselect()
+		if logout.selected ~= self then return end
+		self.button.bg = logout.style.color.gray
+		logout.selected = nil
+	end
+
+	function option:execute()
+		logout:hide()
+		if self.close_apps and logout.style.graceful_shutdown then
+			graceful_shutdown(logout.style.client_kill_timeout, self.callback, logout.style.show_timeout_notification)
+		else
+			self.callback()
 		end
-	}
+	end
+
+	-- binding mouse to option visual
+	option.button:connect_signal('mouse::enter', function() option:select() end)
+	option.button:connect_signal('mouse::leave', function() option:deselect() end)
+	option.button:connect_signal('button::release', function() option:execute() end)
+
+	-- placing option visual to main logout widget
+	local button_with_label = wibox.layout.fixed.vertical()
+	button_with_label.spacing = self.style.text_margin
+	button_with_label:add(option.button)
+	button_with_label:add(option.label)
+	self.layout:add(button_with_label)
+
+	-- putting option to logout inner structure
+	table.insert(self.options, option)
 end
 
 -- Main functions
 -----------------------------------------------------------------------------------------------------------------------
 function logout:init()
 
-	-- Style
+	-- Style and base structure
 	------------------------------------------------------------
 	self.style = default_style()
 	self.options = {}
 
-	-- Prepare all defined logout options
-	------------------------------------------------------------
-	for _, action in ipairs(logout.entries) do
-		local label = action.label
-		local icon = self.style.icons[action.icon_name]
-		local callback = action.callback
-		local do_close_apps = action.close_apps
-		table.insert(self.options, logout:build_option(label, icon, callback, do_close_apps))
-	end
+	self.layout = wibox.layout.fixed.horizontal()
+	self.layout.spacing = self.style.button_spacing
 
+	-- prepare all defined logout options
+	for id, action in ipairs(self.entries) do self:add_option(id, action) end
+
+	-- Create keygrabber
+	------------------------------------------------------------
 	self.keygrabber = function(mod, key, event)
 		if event == "press" then
-			for _, k in ipairs(logout.keys) do
+			for _, k in ipairs(self.keys) do
 				if redutil.key.match_grabber(k, mod, key) then k[3](); return end
 			end
 		end
 	end
 
-	local layout = wibox.layout.fixed.horizontal()
-	layout.spacing = self.style.button_spacing
-	for idx, option in ipairs(self.options) do
-		local iconbox = option.button:get_all_children()[1]
-		iconbox:connect_signal('mouse::enter', function() logout.action.select_by_id(idx) end)
-		iconbox:connect_signal('mouse::leave', function() logout:deselect_option(idx) end)
-		option.button:connect_signal('button::release', function() logout.action.execute_by_id(idx) end)
-		layout:add(option.button)
-	end
-
-	self.wibox = wibox({ widget = wibox.container.place(layout) })
+	-- Main wibox
+	------------------------------------------------------------
+	self.wibox = wibox({ widget = wibox.container.place(self.layout) })
 	self.wibox.type = 'splash'
 	self.wibox.ontop = true
 	self.wibox.bg = self.style.color.wibox
@@ -300,32 +303,18 @@ function logout:init()
 
 	self.wibox:buttons(
 		gears.table.join(
-			awful.button({}, 2, function()
-				self:hide()
-			end),
-			awful.button({}, 3, function()
-				self:hide()
-			end)
+			awful.button({}, 2, function() self:hide() end),
+			awful.button({}, 3, function() self:hide() end)
 		)
 	)
-end
-
--- Deselect option with the given index and remove its highlight
---------------------------------------------------------------------------------
-function logout:deselect_option(num)
-	local option = self.options[num]
-	if not option then return end
-	if self.selected == num then self.selected = nil end
-	option.button.deselect()
 end
 
 -- Hide the logout screen without executing any action
 --------------------------------------------------------------------------------
 function logout:hide()
 	awful.keygrabber.stop(self.keygrabber)
-	for idx = 1, #self.options do
-		self:deselect_option(idx)
-	end
+	if self.selected then self.selected:deselect() end
+
 	redtip:remove_pack()
 	self.wibox.visible = false
 end
@@ -334,18 +323,18 @@ end
 --------------------------------------------------------------------------------
 function logout:show()
 	if not self.wibox then self:init() end
-	local s = mouse.screen
-	self.wibox.screen  = s
-	self.wibox.height  = s.geometry.height
-	self.wibox.width   = s.geometry.width
-	self.wibox.x       = s.geometry.x
-	self.wibox.y       = s.geometry.y
+
+	self.wibox.screen = mouse.screen
+	self.wibox:geometry(mouse.screen.geometry)
 	self.wibox.visible = true
 	self.selected = nil
+
 	redtip:set_pack("Logout screen", self.keys, self.style.keytip.column, self.style.keytip.geometry)
 	awful.keygrabber.run(self.keygrabber)
 end
 
+-- Logout widget setup methods
+--------------------------------------------------------------------------------
 function logout:set_keys(keys)
 	self.keys = keys
 end
