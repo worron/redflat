@@ -190,7 +190,9 @@ function player:init(args)
 	align_vertical:set_middle(wibox.container.margin(control_align, unpack(style.controls_margin)))
 	align_vertical:set_bottom(wibox.container.constraint(self.bar, "exact", nil, style.bar_width))
 	local area = wibox.layout.fixed.horizontal()
-	area:add(self.box.image)
+	local cover_area = wibox.container.place(self.box.image)
+	cover_area.forced_width = style.geometry.height - style.border_margin[3] - style.border_margin[4]
+	area:add(cover_area)
 	area:add(wibox.container.margin(align_vertical, unpack(style.elements_margin)))
 
 	-- Buttons
@@ -270,6 +272,7 @@ function player:init(args)
 	self.clear_info = function(is_att)
 		self.box.image:set_image(style.icon.cover)
 		self.box.image:set_color(is_att and style.color.main or style.color.gray)
+		self.box.image:emit_signal("widget::layout_changed")
 
 		self.box.time:set_text("0:00")
 		self.bar:set_value(0)
@@ -441,12 +444,14 @@ function player:update_from_metadata(data)
 			if image then
 				self.box.image:set_color(nil)
 				has_cover = self.box.image:set_image(decodeURI(image))
+				self.box.image:emit_signal("widget::layout_changed")
 			end
 		end
 		if not has_cover then
 			-- reset to generic icon if no cover available
 			self.box.image:set_color(self.style.color.gray)
 			self.box.image:set_image(self.style.icon.cover)
+			self.box.image:emit_signal("widget::layout_changed")
 		end
 
 		-- track length
