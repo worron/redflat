@@ -6,7 +6,6 @@
 local awful = require("awful")
 local wibox = require("wibox")
 local gears = require("gears")
-local naughty = require("naughty")
 local beautiful = require("beautiful")
 
 local redutil = require("redflat.util")
@@ -25,7 +24,9 @@ local function default_style()
 		icon_margin         = 16,
 		text_margin         = 12,
 		button_spacing      = 48,
+		counter_top_margin  = 200,
 		label_font          = "Sans 14",
+		counter_font        = "Sans 24",
 		button_shape        = gears.shape.rectangle,
 		color               = { wibox = "#202020", text = "#a0a0a0", icon = "#a0a0a0",
 		                        gray = "#575757", main = "#b1222b" },
@@ -38,7 +39,6 @@ local function default_style()
 		},
 		keytip                    = { geometry = { width = 400 } },
 		graceful_shutdown         = true,
-		show_timeout_notification = true,
 		double_key_activation     = false,
 		client_kill_timeout       = 2,
 	}
@@ -50,32 +50,40 @@ end
 
 -- Gracefully closes down user-owned application processes
 ------------------------------------------------------------
-local graceful_shutdown = function(timeout, callback, show_notification)
-	if show_notification then
-		naughty.notify({ title = "Closing session ...",
-		                 text = "Session will be terminated in " .. tostring(timeout) .. " seconds!" })
+local function gracefully_close(application)
+	if application.pid then
+		-- first try sending SIGTERM to the owning process
+		awful.spawn.easy_async("kill -SIGTERM " .. tostring(application.pid), function(_, _, _, exitcode)
+			if exitcode ~= 0 then
+				-- kill might fail for root-owned process or processes with fake PIDs
+				-- (e.g. firejail-wrapped processes), so try to close the client instead
+				application:kill()
+			end
+		end)
+	else
+		-- no associated PID, try to close the client instead
+		application:kill()
 	end
-	for _, c in ipairs(client.get()) do
+end
+
+
+function  logout:_close_all_apps(option)
+	-- graceful exit (apps closing) may be disabled by user settings
+	if not logout.style.graceful_shutdown then
+		logout:hide()
+		option.callback()
+		return
+	end
+
+	-- apps closing
+	for _, application in ipairs(client.get()) do
 		-- clients owned by the same process might vanish upon the first SIGTERM
 		-- during list iteration, so we only handle those which are still valid
-		if c.valid then
-			if c.pid then
-				-- first try sending SIGTERM to the owning process
-				awful.spawn.easy_async("kill -SIGTERM " .. tostring(c.pid), function(_, _, _, exitcode)
-					if exitcode ~= 0 then
-						-- kill might fail for root-owned process or processes with fake PIDs
-						-- (e.g. firejail-wrapped processes), so try to close the client instead
-						c:kill()
-					end
-				end)
-			else
-				-- no associated PID, try to close the client instead
-				c:kill()
-			end
-		end
+		if application.valid then gracefully_close(application) end
 	end
-	-- execute the given logout action after the kill timeout
-	gears.timer({ timeout = timeout, autostart = true, single_shot = true, callback = callback })
+
+	-- execute the given logout option after the kill timeout
+	self.countdown:start(option)
 end
 
 -- Define all available logout options to be displayed
@@ -225,7 +233,7 @@ end
 function logout:add_option(id, action)
 
 	-- creating option structure
-	local option = { id = id, close_apps = action.close_apps, callback = action.callback }
+	local option = { id = id, close_apps = action.close_apps, callback = action.callback, name = action.label }
 	option.button = logout:_make_button(action.icon_name)
 	option.label = logout:_make_label(action.label)
 
@@ -243,10 +251,10 @@ function logout:add_option(id, action)
 	end
 
 	function option:execute()
-		logout:hide()
-		if self.close_apps and logout.style.graceful_shutdown then
-			graceful_shutdown(logout.style.client_kill_timeout, self.callback, logout.style.show_timeout_notification)
+		if self.close_apps then
+			logout:_close_all_apps(self)
 		else
+			logout:hide()
 			self.callback()
 		end
 	end
@@ -261,7 +269,7 @@ function logout:add_option(id, action)
 	button_with_label.spacing = self.style.text_margin
 	button_with_label:add(option.button)
 	button_with_label:add(option.label)
-	self.layout:add(button_with_label)
+	self.option_layout:add(button_with_label)
 
 	-- putting option to logout inner structure
 	table.insert(self.options, option)
@@ -271,15 +279,28 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 function logout:init()
 
-	-- Style and base structure
+	-- Style and base layout structure
 	------------------------------------------------------------
 	self.style = default_style()
 	self.options = {}
 
-	self.layout = wibox.layout.fixed.horizontal()
-	self.layout.spacing = self.style.button_spacing
+	-- buttons layout
+	self.option_layout = wibox.layout.fixed.horizontal()
+	self.option_layout.spacing = self.style.button_spacing
 
-	-- prepare all defined logout options
+	-- shutdown counter label
+	self.counter = wibox.widget.textbox("")
+	self.counter.font = self.style.counter_font
+	self.counter.align = "center"
+	self.counter.valign = "top"
+
+	-- main layout
+	local base_layout = wibox.layout.stack()
+	base_layout:add(wibox.container.place(self.option_layout))
+	base_layout:add(wibox.container.margin(self.counter, 0, 0, self.style.counter_top_margin))
+
+	-- Prepare all defined logout options
+	------------------------------------------------------------
 	for id, action in ipairs(self.entries) do self:add_option(id, action) end
 
 	-- Create keygrabber
@@ -294,7 +315,8 @@ function logout:init()
 
 	-- Main wibox
 	------------------------------------------------------------
-	self.wibox = wibox({ widget = wibox.container.place(self.layout) })
+	--self.wibox = wibox({ widget = wibox.layout.stack(self.option_layout) })
+	self.wibox = wibox({ widget = base_layout })
 	self.wibox.type = 'splash'
 	self.wibox.ontop = true
 	self.wibox.bg = self.style.color.wibox
@@ -307,12 +329,57 @@ function logout:init()
 			awful.button({}, 3, function() self:hide() end)
 		)
 	)
+
+	-- Graceful shutdown counter
+	------------------------------------------------------------
+	local countdown = {}
+	-- Should this pattern be moved to theme variables?
+	countdown.pattern = '<span color="%s">%s</span> in %s... Closing apps (%s left).'
+
+	countdown.timer = gears.timer({
+		timeout = 1,
+		callback = function()
+			if countdown.delay <= 1 then
+				--logout:hide() -- do we need hide?
+				countdown.callback()
+			else
+				countdown.delay = countdown.delay - 1
+				countdown:label(countdown.delay)
+				countdown.timer:again()
+			end
+		end
+	})
+
+	function countdown:label(seconds)
+		local active_apps = client.get() -- not sure how accurate it is
+		logout.counter:set_markup(string.format(
+			self.pattern,
+			logout.style.color.main, self.option_name, seconds, #active_apps
+		))
+	end
+
+	function countdown:start(option)
+		self.option_name = option.name
+		self.callback = option.callback
+
+		self.delay = logout.style.client_kill_timeout
+		self:label(self.delay)
+		self.timer:start()
+	end
+
+	function countdown:stop()
+		if self.timer.started then self.timer:stop() end
+		logout.counter:set_text("")
+	end
+
+	self.countdown = countdown
 end
 
 -- Hide the logout screen without executing any action
 --------------------------------------------------------------------------------
 function logout:hide()
 	awful.keygrabber.stop(self.keygrabber)
+	self.countdown:stop()
 	if self.selected then self.selected:deselect() end
 
 	redtip:remove_pack()
