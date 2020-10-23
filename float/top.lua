@@ -243,7 +243,7 @@ function top:init()
 	-- Build title
 	--------------------------------------------------------------------------------
 	title = construct_item(style)
-	title:set_bg(style.color.wibox)
+	title:set_bg("transparent")
 	title:set({ number = "#", name = "Process Name", cpu = "▾ CPU", mem = "Memory"})
 
 	for _, txtbox in pairs(title.label) do
