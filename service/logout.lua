@@ -342,6 +342,7 @@ function logout:init()
 			if countdown.delay <= 1 then
 				--logout:hide() -- do we need hide?
 				countdown.callback()
+				countdown:stop()
 			else
 				countdown.delay = countdown.delay - 1
 				countdown:label(countdown.delay)
