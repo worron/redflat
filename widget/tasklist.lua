@@ -74,7 +74,7 @@ local function default_style()
 		layout_icon          = { unknown = redutil.base.placeholder() },
 		titleline            = { font = "Sans 16 bold", height = 35 },
 		stateline            = { height = 35 },
-		tagline              = { height = 30 },
+		tagline              = { height = 30, spacing = 10, rows = 1 },
 		state_iconsize       = { width = 20, height = 20 },
 		tag_iconsize         = { width = 16, height = 16 },
 		separator            = { marginh = { 3, 3, 5, 5 } },
@@ -246,7 +246,13 @@ end
 -----------------------------------------------------------------------------------
 local function tagline_construct(setup_layout, style)
 	local tagboxes = {}
+	setup_layout:reset()
 
+	-- calculate number of tag mark per line
+	local columns = math.ceil(#last.screen.tags / style.tagline.rows)
+	setup_layout.forced_num_cols = columns
+
+	-- setup tag marks
 	for i, t in ipairs(last.screen.tags) do
 		if not awful.tag.getproperty(t, "hide") then
 
@@ -635,10 +641,15 @@ function redtasklist.winmenu:init(style)
 
 	if style.enable_tagline then
 		-- Construct visual tag representations in a menu line
-		self.tagline_container = wibox.layout.flex.horizontal()
+		self.tagline_container = wibox.layout.grid()
+		self.tagline_container.forced_num_rows = style.tagline.rows
+		self.tagline_container.spacing = style.tagline.spacing
+		self.tagline_container.expand = true
+
 		local tagline_vertical = wibox.layout.align.vertical()
 		tagline_vertical:set_second(self.tagline_container)
 		tagline_vertical:set_expand("outside")
+
 		self.tagboxes = tagline_construct(self.tagline_container, style)
 		local tagline = wibox.container.constraint(tagline_vertical, "exact", nil, style.tagline.height)
 		table.insert(menu_items, 3, menusep)
@@ -691,7 +702,6 @@ end
 -- Function to rebuild the tag line entirely if screen and tags have changed
 --------------------------------------------------------------------------------
 function redtasklist.winmenu:tagline_rebuild(style)
-	self.tagline_container:set_children({})
 	self.tagboxes = tagline_construct(self.tagline_container, style)
 end
 

@@ -16,6 +16,8 @@
 local setmetatable = setmetatable
 local ipairs = ipairs
 local table = table
+local math = math
+
 local beautiful = require("beautiful")
 local awful = require("awful")
 local wibox = require("wibox")
@@ -49,7 +51,7 @@ local function default_style()
 		layout_icon          = { unknown = redutil.base.placeholder() },
 		actionline           = { height = 28, center_button_width = 50 },
 		stateline            = { height = 35 },
-		tagline              = { height = 30 },
+		tagline              = { height = 30, spacing = 10, rows = 1 },
 		state_iconsize       = { width = 20, height = 20 },
 		action_iconsize      = { width = 18, height = 18 },
 		tag_iconsize         = { width = 16, height = 16 },
@@ -272,7 +274,13 @@ end
 -----------------------------------------------------------------------------------
 local function tag_line_construct(setup_layout, style)
 	local tagboxes = {}
+	setup_layout:reset()
 
+	-- calculate number of tag mark per line
+	local columns = math.ceil(#last.screen.tags / style.tagline.rows)
+	setup_layout.forced_num_cols = columns
+
+	-- setup tag marks
 	for i, t in ipairs(last.screen.tags) do
 		if not awful.tag.getproperty(t, "hide") then
 
@@ -336,8 +344,8 @@ end
 
 -- Initialize window menu widget
 -----------------------------------------------------------------------------------------------------------------------
-function clientmenu:init(style)
-	style = redutil.table.merge(default_style(), style or {})
+function clientmenu:init()
+	local style = self._prebuilt_style or default_style()
 
 	self.hide_check = function(action)
 		if style.hide_action[action] then self.menu:hide() end
@@ -411,10 +419,15 @@ function clientmenu:init(style)
 	table.insert(menu_items, menusep)
 	if style.enable_tagline then
 		-- Construct visual tag representations in a menu line
-		self.tagline_container = wibox.layout.flex.horizontal()
+		self.tagline_container = wibox.layout.grid()
+		self.tagline_container.forced_num_rows = style.tagline.rows
+		self.tagline_container.spacing = style.tagline.spacing
+		self.tagline_container.expand = true
+
 		local tagline_vertical = wibox.layout.align.vertical()
 		tagline_vertical:set_second(self.tagline_container)
 		tagline_vertical:set_expand("outside")
+
 		self.tagboxes = tag_line_construct(self.tagline_container, style)
 		local tagline = wibox.container.constraint(tagline_vertical, "exact", nil, style.tagline.height)
 		table.insert(menu_items, { widget = tagline, focus = true })
@@ -463,7 +476,6 @@ end
 -- Function to rebuild the tag line entirely if screen and tags have changed
 --------------------------------------------------------------------------------
 function clientmenu:tagline_rebuild(style)
-	self.tagline_container:set_children({})
 	self.tagboxes = tag_line_construct(self.tagline_container, style)
 end
 
@@ -486,6 +498,12 @@ function clientmenu:tagline_update(c, style)
 			self.tagboxes[k]:set_color(icon_color)
 		end
 	end
+end
+
+-- Style setup
+--------------------------------------------------------------------------------
+function clientmenu:set_style(style)
+	self._prebuilt_style = redutil.table.merge(default_style(), style or {})
 end
 
 -- Show window menu widget
