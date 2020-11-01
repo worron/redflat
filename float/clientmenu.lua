@@ -292,14 +292,14 @@ local function tag_line_construct(setup_layout, style)
 					function()
 						last.client:move_to_tag(t)
 						awful.layout.arrange(t.screen)
-						clientmenu.menu:hide()
+						clientmenu.hide_check("move")
 					end
 				),
 				awful.button({ style.tagline_mod_key }, 1,
 					function()
 						last.client:move_to_tag(t)
 						awful.layout.arrange(t.screen)
-						clientmenu.menu:hide()
+						clientmenu.hide_check("move")
 						t:view_only()
 					end
 				),
@@ -307,7 +307,7 @@ local function tag_line_construct(setup_layout, style)
 					function()
 						last.client:move_to_tag(t)
 						awful.layout.arrange(t.screen)
-						clientmenu.menu:hide()
+						clientmenu.hide_check("move")
 						t:view_only()
 					end
 				),
@@ -315,6 +315,7 @@ local function tag_line_construct(setup_layout, style)
 					function()
 						last.client:toggle_tag(t)
 						awful.layout.arrange(t.screen)
+						clientmenu.hide_check("add")
 					end
 				)
 			))

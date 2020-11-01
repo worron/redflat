@@ -65,13 +65,13 @@ end
 -- attempts to move the focused client to the next screen (if screen.count() > 1)
 -- if a specific client is not passed via 'c', the focused client is selected
 function placement.next_screen(c)
-	local c = c or client.focus
-	if not c then return end
-	local next_idx = c.screen.index + 1
+	local client_ = c or client.focus
+	if not client_ then return end
+	local next_idx = client_.screen.index + 1
 	local next_screen = screen[ next_idx > screen.count() and 1 or next_idx ]
 	if screen.count() > 1 then
-		c:move_to_screen(next_screen)
-		control_off_screen(c, next_screen.workarea)
+		client_:move_to_screen(next_screen)
+		control_off_screen(client_, next_screen.workarea)
 	end
 end
 

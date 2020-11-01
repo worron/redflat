@@ -260,21 +260,20 @@ local function tagline_construct(setup_layout, style)
 			l:set_second(tagboxes[i])
 			setup_layout:add(l)
 
-
 			-- set mouse action
 			tagboxes[i]:buttons(awful.util.table.join(
 				awful.button({}, 1,
 					function()
 						last.client:move_to_tag(t)
 						awful.layout.arrange(t.screen)
-						redtasklist.winmenu.menu:hide()
+						redtasklist.winmenu.hide_check("move")
 					end
 				),
 				awful.button({ style.tagline_mod_key }, 1,
 					function()
 						last.client:move_to_tag(t)
 						awful.layout.arrange(t.screen)
-						redtasklist.winmenu.menu:hide()
+						redtasklist.winmenu.hide_check("move")
 						t:view_only()
 					end
 				),
@@ -282,7 +281,7 @@ local function tagline_construct(setup_layout, style)
 					function()
 						last.client:move_to_tag(t)
 						awful.layout.arrange(t.screen)
-						redtasklist.winmenu.menu:hide()
+						redtasklist.winmenu.hide_check("move")
 						t:view_only()
 					end
 				),
@@ -290,6 +289,7 @@ local function tagline_construct(setup_layout, style)
 					function()
 						last.client:toggle_tag(t)
 						awful.layout.arrange(t.screen)
+						redtasklist.winmenu.hide_check("add")
 					end
 				)
 			))
@@ -887,7 +887,9 @@ function redtasklist.new(args, style)
 	-- for _, sg in ipairs(client_signals) do client.connect_signal(sg, update) end
 	-- for _, sg in ipairs(tag_signals)    do awful.tag.attached_connect_signal(cs, sg, update) end
 	for _, sg in ipairs(client_signals) do client.connect_signal(sg, function() tasklist.queue:again() end) end
-	for _, sg in ipairs(tag_signals) do awful.tag.attached_connect_signal(cs, sg, function() tasklist.queue:again() end) end
+	for _, sg in ipairs(tag_signals) do
+		awful.tag.attached_connect_signal(cs, sg, function() tasklist.queue:again() end)
+	end
 
 	-- force hide pop-up widgets if any client was closed
 	-- because last vars may be no actual anymore
