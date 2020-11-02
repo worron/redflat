@@ -16,6 +16,8 @@
 local setmetatable = setmetatable
 local ipairs = ipairs
 local table = table
+local math = math
+
 local beautiful = require("beautiful")
 local awful = require("awful")
 local wibox = require("wibox")
@@ -39,27 +41,34 @@ local last = {
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
 	local style = {
-		icon            = { unknown = redutil.base.placeholder(),
-		                    minimize = redutil.base.placeholder(),
-		                    close = redutil.base.placeholder() },
-		micon           = { blank = redutil.base.placeholder({ txt = " " }),
-		                    check = redutil.base.placeholder({ txt = "+" }) },
-		layout_icon     = { unknown = redutil.base.placeholder() },
-		actionline      = { height = 28 },
-		stateline       = { height = 35 },
-		state_iconsize  = { width = 20, height = 20 },
-		action_iconsize = { width = 18, height = 18 },
-		separator       = { marginh = { 3, 3, 5, 5 }, marginv = { 3, 3, 3, 3 } },
-		tagmenu         = { icon_margin = { 2, 2, 2, 2 } },
-		hide_action     = { move = true,
-		                    add = false,
-		                    min = true,
-		                    floating = false,
-		                    sticky = false,
-		                    ontop = false,
-		                    below = false,
-		                    maximized = false },
-		color           = { main = "#b1222b", icon = "#a0a0a0", gray = "#404040", highlight = "#eeeeee" },
+		icon                 = { unknown = redutil.base.placeholder(),
+		                         minimize = redutil.base.placeholder(),
+		                         close = redutil.base.placeholder(),
+		                         tag = redutil.base.placeholder({ txt = "■" }),
+		                         switch_screen = redutil.base.placeholder() },
+		micon                = { blank = redutil.base.placeholder({ txt = " " }),
+		                         check = redutil.base.placeholder({ txt = "+" }) },
+		layout_icon          = { unknown = redutil.base.placeholder() },
+		actionline           = { height = 28, center_button_width = 50 },
+		stateline            = { height = 35 },
+		tagline              = { height = 30, spacing = 10, rows = 1 },
+		state_iconsize       = { width = 20, height = 20 },
+		action_iconsize      = { width = 18, height = 18 },
+		tag_iconsize         = { width = 16, height = 16 },
+		separator            = { marginh = { 3, 3, 5, 5 }, marginv = { 3, 3, 3, 3 } },
+		tagmenu              = { icon_margin = { 2, 2, 2, 2 } },
+		hide_action          = { move = true,
+		                         add = false,
+		                         min = true,
+		                         floating = false,
+		                         sticky = false,
+		                         ontop = false,
+		                         below = false,
+		                         maximized = false },
+		enable_screen_switch = false,
+		enable_tagline       = false,
+		tagline_mod_key      = "Mod4",
+		color                = { main = "#b1222b", icon = "#a0a0a0", gray = "#404040", highlight = "#eeeeee" },
 	}
 	style.menu = {
 		ricon_margin = { 2, 2, 2, 2 },
@@ -226,8 +235,29 @@ local function action_line_construct(setup_layout, style)
 	)
 	setup_layout:set_first(minimize_box)
 
-	-- separator
-	setup_layout:set_second(sep)
+	-- center element (either switch screen button or separator only)
+	if style.enable_screen_switch and screen.count() > 1 then
+		local inner = wibox.layout.align.horizontal()
+
+		-- switch screen button
+		local switch_screen_button = actionbox_construct(
+			style.icon.switch_screen,
+			function()
+				redutil.placement.next_screen(last.client)
+				clientmenu.menu:hide()
+			end
+		)
+		-- button surrounded by separators
+		inner:set_first(sep)
+		inner:set_second(switch_screen_button)
+		inner:set_third(sep)
+		inner:set_forced_width(style.actionline.center_button_width)
+
+		setup_layout:set_second(inner)
+	else
+		-- separator only
+		setup_layout:set_second(sep)
+	end
 
 	-- close button
 	local close_box = actionbox_construct(
@@ -238,6 +268,69 @@ local function action_line_construct(setup_layout, style)
 		end
 	)
 	setup_layout:set_third(close_box)
+end
+
+-- Function to construct menu line with tag switches (for style.enable_tagline)
+-----------------------------------------------------------------------------------
+local function tag_line_construct(setup_layout, style)
+	local tagboxes = {}
+	setup_layout:reset()
+
+	-- calculate number of tag mark per line
+	local columns = math.ceil(#last.screen.tags / style.tagline.rows)
+	setup_layout.forced_num_cols = columns
+
+	-- setup tag marks
+	for i, t in ipairs(last.screen.tags) do
+		if not awful.tag.getproperty(t, "hide") then
+
+			tagboxes[i] = svgbox(style.icon.tag)
+			tagboxes[i]:set_forced_width(style.tag_iconsize.width)
+			tagboxes[i]:set_forced_height(style.tag_iconsize.height)
+
+			-- set widget in line
+			local l = wibox.layout.align.horizontal()
+			l:set_expand("outside")
+			l:set_second(tagboxes[i])
+			setup_layout:add(l)
+
+			-- set mouse action
+			tagboxes[i]:buttons(awful.util.table.join(
+				awful.button({}, 1,
+					function()
+						last.client:move_to_tag(t)
+						awful.layout.arrange(t.screen)
+						clientmenu.hide_check("move")
+					end
+				),
+				awful.button({ style.tagline_mod_key }, 1,
+					function()
+						last.client:move_to_tag(t)
+						awful.layout.arrange(t.screen)
+						clientmenu.hide_check("move")
+						t:view_only()
+					end
+				),
+				awful.button({}, 2,
+					function()
+						last.client:move_to_tag(t)
+						awful.layout.arrange(t.screen)
+						clientmenu.hide_check("move")
+						t:view_only()
+					end
+				),
+				awful.button({}, 3,
+					function()
+						last.client:toggle_tag(t)
+						awful.layout.arrange(t.screen)
+						clientmenu.hide_check("add")
+					end
+				)
+			))
+		end
+	end
+
+	return tagboxes
 end
 
 -- Calculate menu position
@@ -251,8 +344,8 @@ end
 
 -- Initialize window menu widget
 -----------------------------------------------------------------------------------------------------------------------
-function clientmenu:init(style)
-	style = redutil.table.merge(default_style(), style or {})
+function clientmenu:init()
+	local style = self._prebuilt_style or default_style()
 
 	self.hide_check = function(action)
 		if style.hide_action[action] then self.menu:hide() end
@@ -321,23 +414,39 @@ function clientmenu:init(style)
 		last.client:toggle_tag(t); awful.layout.arrange(t.screen); self.hide_check("add")
 	end
 
-	-- Construct tag submenus ("move" and "add")
-	------------------------------------------------------------
-	local movemenu_items = tagmenu_items(self.movemenu_action, style)
-	local addmenu_items  = tagmenu_items(self.addmenu_action, style)
+	local menu_items = {}
+	table.insert(menu_items, { widget = actionline, focus = true })
+	table.insert(menu_items, menusep)
+	if style.enable_tagline then
+		-- Construct visual tag representations in a menu line
+		self.tagline_container = wibox.layout.grid()
+		self.tagline_container.forced_num_rows = style.tagline.rows
+		self.tagline_container.spacing = style.tagline.spacing
+		self.tagline_container.expand = true
+
+		local tagline_vertical = wibox.layout.align.vertical()
+		tagline_vertical:set_second(self.tagline_container)
+		tagline_vertical:set_expand("outside")
+
+		self.tagboxes = tag_line_construct(self.tagline_container, style)
+		local tagline = wibox.container.constraint(tagline_vertical, "exact", nil, style.tagline.height)
+		table.insert(menu_items, { widget = tagline, focus = true })
+	else
+		-- Construct tag submenus ("move" and "add")
+		local movemenu_items = tagmenu_items(self.movemenu_action, style)
+		local addmenu_items  = tagmenu_items(self.addmenu_action, style)
+		table.insert(menu_items, { "Move to tag", { items = movemenu_items, theme = style.tagmenu } })
+		table.insert(menu_items, { "Add to tag",  { items = addmenu_items,  theme = style.tagmenu } })
+	end
+	table.insert(menu_items, menusep)
+	table.insert(menu_items, { widget = stateline, focus = true })
+
 
 	-- Create menu
 	------------------------------------------------------------
 	self.menu = redmenu({
 		theme = style.menu,
-		items = {
-			{ widget = actionline, focus = true },
-			menusep,
-			{ "Move to tag", { items = movemenu_items, theme = style.tagmenu } },
-			{ "Add to tag",  { items = addmenu_items,  theme = style.tagmenu } },
-			menusep,
-			{ widget = stateline, focus = true }
-		}
+		items = menu_items
 	})
 
 	-- Widget update functions
@@ -345,7 +454,11 @@ function clientmenu:init(style)
 	function self:update(c)
 		if self.menu.wibox.visible then
 			stateboxes_update(c, state_icons, stateboxes)
-			tagmenu_update(c, self.menu, { 1, 2 }, style)
+			if style.enable_tagline then
+				self:tagline_update(c, style)
+			else
+				tagmenu_update(c, self.menu, { 1, 2 }, style)
+			end
 		end
 	end
 
@@ -358,6 +471,39 @@ function clientmenu:init(style)
 	for _, sg in ipairs(client_signals) do
 		client.connect_signal(sg, function() self:update(last.client) end)
 	end
+end
+
+-- Function to rebuild the tag line entirely if screen and tags have changed
+--------------------------------------------------------------------------------
+function clientmenu:tagline_rebuild(style)
+	self.tagboxes = tag_line_construct(self.tagline_container, style)
+end
+
+-- Function to update the tag line's icon states
+--------------------------------------------------------------------------------
+function clientmenu:tagline_update(c, style)
+	if last.tag_screen ~= mouse.screen then
+		self:tagline_rebuild(style)
+		last.tag_screen = mouse.screen
+	end
+	for k, t in ipairs(last.screen.tags) do
+		if not awful.tag.getproperty(t, "hide") then
+
+			local icon_color = style.color.gray
+			if c then
+				local client_tags = c:tags()
+				icon_color = awful.util.table.hasitem(client_tags, t) and style.color.main or icon_color
+			end
+
+			self.tagboxes[k]:set_color(icon_color)
+		end
+	end
+end
+
+-- Style setup
+--------------------------------------------------------------------------------
+function clientmenu:set_style(style)
+	self._prebuilt_style = redutil.table.merge(default_style(), style or {})
 end
 
 -- Show window menu widget
