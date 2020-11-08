@@ -123,7 +123,7 @@ function keychain:init(style)
 		if event == "press" then return false end
 
 		-- dirty fix for first key release
-		if self.actkey == key and #mod == 0 then self.actkey = nil; return end
+		if self.actkey == key then self.actkey = nil; return end
 
 		if awful.util.table.hasitem(self.service.close,    key) then self:hide()
 		elseif awful.util.table.hasitem(self.service.stepback, key) then self:undo()
