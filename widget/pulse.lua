@@ -184,7 +184,7 @@ function pulse.new(args, style)
 	--------------------------------------------------------------------------------
 	if autoupdate then
 		local t = gears.timer({ timeout = timeout })
-		t:connect_signal("timeout", function() widg:update_volume() end)
+		t:connect_signal("timeout", function() widg:update_volume({ sink_update = true }) end)
 		t:start()
 	end
 
