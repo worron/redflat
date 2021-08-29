@@ -43,7 +43,8 @@ local function default_style()
 		color        = { border = "#575757", wibox = "#00000000", bg1 = "#57575740", bg2 = "#57575720",
 		                 fbg1 = "#b1222b40", fbg2 = "#b1222b20", mark = "#575757", text = "#202020",
 		                 hbg1 = "#32882d40", hbg2 = "#32882d20" },
-		shape        = nil
+		shape        = nil,
+		window_type  = nil,
 	}
 	return redutil.table.merge(style, redutil.table.check(beautiful, "service.navigator") or {})
 end
@@ -168,7 +169,8 @@ function navigator.make_decor(c)
 		bg           = style.color.wibox,
 		border_width = style.border_width,
 		border_color = style.color.border,
-		shape        = style.shape
+		shape        = style.shape,
+		type         = style.window_type,
 	})
 
 	object.client = c
