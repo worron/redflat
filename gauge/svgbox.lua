@@ -28,8 +28,9 @@ local color = require("gears.color")
 
 local pixbuf
 local function load_pixbuf()
-	local _ = require("lgi").Gdk
-	pixbuf = require("lgi").GdkPixbuf
+	local lgi = require('lgi')
+	lgi.require('Gtk', '3.0')
+	pixbuf = lgi.GdkPixbuf
 end
 local is_pixbuf_loaded = pcall(load_pixbuf)
 
