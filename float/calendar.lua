@@ -227,7 +227,7 @@ function calendar:init()
 		local month = os.date("%B", os.time{
 			year = self.date.year,
 			month = self.date.month,
-			day = self.date.day}
+			day = 1}
 		)
 		local year = string.format("%s", self.date.year)
 		self.month_label:set_markup('<span color="' .. style.color.text .. '">' .. month .. '</span>')
