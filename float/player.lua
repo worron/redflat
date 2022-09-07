@@ -15,6 +15,7 @@ local awful = require("awful")
 local beautiful = require("beautiful")
 local wibox = require("wibox")
 local timer = require("gears.timer")
+local gstring = require("gears.string")
 
 local redutil = require("redflat.util")
 local progressbar = require("redflat.gauge.graph.bar")
@@ -261,9 +262,11 @@ function player:init(args)
 	------------------------------------------------------------
 	self.update_artist = function()
 		if show_album then
-			self.box.artist:set_markup('<span color="' .. style.color.gray .. '">From </span>' .. self.info.album)
+			self.box.artist:set_markup('<span color="' .. style.color.gray .. '">From </span>'
+			                           .. gstring.xml_escape(self.info.album))
 		else
-			self.box.artist:set_markup('<span color="' .. style.color.gray .. '">By </span>' .. self.info.artist)
+			self.box.artist:set_markup('<span color="' .. style.color.gray .. '">By </span>'
+			                           .. gstring.xml_escape(self.info.artist))
 		end
 	end
 
