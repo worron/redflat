@@ -116,7 +116,7 @@ function player:init(args)
 
 	self.info = { artist = "Unknown", album = "Unknown" }
 	self.style = style
-	self.last = { status = "Stopped", length = 5 * 60 * 1000000, volume = nil }
+	self.last = { status = "Stopped", length = 5 * 60 * 1000000, volume = nil, trackid = "/not/used" }
 
 	-- dbus vars
 	self.command = {
@@ -125,7 +125,7 @@ function player:init(args)
 		get_volume   = string.format(dbus_get, _player, "string:'Volume'"),
 		set_volume   = string.format(dbus_set, _player, "string:'Volume' variant:double:"),
 		action       = string.format(dbus_action, _player),
-		set_position = string.format(dbus_action, _player) .. "SetPosition objpath:/not/used int64:",
+		set_position = string.format(dbus_action, _player) .. "SetPosition objpath:%s int64:%s",
 	}
 
 	self._actions = { "PlayPause", "Next", "Previous" }
@@ -221,7 +221,9 @@ function player:init(args)
 				}
 
 				local position = (coords.mouse.x - coords.wibox.x - coords.bar.x) / coords.bar.width
-				awful.spawn.with_shell(self.command.set_position .. math.floor(self.last.length * position))
+				local cmd = string.format(self.command.set_position, self.last.trackid,
+				                          math.floor(self.last.length * position))
+				awful.spawn.with_shell(cmd)
 			end
 		)
 	))
@@ -284,6 +286,7 @@ function player:init(args)
 		self.update_artist()
 
 		self.last.volume = nil
+		self.last.trackid = "/not/used"
 	end
 
 	-- Main update function
@@ -357,14 +360,15 @@ function player:initialize_info()
 			end
 
 			if exit_code == 0 then
-				data.Metadata["xesam:title"]  = parse_dbus_value("xesam:title")
-				data.Metadata["xesam:artist"] = parse_dbus_value("xesam:artist")
-				data.Metadata["xesam:album"]  = parse_dbus_value("xesam:album")
-				data.Metadata["mpris:artUrl"] = parse_dbus_value("mpris:artUrl")
-				data.Metadata["mpris:length"] = parse_dbus_value("mpris:length")
-				data["Volume"]                = parse_dbus_value("Volume")
-				data["Position"]              = parse_dbus_value("Position")
-				data["PlaybackStatus"]        = parse_dbus_value("PlaybackStatus")
+				data.Metadata["xesam:title"]    = parse_dbus_value("xesam:title")
+				data.Metadata["xesam:artist"]   = parse_dbus_value("xesam:artist")
+				data.Metadata["xesam:album"]    = parse_dbus_value("xesam:album")
+				data.Metadata["mpris:trackid"]  = parse_dbus_value("mpris:trackid")
+				data.Metadata["mpris:artUrl"]   = parse_dbus_value("mpris:artUrl")
+				data.Metadata["mpris:length"]   = parse_dbus_value("mpris:length")
+				data["Volume"]                  = parse_dbus_value("Volume")
+				data["Position"]                = parse_dbus_value("Position")
+				data["PlaybackStatus"]          = parse_dbus_value("PlaybackStatus")
 				self:update_from_metadata(data)
 			end
 		end
@@ -459,6 +463,11 @@ function player:update_from_metadata(data)
 
 		-- track length
 		if data.Metadata["mpris:length"] then self.last.length = data.Metadata["mpris:length"] end
+
+		-- track id
+		if data.Metadata["mpris:trackid"] then
+			self.last.trackid = data.Metadata["mpris:trackid"]
+		end
 	end
 
 	if data.PlaybackStatus then
