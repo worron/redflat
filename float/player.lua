@@ -65,6 +65,28 @@ local function decodeURI(s)
 	return string.gsub(s, '%%(%x%x)', function(hex) return string.char(tonumber(hex, 16)) end)
 end
 
+-- Dbus output parser
+-----------------------------------------------------------------------------------------------------------------------
+local function parse_dbus_value(output, ident)
+	local regex = "(" .. ident .. ")%s+([a-z0-9]+)%s+(.-)%s-%)\n"
+	local _, _, value = output:match(regex)
+	if not value then return nil end
+
+	-- check for int64 type field
+	local int64_val = value:match("int64%s+(%d+)")
+	if int64_val then return tonumber(int64_val) end
+
+	-- check for double type field
+	local double_val = value:match("double%s+([%d.]+)")
+	if double_val then return tonumber(double_val) end
+
+	-- check for array type field as table, extract first entry only
+	local array_val = value:match("array%s%[%s+([^%],]+)")
+	if array_val then return { array_val } end
+
+	return value
+end
+
 -- Generate default theme vars
 -----------------------------------------------------------------------------------------------------------------------
 local function default_style()
@@ -116,17 +138,19 @@ function player:init(args)
 
 	self.info = { artist = "Unknown", album = "Unknown" }
 	self.style = style
-	self.last = { status = "Stopped", length = 5 * 60 * 1000000, volume = nil }
+	self.last = { status = "Stopped", length = 5 * 60 * 1000000, volume = nil, trackid = "/not/used" }
 	self.player = _player
+	self.use_track_id_hack = args.use_track_id_hack or false
 
 	-- dbus vars
 	self.command = {
 		get_all      = string.format(dbus_getall, _player),
+		get_meta     = string.format(dbus_get, _player, "string:'Metadata'"),
 		get_position = string.format(dbus_get, _player, "string:'Position'"),
 		get_volume   = string.format(dbus_get, _player, "string:'Volume'"),
 		set_volume   = string.format(dbus_set, _player, "string:'Volume' variant:double:"),
 		action       = string.format(dbus_action, _player),
-		set_position = string.format(dbus_action, _player) .. "SetPosition objpath:/not/used int64:",
+		set_position = string.format(dbus_action, _player) .. "SetPosition objpath:%s int64:%s",
 	}
 
 	self._actions = { "PlayPause", "Next", "Previous" }
@@ -222,7 +246,9 @@ function player:init(args)
 				}
 
 				local position = (coords.mouse.x - coords.wibox.x - coords.bar.x) / coords.bar.width
-				awful.spawn.with_shell(self.command.set_position .. math.floor(self.last.length * position))
+				local cmd = string.format(self.command.set_position, self.last.trackid,
+				                          math.floor(self.last.length * position))
+				awful.spawn.with_shell(cmd)
 			end
 		)
 	))
@@ -285,6 +311,7 @@ function player:init(args)
 		self.update_artist()
 
 		self.last.volume = nil
+		self.last.trackid = "/not/used"
 	end
 
 	-- Main update function
@@ -337,37 +364,32 @@ function player:initialize_info()
 
 			local data = { Metadata = {} }
 
-			local function parse_dbus_value(ident)
-				local regex = "(" .. ident .. ")%s+([a-z0-9]+)%s+(.-)%s-%)\n"
-				local _, _, value = output:match(regex)
-				if not value then return nil end
-
-				-- check for int64 type field
-				local int64_val = value:match("int64%s+(%d+)")
-				if int64_val then return tonumber(int64_val) end
-
-				-- check for double type field
-				local double_val = value:match("double%s+([%d.]+)")
-				if double_val then return tonumber(double_val) end
-
-				-- check for array type field as table, extract first entry only
-				local array_val = value:match("array%s%[%s+([^%],]+)")
-				if array_val then return { array_val } end
-
-				return value
-			end
-
 			if exit_code == 0 then
-				data.Metadata["xesam:title"]  = parse_dbus_value("xesam:title")
-				data.Metadata["xesam:artist"] = parse_dbus_value("xesam:artist")
-				data.Metadata["xesam:album"]  = parse_dbus_value("xesam:album")
-				data.Metadata["mpris:artUrl"] = parse_dbus_value("mpris:artUrl")
-				data.Metadata["mpris:length"] = parse_dbus_value("mpris:length")
-				data["Volume"]                = parse_dbus_value("Volume")
-				data["Position"]              = parse_dbus_value("Position")
-				data["PlaybackStatus"]        = parse_dbus_value("PlaybackStatus")
+				data.Metadata["xesam:title"]    = parse_dbus_value(output, "xesam:title")
+				data.Metadata["xesam:artist"]   = parse_dbus_value(output, "xesam:artist")
+				data.Metadata["xesam:album"]    = parse_dbus_value(output, "xesam:album")
+				data.Metadata["mpris:trackid"]  = parse_dbus_value(output, "mpris:trackid")
+				data.Metadata["mpris:artUrl"]   = parse_dbus_value(output, "mpris:artUrl")
+				data.Metadata["mpris:length"]   = parse_dbus_value(output, "mpris:length")
+				data["Volume"]                  = parse_dbus_value(output, "Volume")
+				data["Position"]                = parse_dbus_value(output, "Position")
+				data["PlaybackStatus"]          = parse_dbus_value(output, "PlaybackStatus")
 				self:update_from_metadata(data)
 			end
+		end
+	)
+end
+
+-- Force update track data
+-----------------------------------------------------------------------------------------------------------------------
+function player:_fill_track_id(data)
+	awful.spawn.easy_async(
+		self.command.get_meta,
+		function(output, _, _, exit_code)
+			if exit_code == 0 then
+				data.Metadata["mpris:trackid"]  = parse_dbus_value(output, "mpris:trackid")
+			end
+			self:update_from_metadata(data)
 		end
 	)
 end
@@ -460,6 +482,11 @@ function player:update_from_metadata(data)
 
 		-- track length
 		if data.Metadata["mpris:length"] then self.last.length = data.Metadata["mpris:length"] end
+
+		-- track id
+		if data.Metadata["mpris:trackid"] then
+			self.last.trackid = data.Metadata["mpris:trackid"]
+		end
 	end
 
 	if data.PlaybackStatus then
@@ -519,7 +546,11 @@ function player:listen()
 	)
 	dbus.connect_signal("org.freedesktop.DBus.Properties",
 		function (_, _, data)
-			self:update_from_metadata(data)
+			if self.use_track_id_hack and data.Metadata and not data.Metadata["mpris:trackid"] then
+				self:_fill_track_id(data)
+			else
+				self:update_from_metadata(data)
+			end
 		end
 	)
 
