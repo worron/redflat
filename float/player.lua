@@ -117,6 +117,7 @@ function player:init(args)
 	self.info = { artist = "Unknown", album = "Unknown" }
 	self.style = style
 	self.last = { status = "Stopped", length = 5 * 60 * 1000000, volume = nil, trackid = "/not/used" }
+	self.player = _player
 
 	-- dbus vars
 	self.command = {
@@ -522,7 +523,8 @@ function player:listen()
 	dbus.request_name("session", "org.freedesktop.DBus.Properties")
 	dbus.add_match(
 		"session",
-		"path=/org/mpris/MediaPlayer2, interface='org.freedesktop.DBus.Properties', member='PropertiesChanged'"
+		"sender='org.mpris.MediaPlayer2." .. self.player .. "', interface='org.freedesktop.DBus.Properties', "
+		.. "member='PropertiesChanged'"
 	)
 	dbus.connect_signal("org.freedesktop.DBus.Properties",
 		function (_, _, data)
