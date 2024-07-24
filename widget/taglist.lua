@@ -45,11 +45,28 @@ end
 -- Support functions
 -----------------------------------------------------------------------------------------------------------------------
 
+-- Find all taglist vivsible clients
+--------------------------------------------------------------------------------
+local function visible_clients(t, ignored)
+	local clients = {}
+
+	for _, c in pairs(t:clients()) do
+		local hidden = c.hidden or c.type == "splash" or c.type == "dock" or c.type == "desktop"
+		               or (c.class and awful.util.table.hasitem(ignored, c.class))
+
+		if not hidden then
+			table.insert(clients, c)
+		end
+	end
+
+	return clients
+end
+
 -- Get info about tag
 --------------------------------------------------------------------------------
-local function get_state(t)
+local function get_state(t, ignored)
 	local state = { focus = false, urgent = false, list = {} }
-	local client_list = t:clients()
+	local client_list = visible_clients(t, ignored)
 	local client_count = 0
 
 	for _, c in pairs(client_list) do
@@ -147,7 +164,7 @@ function taglist.new(args, style)
 			end
 
 			-- set tag state info to widget
-			local state = get_state(t)
+			local state = get_state(t, args.ignored or {})
 			widg:set_state(state)
 			widg.tip = hint(t)
 
