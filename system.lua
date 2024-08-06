@@ -565,7 +565,7 @@ function system.transmission.parse(output, show_active_only)
 
 		if string.sub(line, 1, 3) == "Sum" then
 			-- get total speed
-			local seed, dnld = string.match(line, "Sum:%s+[%d%.]+%s+%a+%s+([%d%.]+)%s+([%d%.]+)")
+			local seed, dnld = string.match(line, "Sum:%s+[%d%.%,]+%s+%a+%s+([%d%.%,]+)%s+([%d%.%,]+)")
 			seed, dnld = tonumber(seed), tonumber(dnld)
 			if seed and dnld then
 				torrent.seed.speed, torrent.dnld.speed = seed, dnld
@@ -574,7 +574,7 @@ function system.transmission.parse(output, show_active_only)
 			-- get torrent info
 			local prog, status, name = string.match(
 				line,
-				"%s+%d+%s+(%d+)%%%s+[%d%.]+%s%a+%s+.+%s+[%d%.]+%s+[%d%.]+%s+[%d%.]+%s+(%a+)%s+(.+)"
+				"%s+%d+%s+(%d+)%%%s+[%d%.%,]+%s%a+%s+.+%s+[%d%.%,]+%s+[%d%.%,]+%s+[%d%.%,]+%s+(%a+)%s+(.+)"
 			)
 
 			if prog and status then
