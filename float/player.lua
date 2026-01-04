@@ -546,6 +546,8 @@ function player:listen()
 	)
 	dbus.connect_signal("org.freedesktop.DBus.Properties",
 		function (_, _, data)
+			if not data then return end
+
 			if self.use_track_id_hack and data.Metadata and not data.Metadata["mpris:trackid"] then
 				self:_fill_track_id(data)
 			else
